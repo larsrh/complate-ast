@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "es2016",
+      "dom"
+    ],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "target": "es6",
+    "module": "commonjs",
+    "declaration": true,
+    "incremental": true,
+    "strict": true,
+    "moduleResolution": "node"
+  }
+}
