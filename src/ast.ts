@@ -1,7 +1,7 @@
 import { Renderer } from "./renderer"
 
 export type StructuredNodeType = "text" | "element"
-export type SemiStructuredNodeType = "text" | "element" | "prerendered"
+export type SemiStructuredNodeType = StructuredNodeType | "prerendered"
 
 export interface SemiStructuredAST<P> {
     getNodeType(): SemiStructuredNodeType

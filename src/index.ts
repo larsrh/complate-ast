@@ -1,5 +1,6 @@
 import {builder, DOMNodeAST, StructuredAST} from "./ast";
 import {jsdomRenderer} from "./renderers/nodejs-dom";
+import {StreamRenderer, StringStream} from "./renderers/stream";
 
 const ast: StructuredAST =
     builder.element("div", new Map<string, string>([["lang", "en"]]),
@@ -22,3 +23,8 @@ const outerAST: DOMNodeAST =
 const outerDOM: Node = outerAST.render(jsdomRenderer);
 
 console.log((outerDOM as Element).innerHTML);
+
+const stream = new StringStream();
+ast.render(new StreamRenderer(stream))();
+
+console.log(stream.content);

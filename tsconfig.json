@@ -11,6 +11,7 @@
     "declaration": true,
     "incremental": true,
     "strict": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "noImplicitAny": false
   }
 }
