@@ -5,9 +5,9 @@ export class DOMRenderer implements Renderer<Node, Node> {
         private readonly document: Document
     ) {}
 
-    renderElement(tag: string, attributes: Map<string, string>, children: Node[]): Element {
+    renderElement(tag: string, attributes: object, children: Node[]): Element {
         const node = this.document.createElement(tag);
-        for (const [key, value] of attributes.entries())
+        for (const [key, value] of Object.entries(attributes))
             node.setAttribute(key, value);
         for (const child of children)
             node.appendChild(child);

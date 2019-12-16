@@ -1,17 +1,17 @@
-import {builder, DOMNodeAST, StructuredAST} from "./ast";
+import {builder, render, DOMNodeAST, StructuredAST} from "./ast/structured";
 import {jsdomRenderer} from "./renderers/nodejs-dom";
 import {StreamRenderer, StringStream} from "./renderers/stream";
 
-const ast: StructuredAST =
-    builder.element("div", new Map<string, string>([["lang", "en"]]),
+const ast: StructuredAST<never> =
+    builder.element("div", { lang: "en" },
         builder.text("Hello"),
         builder.element("br"),
-        builder.element("span", new Map<string, string>([["lang", "de"]]),
+        builder.element("span", { lang: "de" },
             builder.text("<Welt>")
         )
     );
 
-const dom: Node = ast.render(jsdomRenderer);
+const dom: Node = render(ast, jsdomRenderer);
 
 console.log((dom as Element).innerHTML);
 
@@ -20,11 +20,11 @@ const outerAST: DOMNodeAST =
         builder.prerendered(dom.cloneNode(true))
     );
 
-const outerDOM: Node = outerAST.render(jsdomRenderer);
+const outerDOM: Node = render(outerAST, jsdomRenderer);
 
 console.log((outerDOM as Element).innerHTML);
 
 const stream = new StringStream();
-ast.render(new StreamRenderer(stream))();
+render(ast, new StreamRenderer(stream))();
 
 console.log(stream.content);

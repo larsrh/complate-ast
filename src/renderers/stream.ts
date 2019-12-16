@@ -24,16 +24,16 @@ export class StreamRenderer implements Renderer<string, () => void> {
         private readonly stream: Stream
     ) {}
 
-    renderElement(tag: string, attributes: Map<string, string>, children: (() => void)[]): () => void {
+    renderElement(tag: string, attributes: object, children: (() => void)[]): () => void {
         return () => {
             this.stream.add("<");
             this.stream.add(tag);
-            for (const [key, value] of attributes.entries()) {
+            for (const [key, value] of Object.entries(attributes)) {
                 this.stream.add(" ");
                 this.stream.add(key);
-                this.stream.add("='");
+                this.stream.add("=\"");
                 this.stream.add(escapeHtml(value));
-                this.stream.add("'");
+                this.stream.add("\"");
             }
             this.stream.add(">");
             children.forEach(child => child());

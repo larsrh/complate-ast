@@ -4,18 +4,20 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "tsc && jest"
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "@types/jsdom": "^12.2.4",
-    "typescript": "^3.7.2"
-  },
   "dependencies": {
-    "@types/lodash": "^4.14.149",
     "escape-html": "^1.0.3",
-    "jsdom": "^15.2.1",
-    "lodash": "^4.17.15"
+    "jsdom": "^15.2.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.23",
+    "@types/jsdom": "^12.2.4",
+    "fast-check": "^1.20.1",
+    "jest": "^24.9.0",
+    "typescript": "^3.7.2"
   }
 }
