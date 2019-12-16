@@ -1,4 +1,5 @@
 import { Renderer } from "../renderer"
+import { Builder } from "./builder"
 
 export type StructuredNodeType = "text" | "element" | "prerendered"
 
@@ -56,21 +57,25 @@ export class PrerenderedNode<P> implements StructuredAST<P> {
 
 export type DOMNodeAST = StructuredAST<Node>
 
-export const builder = {
-    text(text: string): TextNode {
-        return new TextNode(text);
-    },
-    prerendered<P>(p: P): PrerenderedNode<P> {
-        return new PrerenderedNode<P>(p);
-    },
-    element<P>(tag: string, attributes?: object, ...children: StructuredAST<P>[]): ElementNode<P> {
+export class StructuredBuilder<P> implements Builder<StructuredAST<P>, P> {
+    element(tag: string, attributes?: object, ...children: StructuredAST<P>[]): StructuredAST<P> {
         return new ElementNode<P>(
             tag,
             attributes ? attributes : {},
             children ? children : []
         );
     }
-};
+
+    prerendered(p: P): StructuredAST<P> {
+        return new PrerenderedNode<P>(p);
+    }
+
+    text(text: string): StructuredAST<P> {
+        return new TextNode(text);
+    }
+}
+
+export const builder = new StructuredBuilder<never>();
 
 export function fromDOM(node: Node): StructuredAST<never> {
     if (node.nodeName === "#text") {

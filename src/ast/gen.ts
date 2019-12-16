@@ -1,10 +1,10 @@
 import fc, {Arbitrary} from "fast-check";
-import {builder, StructuredAST} from "./structured";
+import {Builder} from "./builder";
 
 const alphabetic =
     fc.array(fc.integer(0, 25).map(int => String.fromCharCode(int + 97 /* 'a' */)), 10, 20).map(array => array.join(""));
 
-function structured<P>(prerenderedGen?: Arbitrary<P>): Arbitrary<StructuredAST<P>> {
+function structured<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbitrary<A> {
     const { ast } = fc.letrec(tie => ({
         ast:
             fc.frequency(
@@ -33,17 +33,18 @@ function structured<P>(prerenderedGen?: Arbitrary<P>): Arbitrary<StructuredAST<P
                 fc.array(tie("ast"), 5)
             ).map(args => {
                 const [tag, attrs, children] = args;
-                return builder.element(tag, Object.fromEntries(attrs), ...(children as StructuredAST<P>[]));
+                return builder.element(tag, Object.fromEntries(attrs), ...(children as A[]));
             })
     }));
 
-    return ast as Arbitrary<StructuredAST<P>>;
+    return ast as Arbitrary<A>;
 }
 
-export function structuredNoPrerendered(): Arbitrary<StructuredAST<never>> {
-    return structured();
+export function structuredNoPrerendered<A>(builder: Builder<A, never>): Arbitrary<A> {
+    return structured(builder);
 }
 
-export function structuredWithPrerendered<P>(gen: Arbitrary<P>): Arbitrary<StructuredAST<P>> {
-    return structured(gen);
+export function structuredWithPrerendered<A, P>(builder: Builder<A, P>, gen: Arbitrary<P>): Arbitrary<A> {
+    // TODO test this
+    return structured(builder, gen);
 }

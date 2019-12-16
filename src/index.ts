@@ -1,4 +1,4 @@
-import {builder, render, DOMNodeAST, StructuredAST} from "./ast/structured";
+import {builder, render, DOMNodeAST, StructuredAST, StructuredBuilder} from "./ast/structured";
 import {jsdomRenderer} from "./renderers/nodejs-dom";
 import {StreamRenderer, StringStream} from "./renderers/stream";
 
@@ -15,9 +15,10 @@ const dom: Node = render(ast, jsdomRenderer);
 
 console.log((dom as Element).innerHTML);
 
+const domBuilder = new StructuredBuilder<Node>();
 const outerAST: DOMNodeAST =
-    builder.element("div", undefined,
-        builder.prerendered(dom.cloneNode(true))
+    domBuilder.element("div", undefined,
+        domBuilder.prerendered(dom.cloneNode(true))
     );
 
 const outerDOM: Node = render(outerAST, jsdomRenderer);
