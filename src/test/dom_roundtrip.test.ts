@@ -1,10 +1,11 @@
 import fc from "fast-check";
 import {structuredNoPrerendered} from "../ast/gen";
-import {fromDOM, render, StructuredBuilder} from "../ast/structured";
+import {render, StructuredBuilder} from "../ast/structured";
 import {jsdomRenderer} from "../renderers/nodejs-dom";
 import {JSDOM} from "jsdom";
 import {StreamRenderer, StringStream} from "../renderers/stream";
 import {NormalizingRenderer} from "../renderers/map";
+import {fromDOM} from "../ast/builder";
 
 function parseHTML(html: string): Node {
     const document = new JSDOM().window.document;
@@ -35,7 +36,7 @@ describe("Structured AST", () => {
         it("Roundtrip property", () => {
             fc.assert(fc.property(gen, ast => {
                 const dom = render(ast, jsdomRenderer);
-                const ast2 = fromDOM(dom);
+                const ast2 = fromDOM(builder, dom);
                 expect(ast2).toEqual(ast);
             }));
         });
@@ -49,7 +50,7 @@ describe("Structured AST", () => {
                 const stream = new StringStream();
                 render(ast, new StreamRenderer(stream))();
                 const ast1 = render(ast, new NormalizingRenderer());
-                const ast2 = fromDOM(parseHTML(stream.content));
+                const ast2 = fromDOM(builder, parseHTML(stream.content));
                 expect(ast2).toEqual(ast1);
             }));
         });
