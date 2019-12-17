@@ -1,13 +1,13 @@
-import { Builder } from "./builder"
+import {Builder} from "./builder"
 
-export type StructuredNodeType = "text" | "element" | "prerendered"
+export type NodeType = "text" | "element" | "prerendered"
 
-export interface StructuredAST<P> {
-    readonly nodeType: StructuredNodeType
+export interface AST<P> {
+    readonly nodeType: NodeType
     readonly astType: "structured"
 }
 
-export function render<P, O>(ast: StructuredAST<P>, renderer: Builder<O, P>): O {
+export function render<P, O>(ast: AST<P>, renderer: Builder<O, P>): O {
     if (ast.nodeType === "text") {
         return renderer.text((ast as TextNode).text);
     }
@@ -25,7 +25,7 @@ export function render<P, O>(ast: StructuredAST<P>, renderer: Builder<O, P>): O 
     throw new Error("Invalid AST");
 }
 
-export class TextNode implements StructuredAST<never> {
+export class TextNode implements AST<never> {
     public readonly nodeType = "text";
     public readonly astType = "structured";
 
@@ -34,18 +34,18 @@ export class TextNode implements StructuredAST<never> {
     ) {}
 }
 
-export class ElementNode<P> implements StructuredAST<P> {
+export class ElementNode<P> implements AST<P> {
     public readonly nodeType = "element";
     public readonly astType = "structured";
 
     constructor(
         public readonly tag: string,
         public readonly attributes: object,
-        public readonly children: StructuredAST<P>[]
+        public readonly children: AST<P>[]
     ) {}
 }
 
-export class PrerenderedNode<P> implements StructuredAST<P> {
+export class PrerenderedNode<P> implements AST<P> {
     public readonly nodeType = "prerendered";
     public readonly astType = "structured";
 
@@ -54,10 +54,10 @@ export class PrerenderedNode<P> implements StructuredAST<P> {
     ) {}
 }
 
-export type DOMNodeAST = StructuredAST<Node>
+export type DOMNodeAST = AST<Node>
 
-export class StructuredBuilder<P> implements Builder<StructuredAST<P>, P> {
-    element(tag: string, attributes?: object, ...children: StructuredAST<P>[]): StructuredAST<P> {
+export class ASTBuilder<P> implements Builder<AST<P>, P> {
+    element(tag: string, attributes?: object, ...children: AST<P>[]): AST<P> {
         return new ElementNode<P>(
             tag,
             attributes ? attributes : {},
@@ -65,13 +65,54 @@ export class StructuredBuilder<P> implements Builder<StructuredAST<P>, P> {
         );
     }
 
-    prerendered(p: P): StructuredAST<P> {
+    prerendered(p: P): AST<P> {
         return new PrerenderedNode<P>(p);
     }
 
-    text(text: string): StructuredAST<P> {
+    text(text: string): AST<P> {
         return new TextNode(text);
     }
 }
 
-export const builder = new StructuredBuilder<never>();
+export const astBuilder = new ASTBuilder<never>();
+
+export class MappingBuilder<P, Q> implements Builder<AST<Q>, P> {
+    constructor(
+        private readonly fn: (p: P) => Q
+    ) {}
+
+    element(tag: string, attributes?: object, ...children: AST<Q>[]): AST<Q> {
+        return new ElementNode(tag, attributes ? attributes : {}, children);
+    }
+
+    prerendered(p: P): AST<Q> {
+        return new PrerenderedNode(this.fn(p));
+    }
+
+    text(text: string): AST<Q> {
+        return new TextNode(text);
+    }
+}
+
+export function map<P, Q>(ast: AST<P>, fn: (p: P) => Q): AST<Q> {
+    return render(ast, new MappingBuilder(fn));
+}
+
+export class FlatteningBuilder<P> implements Builder<AST<P>, AST<P>> {
+    element(tag: string, attributes?: object, ...children: AST<P>[]): AST<P> {
+        return new ElementNode(tag, attributes ? attributes : {}, children);
+    }
+
+    prerendered(p: AST<P>): AST<P> {
+        return p;
+    }
+
+    text(text: string): AST<P> {
+        return new TextNode(text);
+    }
+
+}
+
+export function flatten<P>(ast: AST<AST<P>>): AST<P> {
+    return render(ast, new FlatteningBuilder());
+}

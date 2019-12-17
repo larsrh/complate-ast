@@ -1,11 +1,11 @@
 import fc from "fast-check";
-import {render, StructuredBuilder} from "../ast/structured";
+import * as Structured from "../ast/structured";
+import * as Stream from "../ast/stream";
 import {JSDOM} from "jsdom";
 import {fromDOM} from "../ast/builder";
 import {StringStream} from "../stream";
 import {jsdomBuilder} from "../renderers/nodejs-dom";
-import {streamBuilderNoPrerender} from "../ast/stream";
-import {NormalizingBuilder} from "../renderers/map";
+import {NormalizingBuilder} from "../renderers/normalize";
 import {genNoPrerendered} from "../ast/gen";
 
 function parseHTML(html: string): Node {
@@ -27,16 +27,16 @@ function compareHTML(html1: string, html2: string): void {
     expect(dom2).toEqual(dom1);
 }
 
-describe("Structured AST", () => {
+describe("Structured AST roundtrips", () => {
 
-    const builder = new StructuredBuilder<never>();
+    const builder = Structured.astBuilder;
     const gen = genNoPrerendered(builder);
 
     describe("DOM rendering", () => {
 
         it("Roundtrip property", () => {
             fc.assert(fc.property(gen, ast => {
-                const dom = render(ast, jsdomBuilder);
+                const dom = Structured.render(ast, jsdomBuilder);
                 const ast2 = fromDOM(builder, dom);
                 expect(ast2).toEqual(ast);
             }));
@@ -49,8 +49,8 @@ describe("Structured AST", () => {
         it("Roundtrip property", () => {
             fc.assert(fc.property(gen, ast => {
                 const stream = new StringStream();
-                render(ast, streamBuilderNoPrerender).render(stream);
-                const ast1 = render(ast, new NormalizingBuilder());
+                Structured.render(ast, Stream.astBuilderNoPrerender).render(stream);
+                const ast1 = Structured.render(ast, new NormalizingBuilder());
                 const ast2 = fromDOM(builder, parseHTML(stream.content));
                 expect(ast2).toEqual(ast1);
             }));
@@ -60,8 +60,11 @@ describe("Structured AST", () => {
             fc.assert(fc.property(gen, ast => {
                 const stream1 = new StringStream();
                 const stream2 = new StringStream();
-                render(ast, streamBuilderNoPrerender).render(stream1);
-                render(render(ast, new NormalizingBuilder()), streamBuilderNoPrerender).render(stream2);
+                Structured.render(ast, Stream.astBuilderNoPrerender).render(stream1);
+                Structured.render(
+                    Structured.render(ast, new NormalizingBuilder()),
+                    Stream.astBuilderNoPrerender
+                ).render(stream2);
                 expect(stream2.content).toEqual(stream1.content);
             }));
         });
@@ -71,9 +74,9 @@ describe("Structured AST", () => {
     it("DOM/HTML rendering equivalence", () => {
 
         fc.assert(fc.property(gen.filter(ast => ast.nodeType !== "text"), ast => {
-            const html2 = (render(ast, jsdomBuilder) as Element).outerHTML;
+            const html2 = (Structured.render(ast, jsdomBuilder) as Element).outerHTML;
             const stream = new StringStream();
-            render(ast, streamBuilderNoPrerender).render(stream);
+            Structured.render(ast, Stream.astBuilderNoPrerender).render(stream);
             compareHTML(stream.content, html2);
         }));
 

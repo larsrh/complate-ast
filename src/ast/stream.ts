@@ -4,26 +4,26 @@ import {Builder} from "./builder";
 // TODO use import ... from
 const escapeHtml = require("escape-html");
 
-export interface StreamAST {
+export interface AST {
     readonly astType: "stream"
     render(stream: Stream): void
 }
 
-export function createStreamAST(fn: (stream: Stream) => void): StreamAST {
+export function create(fn: (stream: Stream) => void): AST {
     return {
         astType: "stream",
         render: fn
     };
 }
 
-export class StreamBuilder<P> implements Builder<StreamAST, P> {
+export class ASTBuilder<P> implements Builder<AST, P> {
     constructor(
-        private readonly renderP: (p: P) => string
+        private readonly renderP: (p: P) => ((stream: Stream) => void)
     ) {
     }
 
-    element(tag: string, attributes?: object, ...children: StreamAST[]): StreamAST {
-        return createStreamAST(stream => {
+    element(tag: string, attributes?: object, ...children: AST[]): AST {
+        return create(stream => {
             stream.add("<");
             stream.add(tag);
             if (attributes)
@@ -42,19 +42,19 @@ export class StreamBuilder<P> implements Builder<StreamAST, P> {
         });
     }
 
-    prerendered(p: P): StreamAST {
-        return createStreamAST(stream => {
-            stream.add(this.renderP(p));
+    prerendered(p: P): AST {
+        return create(stream => {
+            this.renderP(p)(stream);
         });
     }
 
-    text(text: string): StreamAST {
-        return createStreamAST(stream => {
+    text(text: string): AST {
+        return create(stream => {
             stream.add(escapeHtml(text))
         });
     }
 
 }
 
-export const streamBuilder = new StreamBuilder<string>(x => x);
-export const streamBuilderNoPrerender = new StreamBuilder<never>(x => "");
+export const astBuilder = new ASTBuilder<string>(x => stream => stream.add(x));
+export const astBuilderNoPrerender = new ASTBuilder<never>(x => stream => {});
