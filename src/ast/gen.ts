@@ -4,7 +4,7 @@ import {Builder} from "./builder";
 const alphabetic =
     fc.array(fc.integer(0, 25).map(int => String.fromCharCode(int + 97 /* 'a' */)), 10, 20).map(array => array.join(""));
 
-function structured<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbitrary<A> {
+function gen<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbitrary<A> {
     const { ast } = fc.letrec(tie => ({
         ast:
             fc.frequency(
@@ -40,11 +40,11 @@ function structured<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>)
     return ast as Arbitrary<A>;
 }
 
-export function structuredNoPrerendered<A>(builder: Builder<A, never>): Arbitrary<A> {
-    return structured(builder);
+export function genNoPrerendered<A>(builder: Builder<A, never>): Arbitrary<A> {
+    return gen(builder);
 }
 
-export function structuredWithPrerendered<A, P>(builder: Builder<A, P>, gen: Arbitrary<P>): Arbitrary<A> {
+export function genWithPrerendered<A, P>(builder: Builder<A, P>, genP: Arbitrary<P>): Arbitrary<A> {
     // TODO test this
-    return structured(builder, gen);
+    return gen(builder, genP);
 }

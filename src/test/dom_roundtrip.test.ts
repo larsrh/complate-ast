@@ -1,5 +1,4 @@
 import fc from "fast-check";
-import {structuredNoPrerendered} from "../ast/gen";
 import {render, StructuredBuilder} from "../ast/structured";
 import {JSDOM} from "jsdom";
 import {fromDOM} from "../ast/builder";
@@ -7,6 +6,7 @@ import {StringStream} from "../stream";
 import {jsdomBuilder} from "../renderers/nodejs-dom";
 import {streamBuilderNoPrerender} from "../ast/stream";
 import {NormalizingBuilder} from "../renderers/map";
+import {genNoPrerendered} from "../ast/gen";
 
 function parseHTML(html: string): Node {
     const document = new JSDOM().window.document;
@@ -30,7 +30,7 @@ function compareHTML(html1: string, html2: string): void {
 describe("Structured AST", () => {
 
     const builder = new StructuredBuilder<never>();
-    const gen = structuredNoPrerendered(builder);
+    const gen = genNoPrerendered(builder);
 
     describe("DOM rendering", () => {
 
