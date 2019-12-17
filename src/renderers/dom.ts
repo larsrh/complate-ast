@@ -1,11 +1,11 @@
-import { Renderer } from "../renderer";
+import {Builder} from "../ast/builder";
 
-export class DOMRenderer implements Renderer<Node, Node> {
+export class DOMBuilder implements Builder<Node, Node> {
     constructor(
         private readonly document: Document
     ) {}
 
-    renderElement(tag: string, attributes: object, children: Node[]): Element {
+    element(tag: string, attributes: object, ...children: Node[]): Element {
         const node = this.document.createElement(tag);
         for (const [key, value] of Object.entries(attributes))
             node.setAttribute(key, value);
@@ -14,11 +14,11 @@ export class DOMRenderer implements Renderer<Node, Node> {
         return node;
     }
 
-    renderPrerendered(p: Node): Node {
+    prerendered(p: Node): Node {
         return p;
     }
 
-    renderText(text: string): Text {
+    text(text: string): Text {
         return this.document.createTextNode(text);
     }
 }

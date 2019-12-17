@@ -1,30 +1,30 @@
-import {Renderer} from "../renderer";
 import {StructuredAST, ElementNode, PrerenderedNode, TextNode} from "../ast/structured";
+import {Builder} from "../ast/builder";
 
-export class MappingRenderer<P, Q> implements Renderer<P, StructuredAST<Q>> {
+export class MappingBuilder<P, Q> implements Builder<StructuredAST<Q>, P> {
     constructor(
         private readonly fn: (p: P) => Q
     ) {}
 
-    renderElement(tag: string, attributes: object, children: StructuredAST<Q>[]): StructuredAST<Q> {
+    element(tag: string, attributes: object, ...children: StructuredAST<Q>[]): StructuredAST<Q> {
         return new ElementNode(tag, attributes, children);
     }
 
-    renderPrerendered(p: P): StructuredAST<Q> {
+    prerendered(p: P): StructuredAST<Q> {
         return new PrerenderedNode(this.fn(p));
     }
 
-    renderText(text: string): StructuredAST<Q> {
+    text(text: string): StructuredAST<Q> {
         return new TextNode(text);
     }
 }
 
-export class NormalizingRenderer<P> extends MappingRenderer<P, P> {
+export class NormalizingBuilder<P> extends MappingBuilder<P, P> {
     constructor() {
         super((p: P) => p);
     }
 
-    renderElement(tag: string, attributes: object, children: StructuredAST<P>[]): StructuredAST<P> {
+    element(tag: string, attributes: object, ...children: StructuredAST<P>[]): StructuredAST<P> {
         const newChildren = new Array<StructuredAST<P>>();
         let currentText = "";
         for (const child of children) {

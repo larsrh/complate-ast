@@ -1,4 +1,3 @@
-import { Renderer } from "../renderer"
 import { Builder } from "./builder"
 
 export type StructuredNodeType = "text" | "element" | "prerendered"
@@ -8,20 +7,20 @@ export interface StructuredAST<P> {
     readonly astType: "structured"
 }
 
-export function render<P, O>(ast: StructuredAST<P>, renderer: Renderer<P, O>): O {
+export function render<P, O>(ast: StructuredAST<P>, renderer: Builder<O, P>): O {
     if (ast.nodeType === "text") {
-        return renderer.renderText((ast as TextNode).text);
+        return renderer.text((ast as TextNode).text);
     }
     if (ast.nodeType == "element") {
         const node = ast as ElementNode<P>;
-        return renderer.renderElement(
+        return renderer.element(
             node.tag,
             node.attributes,
-            node.children.map(child => render(child, renderer))
+            ...node.children.map(child => render(child, renderer))
         );
     }
     if (ast.nodeType == "prerendered") {
-        return renderer.renderPrerendered((ast as PrerenderedNode<P>).content);
+        return renderer.prerendered((ast as PrerenderedNode<P>).content);
     }
     throw new Error("Invalid AST");
 }
