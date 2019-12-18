@@ -1,10 +1,11 @@
 import {Stream} from "../stream";
 import {Builder} from "./builder";
+import * as Universal from "./universal";
 
 // TODO use import ... from
 const escapeHtml = require("escape-html");
 
-export interface AST {
+export interface AST extends Universal.AST {
     readonly astType: "stream"
     render(stream: Stream): void
 }

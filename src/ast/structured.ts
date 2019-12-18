@@ -1,8 +1,9 @@
 import {Builder} from "./builder"
+import * as Universal from "./universal";
 
 export type NodeType = "text" | "element" | "prerendered"
 
-export interface AST<P> {
+export interface AST<P> extends Universal.AST {
     readonly nodeType: NodeType
     readonly astType: "structured"
 }

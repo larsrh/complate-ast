@@ -12,6 +12,7 @@
     "incremental": true,
     "strict": true,
     "moduleResolution": "node",
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "esModuleInterop": true
   }
 }
