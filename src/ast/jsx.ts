@@ -5,8 +5,9 @@ import * as Reify from "../js/reify";
 import * as Universal from "./universal";
 import * as Structured from "./structured";
 import * as Raw from "./raw";
-import {JSXElement, JSXExpression, JSXExpressionContainer, JSXText} from "../js/jsx";
+import {JSXElement, JSXExpressionContainer, JSXText} from "../js/jsx";
 import _ from "lodash";
+import * as Util from "../util";
 
 // TODO use import
 const jsx = require("acorn-jsx");
@@ -33,8 +34,8 @@ class ExpressionBuilder {
 
     element(
         tag: string,
-        attributes: Map<string, ESTree.Expression>,
-        children: JSXExpression[]
+        attributes: Map<string, ESTree.BaseExpression>,
+        children: ESTree.BaseExpression[]
     ): ESTree.Node {
         const isStatic =
             _.every(children, '_static_ast') &&
@@ -51,18 +52,53 @@ class ExpressionBuilder {
             staticChildren = children.map(child => extractAST(child as ESTree.Node)!);
         }
 
-        if (this.mode === "structured") {
-            const node = Reify.object(new Map<string, ESTree.Expression>([
-                ["nodeType", Reify.string("element")],
+        function adaptChild(child: ESTree.BaseExpression, all?: boolean): ESTree.Expression {
+            if (child.type === "JSXExpressionContainer" || all) {
+                const content =
+                    child.type === "JSXExpressionContainer" ?
+                        (child as JSXExpressionContainer).expression :
+                        child as ESTree.Expression;
+
+                // this can be anything: text or more elements, so we have to wrap it in prerendered
+                return Reify.object(new Map<string, ESTree.Expression>([
+                    ["astType", Reify.string("structured")],
+                    ["nodeType", Reify.string("prerendered")],
+                    ["content", content]
+                ]));
+            }
+            if (child.type === "ObjectExpression") {
+                // we have already processed this
+                return child as ESTree.ObjectExpression;
+            }
+
+            throw new Error(`Unknown expression type: ${child.type}`);
+        }
+
+        function adaptAttribute(expr: ESTree.BaseExpression): ESTree.Expression {
+            if (expr.type === "Literal")
+                return expr as ESTree.Literal;
+            // @ts-ignore
+            if (expr.type === "JSXExpressionContainer")
+                return (expr as any as JSXExpressionContainer).expression;
+            throw new Error(`Unknown attribute type: ${expr.type}`);
+        }
+
+        function makeStructured(all?: boolean): ESTree.Expression {
+            return Reify.object(new Map<string, ESTree.Expression>([
                 ["astType", Reify.string("structured")],
+                ["nodeType", Reify.string("element")],
                 ["tag", Reify.string(tag)],
-                ["attributes", Reify.object(attributes)],
-                ["children", Reify.array(children as ESTree.Expression[])]
+                ["attributes", Reify.object(Util.mapValues(attributes, adaptAttribute))],
+                ["children", Reify.array(children.map(child => adaptChild(child, all)))]
             ]));
+        }
+
+        if (this.mode === "structured") {
+            const node = makeStructured();
 
             if (isStatic) {
                 if (!_.every(staticChildren!, { astType: "structured" }))
-                    throw new Error("Bug: structured mode contains non-structured children");
+                    throw new Error("Bug: structured node contains static, non-structured children");
 
                 const ast = Structured.astBuilder.element(
                     tag,
@@ -78,7 +114,23 @@ class ExpressionBuilder {
             throw new Error("unsupported");
         }
         else { // raw
-            throw new Error("unsupported");
+            if (isStatic) {
+                if (!_.every(staticChildren!, { astType: "raw" }))
+                    throw new Error("Bug: raw node contains static, non-raw children");
+
+                const ast = Raw.astBuilder.element(
+                    tag,
+                    staticAttributes!,
+                    ...(staticChildren! as Raw.AST[])
+                );
+                const node = Reify.any(ast);
+                injectAST(node, ast);
+                return node;
+            }
+            else {
+                // need to fall back to structured node
+                return makeStructured(true);
+            }
         }
     }
 
@@ -116,9 +168,9 @@ export function preprocess(ast: ESTree.Node, mode: Universal.Kind): ESTree.Progr
             if (node.type === "JSXElement") {
                 const element = node as any as JSXElement;
                 const tag = element.openingElement.name.name;
-                const attributes = new Map<string, ESTree.Expression>(
+                const attributes = new Map<string, ESTree.BaseExpression>(
                     element.openingElement.attributes.map(attr =>
-                        [attr.name.name, attr.value as ESTree.Expression]
+                        [attr.name.name, attr.value as ESTree.BaseExpression]
                     )
                 );
                 const children = element.children;
@@ -128,15 +180,6 @@ export function preprocess(ast: ESTree.Node, mode: Universal.Kind): ESTree.Progr
             else if (node.type === "JSXText") {
                 const text = node as any as JSXText;
                 this.replace(builder.text(text.value));
-            }
-            // @ts-ignore
-            else if (node.type === "JSXExpressionContainer") {
-                // JSX expression containers can appear as attribute values (x = {y}) and in children
-                // we strip this out, which _may_ result in invalid code if there's a bug lurking somewhere
-                // but escodegen refuses to serialize any JSX expressions, so this is safe:
-                // in case of a bug, escodegen will blow up
-                const container = node as any as JSXExpressionContainer;
-                this.replace(container.expression);
             }
         }
     });

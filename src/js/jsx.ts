@@ -45,5 +45,5 @@ export interface JSXElement extends JSXExpression {
     readonly name: "JSXElement";
     readonly openingElement: JSXOpeningElement;
     readonly closingElement: JSXClosingElement | null; // null if openingElement.selfClosing
-    readonly children: JSXExpression[];
+    readonly children: ESTree.BaseExpression[];
 }
