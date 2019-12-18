@@ -61,6 +61,10 @@ describe("Reify", () => {
     it("any(structured(raw))", () => {
         const gen = genWithPrerendered(new Structured.ASTBuilder(), genNoPrerendered(Raw.astBuilder));
         checkReify(gen, Reify.any);
+    });
+
+    it("function", () => {
+        expect(() => Reify.any(() => {})).toThrow(/function/i);
     })
 
 });

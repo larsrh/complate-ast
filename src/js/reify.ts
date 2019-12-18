@@ -62,5 +62,9 @@ export function any(x: any): ESTree.Expression {
         return object(map);
     }
 
+    if (typeof x === "function") {
+        throw new Error("Functions can't be reified");
+    }
+
     throw new Error("Unknown value");
 }
