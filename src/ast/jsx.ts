@@ -36,6 +36,21 @@ class ExpressionBuilder {
         attributes: Map<string, ESTree.Expression>,
         children: JSXExpression[]
     ): ESTree.Node {
+        const isStatic =
+            _.every(children, '_static_ast') &&
+            // needs to be converted to array because lodash does weird things otherwise
+            _.every([...attributes.values()], { type: "Literal" });
+
+        let staticAttributes: object | null;
+        let staticChildren: Universal.AST[] | null;
+        if (isStatic) {
+            staticAttributes = Object.fromEntries([...attributes.entries()].map(entry => {
+                const [key, value] = entry;
+                return [key, (value as ESTree.Literal).value];
+            }));
+            staticChildren = children.map(child => extractAST(child as ESTree.Node)!);
+        }
+
         if (this.mode === "structured") {
             const node = Reify.object(new Map<string, ESTree.Expression>([
                 ["nodeType", Reify.string("element")],
@@ -45,29 +60,24 @@ class ExpressionBuilder {
                 ["children", Reify.array(children as ESTree.Expression[])]
             ]));
 
-            if (
-                // needs to be converted to array because lodash does weird things otherwise
-                _.every([...attributes.values()], { type: "Literal" }) &&
-                _.every(children, '_static_ast')
-            ) {
-                const staticAttributes = Object.fromEntries([...attributes.entries()].map(entry => {
-                    const [key, value] = entry;
-                    return [key, (value as ESTree.Literal).value];
-                }));
-                const staticChildren = children.map(child =>
-                    extractAST(child as ESTree.Node) as Structured.AST<never>
-                );
+            if (isStatic) {
+                if (!_.every(staticChildren!, { astType: "structured" }))
+                    throw new Error("Bug: structured mode contains non-structured children");
+
                 const ast = Structured.astBuilder.element(
                     tag,
-                    staticAttributes,
-                    ...staticChildren
+                    staticAttributes!,
+                    ...(staticChildren! as Structured.AST<never>[])
                 );
                 injectAST(node, ast);
             }
 
             return node;
         }
-        else {
+        else if (this.mode === "stream") {
+            throw new Error("unsupported");
+        }
+        else { // raw
             throw new Error("unsupported");
         }
     }

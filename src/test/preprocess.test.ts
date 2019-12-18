@@ -33,6 +33,7 @@ describe("Preprocessing (structured)", () => {
     check(
         "Simple wrapped text",
         "<div class='y'>test</div>",
+        // TODO replace with object literal
         builder.element("div", {class: "y"}, builder.text("test")),
         true
     );
