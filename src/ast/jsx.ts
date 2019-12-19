@@ -8,6 +8,7 @@ import * as Raw from "./raw";
 import {JSXElement, JSXExpressionContainer, JSXText} from "../js/jsx";
 import _ from "lodash";
 import {Builder} from "./builder";
+import {isMacro} from "../util";
 
 // TODO use import
 const jsx = require("acorn-jsx");
@@ -69,6 +70,7 @@ class Runtime {
 // not exactly a `Builder`: attributes are already expressions, not strings
 export interface ESTreeBuilder {
     element(tag: string, attributes: Map<string, ESTree.Expression>, children: ESTree.Expression[]): ESTree.Expression
+    macro(macro: string, attributes: Map<string, ESTree.Expression>, children: ESTree.Expression[]): ESTree.Expression
     text(text: string): ESTree.Expression
     readonly canStatic: boolean
 }
@@ -84,24 +86,18 @@ export class RuntimeBuilder implements ESTreeBuilder {
         this.runtime = new Runtime(runtimeExpression(runtime));
     }
 
-    element(
-        tag: string,
+    private elementish(
+        callee: ESTree.Expression,
+        tag: string | null,
         attributes: Map<string, ESTree.Expression>,
         children: ESTree.Expression[]
     ): ESTree.Expression {
+        const tagish = tag !== null ? [Reify.string(tag)] : [];
         return {
             type: "CallExpression",
-            callee: {
-                type: "MemberExpression",
-                object: this.runtime.builder(this.mode),
-                property: {
-                    type: "Identifier",
-                    name: "element"
-                },
-                computed: false
-            },
+            callee: callee,
             arguments: [
-                Reify.string(tag),
+                ...tagish,
                 Reify.object(attributes),
                 {
                     type: "SpreadElement",
@@ -116,6 +112,40 @@ export class RuntimeBuilder implements ESTreeBuilder {
                 }
             ]
         };
+    }
+
+    element(
+        tag: string,
+        attributes: Map<string, ESTree.Expression>,
+        children: ESTree.Expression[]
+    ): ESTree.Expression {
+        return this.elementish(
+            {
+                type: "MemberExpression",
+                object: this.runtime.builder(this.mode),
+                property: {
+                    type: "Identifier",
+                    name: "element"
+                },
+                computed: false
+            },
+            tag,
+            attributes,
+            children
+        );
+    }
+
+    macro(
+        macro: string,
+        attributes: Map<string, ESTree.Expression>,
+        children: ESTree.Expression[]
+    ): ESTree.Expression {
+        return this.elementish(
+            { type: "Identifier", name: macro },
+            null,
+            attributes,
+            children
+        );
     }
 
     text(text: string): ESTree.Expression {
@@ -152,6 +182,34 @@ export class OptimizingBuilder implements ESTreeBuilder {
         // "stream" intentionally left blank
     }
 
+    private staticChildren(children: ESTree.Expression[]): Universal.AST[] | null {
+        if (_.every(children, '_static_ast')) {
+            const staticChildren = children.map(child => extractAST(child as ESTree.Node)!);
+
+            if (!_.every(staticChildren, { astType: this.mode }))
+                throw new Error(`Bug: ${this.mode} node contains static, non-${this.mode} children`);
+
+            return staticChildren;
+        }
+
+        return null;
+    }
+
+    private normalizeChildren(isStaticChildren: boolean, children: ESTree.Expression[]): ESTree.Expression {
+        if (isStaticChildren)
+            // children are statically known --> we don't have to normalize them
+            // (this is a sufficient condition, but not the necessary condition! a child that directly stems from
+            // a macro also doesn't have to be normalized; future performance optimization)
+            return Reify.array(children);
+        else
+            // fallback: insert a call to `normalizeChildren`
+            return {
+                type: "CallExpression",
+                callee: this.runtime.normalizeChildren,
+                arguments: [Reify.string(this.mode), ...children]
+            };
+    }
+
     element(
         tag: string,
         attributes: Map<string, ESTree.Expression>,
@@ -163,7 +221,8 @@ export class OptimizingBuilder implements ESTreeBuilder {
         // this works on a best effort basis: if a particular subtree is static, we compute it here and attach
         // it as a non-standard field in the returned `ESTree.Node`
         // caveat: we may do superfluous work here, but that's okay, since all of this happens at compile time
-        const isStaticChildren = _.every(children, '_static_ast');
+        const staticChildren = this.staticChildren(children);
+        const isStaticChildren = staticChildren !== null;
         const isStaticAttributes = _.every([...attributes.values()], { type: "Literal" });
         const isStatic =
             // streaming AST can't be reified because it contains a function
@@ -172,14 +231,6 @@ export class OptimizingBuilder implements ESTreeBuilder {
             isStaticChildren &&
             // all attributes must be literal
             isStaticAttributes;
-
-        let staticChildren: Universal.AST[] | null;
-        if (isStaticChildren) {
-            staticChildren = children.map(child => extractAST(child as ESTree.Node)!);
-
-            if (!_.every(staticChildren, { astType: this.mode }))
-                throw new Error(`Bug: ${this.mode} node contains static, non-${this.mode} children`);
-        }
 
         let staticAttributes: object | null;
         if (isStaticAttributes)
@@ -199,20 +250,9 @@ export class OptimizingBuilder implements ESTreeBuilder {
             return node;
         }
 
-        let normalizedChildren: ESTree.Expression;
-        if (isStaticChildren)
-            // children are statically known --> we don't have to normalize them
-            // (this is a sufficient condition, but not the necessary condition! a child that directly stems from
-            // a macro also doesn't have to be normalized; future performance optimization)
-            normalizedChildren = Reify.array(children);
-        else
-            normalizedChildren = {
-                type: "CallExpression",
-                callee: this.runtime.normalizeChildren,
-                arguments: [Reify.string(this.mode), ...children]
-            };
-
         // at this point, `isStatic` is false
+
+        const normalizedChildren = this.normalizeChildren(isStaticChildren, children);
 
         if (this.mode === "structured") {
             return Reify.object(new Map<string, ESTree.Expression>([
@@ -270,6 +310,32 @@ export class OptimizingBuilder implements ESTreeBuilder {
         }
     }
 
+    macro(
+        tag: string,
+        attributes: Map<string, ESTree.Expression>,
+        children: ESTree.Expression[]
+    ): ESTree.Expression {
+        const normalizedChildren = this.normalizeChildren(
+            this.staticChildren(children) !== null,
+            children
+        );
+
+        return {
+            type: "CallExpression",
+            callee: {
+                type: "Identifier",
+                name: tag
+            },
+            arguments: [
+                Reify.object(attributes),
+                {
+                    type: "SpreadElement",
+                    argument: normalizedChildren
+                }
+            ]
+        };
+    }
+
     text(text: string): ESTree.Expression {
         if (this.mode === "structured") {
             const ast = Structured.astBuilder.text(text);
@@ -309,7 +375,11 @@ export function preprocess(ast: ESTree.Node, builder: ESTreeBuilder): ESTree.Pro
                     )
                 );
                 const children = element.children as ESTree.Expression[];
-                this.replace(builder.element(tag, attributes, children));
+                const replacement =
+                    isMacro(tag) ?
+                        builder.macro(tag, attributes, children) :
+                        builder.element(tag, attributes, children);
+                this.replace(replacement);
             }
             // @ts-ignore
             else if (node.type === "JSXExpressionContainer") {

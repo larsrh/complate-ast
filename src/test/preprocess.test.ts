@@ -122,6 +122,23 @@ describe("Preprocessing (examples)", () => {
             )
         );
 
+        check(
+            "Simple IIFE",
+            "(() => <div />)()",
+            Structured.astBuilder.element("div")
+        );
+
+        check(
+            "Simple macro",
+            `(() => {
+                function Div(props, ...children) {
+                    return <div>{children}</div>;
+                }
+                return <Div>abc</Div>
+            })()`,
+            Structured.astBuilder.element("div", {}, Structured.astBuilder.text("abc"))
+        );
+
         checkRuntimeFailure(
             "Invalid children",
             "<div>{ 3 }</div>"
