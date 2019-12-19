@@ -103,6 +103,12 @@ describe("Preprocessing (examples)", () => {
         );
 
         check(
+            "Coalesce void children",
+            "<div>{null}{false}{undefined}</div>",
+            Structured.astBuilder.element("div")
+        );
+
+        check(
             "Simple macro",
             `(() => {
                 function Div(props, ...children) {
