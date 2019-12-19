@@ -42,8 +42,13 @@ export interface JSXClosingElement extends JSXNode {
 }
 
 export interface JSXElement extends JSXExpression {
-    readonly name: "JSXElement";
+    readonly type: "JSXElement";
     readonly openingElement: JSXOpeningElement;
     readonly closingElement: JSXClosingElement | null; // null if openingElement.selfClosing
+    readonly children: ESTree.BaseExpression[];
+}
+
+export interface JSXFragment extends JSXExpression {
+    readonly type: "JSXFragment";
     readonly children: ESTree.BaseExpression[];
 }

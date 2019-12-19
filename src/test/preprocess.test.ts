@@ -109,6 +109,27 @@ describe("Preprocessing (examples)", () => {
         );
 
         check(
+            "Fragment (implicit)",
+            "<div><><br /><span /></></div>",
+            Structured.astBuilder.element("div", {},
+                Structured.astBuilder.element("br"),
+                Structured.astBuilder.element("span"),
+            )
+        );
+
+        check(
+            "Fragment (explicit)",
+            `(() => {
+                const Fragment = JSXRuntime.Fragment;
+                return <div><Fragment><br /><span /></Fragment></div>;
+            })()`,
+            Structured.astBuilder.element("div", {},
+                Structured.astBuilder.element("br"),
+                Structured.astBuilder.element("span"),
+            )
+        );
+
+        check(
             "Simple macro",
             `(() => {
                 function Div(props, ...children) {

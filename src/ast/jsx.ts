@@ -5,7 +5,7 @@ import * as Reify from "../js/reify";
 import * as Universal from "./universal";
 import * as Structured from "./structured";
 import * as Raw from "./raw";
-import {JSXElement, JSXExpressionContainer, JSXText} from "../js/jsx";
+import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../js/jsx";
 import _ from "lodash";
 import {Attributes, AttributeValue, Builder} from "./builder";
 import {Object, isMacro, mapObject, Gensym, escapeHTML} from "../util";
@@ -65,10 +65,14 @@ class Runtime {
     get escapeHTML(): ESTree.Expression {
         return this.select("escapeHTML");
     }
+
+    get fragment(): ESTree.Expression {
+        return this.select("Fragment");
+    }
 }
 
 export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree.Expression, ESTree.Expression> {
-    protected readonly runtime: Runtime;
+    readonly runtime: Runtime;
 
     constructor(
         readonly canStatic: boolean,
@@ -78,13 +82,13 @@ export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree
     }
 
     abstract element(
-        macro: string,
+        tag: string,
         attributes?: Attributes<ESTree.Expression>,
         ...children: ESTree.Expression[]
     ): ESTree.Expression;
 
     abstract macro(
-        macro: string,
+        macro: ESTree.Expression,
         attributes: Attributes<ESTree.Expression>,
         ...children: ESTree.Expression[]
     ): ESTree.Expression;
@@ -158,12 +162,12 @@ export class RuntimeBuilder extends ESTreeBuilder {
     }
 
     macro(
-        macro: string,
+        macro: ESTree.Expression,
         attributes: Attributes<ESTree.Expression>,
         ...children: ESTree.Expression[]
     ): ESTree.Expression {
         return this.elementish(
-            { type: "Identifier", name: macro },
+            macro,
             null,
             attributes,
             children
@@ -405,7 +409,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
     }
 
     macro(
-        tag: string,
+        macro: ESTree.Expression,
         attributes: Attributes<ESTree.Expression>,
         ...children: ESTree.Expression[]
     ): ESTree.Expression {
@@ -416,10 +420,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
 
         return {
             type: "CallExpression",
-            callee: {
-                type: "Identifier",
-                name: tag
-            },
+            callee: macro,
             arguments: [
                 Reify.object(attributes),
                 {
@@ -482,7 +483,7 @@ export function preprocess(ast: ESTree.Node, builder: ESTreeBuilder): ESTree.Pro
                 const children = element.children as ESTree.Expression[];
                 const replacement =
                     isMacro(tag) ?
-                        builder.macro(tag, attributes, ...children) :
+                        builder.macro({ type: "Identifier", name: tag }, attributes, ...children) :
                         builder.element(tag, attributes, ...children);
                 this.replace(replacement);
             }
@@ -490,6 +491,12 @@ export function preprocess(ast: ESTree.Node, builder: ESTreeBuilder): ESTree.Pro
             else if (node.type === "JSXExpressionContainer") {
                 const container = node as any as JSXExpressionContainer;
                 this.replace(container.expression);
+            }
+            // @ts-ignore
+            else if (node.type === "JSXFragment") {
+                const fragment = node as any as JSXFragment;
+                const children = fragment.children as ESTree.Expression[];
+                this.replace(builder.macro(builder.runtime.fragment, {}, ...children))
             }
             // @ts-ignore
             else if (node.type === "JSXText") {
