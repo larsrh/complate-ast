@@ -50,6 +50,9 @@ class ExpressionBuilder {
                 return [key, (value as ESTree.Literal).value];
             }));
             staticChildren = children.map(child => extractAST(child as ESTree.Node)!);
+
+            if (!_.every(staticChildren, { astType: this.mode }))
+                throw new Error(`Bug: ${this.mode} node contains static, non-${this.mode} children`);
         }
 
         function adaptChild(child: ESTree.BaseExpression, all?: boolean): ESTree.Expression {
@@ -97,9 +100,6 @@ class ExpressionBuilder {
             const node = makeStructured();
 
             if (isStatic) {
-                if (!_.every(staticChildren!, { astType: "structured" }))
-                    throw new Error("Bug: structured node contains static, non-structured children");
-
                 const ast = Structured.astBuilder.element(
                     tag,
                     staticAttributes!,
@@ -115,9 +115,6 @@ class ExpressionBuilder {
         }
         else { // raw
             if (isStatic) {
-                if (!_.every(staticChildren!, { astType: "raw" }))
-                    throw new Error("Bug: raw node contains static, non-raw children");
-
                 const ast = Raw.astBuilder.element(
                     tag,
                     staticAttributes!,
