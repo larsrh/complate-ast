@@ -1,8 +1,7 @@
 import {Builder} from "./builder";
 import * as Universal from "./universal";
+import {escapeHTML} from "../util";
 
-// TODO use import ... from
-const escapeHtml = require("escape-html");
 
 export interface AST extends Universal.AST {
     readonly astType: "raw"
@@ -26,7 +25,7 @@ export class ASTBuilder implements Builder<AST, string> {
                 raw += " ";
                 raw += key;
                 raw += "=\"";
-                raw += escapeHtml(value);
+                raw += escapeHTML(value);
                 raw += "\"";
             }
         raw += ">";
@@ -42,7 +41,7 @@ export class ASTBuilder implements Builder<AST, string> {
     }
 
     text(text: string): AST {
-        return create(escapeHtml(text));
+        return create(escapeHTML(text));
     }
 
 }

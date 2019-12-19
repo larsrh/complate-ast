@@ -1,9 +1,7 @@
 import {Stream} from "../stream";
 import {Builder} from "./builder";
 import * as Universal from "./universal";
-
-// TODO use import ... from
-const escapeHtml = require("escape-html");
+import {escapeHTML} from "../util";
 
 export interface AST extends Universal.AST {
     readonly astType: "stream"
@@ -32,7 +30,7 @@ export class ASTBuilder<P> implements Builder<AST, P> {
                     stream.add(" ");
                     stream.add(key);
                     stream.add("=\"");
-                    stream.add(escapeHtml(value));
+                    stream.add(escapeHTML(value));
                     stream.add("\"");
                 }
             stream.add(">");
@@ -51,7 +49,7 @@ export class ASTBuilder<P> implements Builder<AST, P> {
 
     text(text: string): AST {
         return create(stream => {
-            stream.add(escapeHtml(text))
+            stream.add(escapeHTML(text))
         });
     }
 
