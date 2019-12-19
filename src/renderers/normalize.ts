@@ -1,20 +1,11 @@
-import * as Structured from "../ast/structured";
 import * as Universal from "../ast/universal";
-import * as Raw from "../ast/raw";
-import * as Stream from "../ast/stream";
 import * as _ from "lodash";
+import {allBuilders} from "../ast/builders";
 
 // TODO implement as builder
 
-// TODO export (also used in testing)
-const builders: { [key in Universal.Kind]: Universal.Builder } = {
-    "structured": Structured.astBuilder,
-    "raw": Raw.astBuilder,
-    "stream": Stream.astBuilder
-};
-
 export function normalizeChildren(kind: Universal.Kind, ...children: any[]): Universal.AST[] {
-    const builder = builders[kind];
+    const builder = allBuilders[kind];
     return _.flattenDeep(children).filter(child =>
         child !== undefined && child !== false && child !== null
     ).map(child => {

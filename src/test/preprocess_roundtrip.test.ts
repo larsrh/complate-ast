@@ -1,36 +1,16 @@
-import {matrix} from "./util/roundtrip-matrix";
+import {force, matrix} from "./util/roundtrip-matrix";
 import fc from "fast-check";
 import {genNoPrerendered} from "../ast/gen";
 import * as Structured from "../ast/structured";
 import * as Raw from "../ast/raw";
-import * as Universal from "../ast/universal";
-import * as Stream from "../ast/stream";
 import {extractAST, parse, preprocess} from "../ast/jsx";
 import * as ESTree from "estree";
 import {runInNewContext} from "vm";
 import {generate} from "escodegen";
+import {CompactingBuilder} from "../renderers/compact";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../runtime/jsx-runtime";
-import {CompactingBuilder} from "../renderers/compact";
-import {StringStream} from "../stream";
-
-function force(ast: any): any {
-    if (ast.astType) {
-        const type = ast.astType as Universal.Kind;
-        // streaming ASTs need to be forced because we can't compare functions
-        if (type === "stream") {
-            const streamAST = ast as Stream.AST;
-            const buffer = new StringStream();
-            streamAST.render(buffer);
-            return buffer.content;
-        }
-
-        return ast;
-    }
-
-    throw new Error("Unknown object; not an AST");
-}
 
 describe("Preprocessing roundtrips", () => {
 

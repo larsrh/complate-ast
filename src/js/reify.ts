@@ -104,6 +104,22 @@ export namespace functions {
         }
     }
 
+    export function arrayForEach(array: ESTree.Expression, fn: ESTree.Expression): ESTree.CallExpression {
+        return {
+            type: "CallExpression",
+            callee: {
+                type: "MemberExpression",
+                object: array,
+                property: {
+                    type: "Identifier",
+                    name: "forEach"
+                },
+                computed: false
+            },
+            arguments: [fn]
+        }
+    }
+
     export function binaryPlus(left: ESTree.Expression, right: ESTree.Expression): ESTree.BinaryExpression {
         return {
             type: "BinaryExpression",

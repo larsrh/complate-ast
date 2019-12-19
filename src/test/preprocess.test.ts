@@ -3,11 +3,10 @@ import * as ESTree from "estree";
 import * as Structured from "../ast/structured";
 import {generate} from "escodegen";
 import {runInNewContext} from "vm";
-import {matrix} from "./util/roundtrip-matrix";
+import {force, matrix} from "./util/roundtrip-matrix";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../runtime/jsx-runtime";
-
 
 describe("Preprocessing (examples)", () => {
 
@@ -24,7 +23,7 @@ describe("Preprocessing (examples)", () => {
 
                 it("Equivalence", () => {
                     const result = runInNewContext(generate(processed), sandbox);
-                    expect(result).toEqual(expected);
+                    expect(force(result)).toEqual(force(expected));
                 });
 
                 const name = doStatic ? "Static" : "Non-static";
@@ -46,7 +45,7 @@ describe("Preprocessing (examples)", () => {
                 const input = parse(jsx);
                 const processed = preprocess(input, esBuilder) as ESTree.Program;
                 const generated = generate(processed);
-                expect(() => runInNewContext(generated, sandbox)).toThrow();
+                expect(() => force(runInNewContext(generated, sandbox))).toThrow();
             })
         }
 

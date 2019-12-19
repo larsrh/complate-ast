@@ -8,7 +8,7 @@ import * as Raw from "./raw";
 import {JSXElement, JSXExpressionContainer, JSXText} from "../js/jsx";
 import _ from "lodash";
 import {Attributes, AttributeValue, Builder} from "./builder";
-import {Object, isMacro, mapObject} from "../util";
+import {Object, isMacro, mapObject, Gensym, escapeHTML} from "../util";
 
 // TODO use import
 const jsx = require("acorn-jsx");
@@ -189,17 +189,21 @@ export class RuntimeBuilder extends ESTreeBuilder {
 
 export class OptimizingBuilder extends ESTreeBuilder {
     private readonly builder?: Builder<Universal.AST>;
+    private readonly gen: Gensym;
 
     constructor(
         private readonly mode: Universal.Kind,
         runtime?: string
     ) {
         super(mode !== "stream", runtime);
+
         if (this.mode === "structured")
             this.builder = Structured.astBuilder;
         else if (this.mode === "raw")
             this.builder = Raw.astBuilder;
         // "stream" intentionally left blank
+
+        this.gen = new Gensym("__stream__");
     }
 
     private staticChildren(children: ESTree.Expression[]): Universal.AST[] | null {
@@ -228,6 +232,25 @@ export class OptimizingBuilder extends ESTreeBuilder {
                 callee: this.runtime.normalizeChildren,
                 arguments: [Reify.string(this.mode), ...children]
             };
+    }
+
+    private streamGenAdd(): [ESTree.Identifier, (expr: ESTree.Expression) => ESTree.Expression] {
+        const stream = this.gen.sym();
+
+        function streamAdd(expr: ESTree.Expression): ESTree.Expression {
+            return {
+                type: "CallExpression",
+                callee: {
+                    type: "MemberExpression",
+                    object: stream,
+                    property: {type: "Identifier", name: "add"},
+                    computed: false
+                },
+                arguments: [expr]
+            };
+        }
+
+        return [stream, streamAdd];
     }
 
     element(
@@ -283,7 +306,59 @@ export class OptimizingBuilder extends ESTreeBuilder {
             });
         }
         else if (this.mode === "stream") {
-            throw new Error("unsupported");
+            const [stream, streamAdd] = this.streamGenAdd();
+
+            const render: ESTree.ArrowFunctionExpression = {
+                type: "ArrowFunctionExpression",
+                expression: true,
+                params: [{type: "Identifier", name: "x"}],
+                body: {
+                    type: "CallExpression",
+                    callee: {
+                        type: "MemberExpression",
+                        object: {type: "Identifier", name: "x"},
+                        property: {type: "Identifier", name: "render"},
+                        computed: false
+                    },
+                    arguments: [stream]
+                }
+            };
+
+            const body = [
+                streamAdd(Reify.string("<" + tag)),
+                // TODO escaping attributes needs to take false/true/null/undefined into account
+                ..._.flatMap(Object.entries(attributes), attribute => {
+                    const[key, value] = attribute;
+                    return [
+                        streamAdd(Reify.string(` ${key}="`)),
+                        streamAdd({
+                            type: "CallExpression",
+                            callee: this.runtime.escapeHTML,
+                            arguments: [value]
+                        }),
+                        streamAdd(Reify.string('"'))
+                    ]
+                }),
+                streamAdd(Reify.string(">")),
+                Reify.functions.arrayForEach(normalizedChildren, render),
+                streamAdd(Reify.string(`</${tag}>`))
+            ];
+
+            return Reify.object({
+                astType: Reify.string("stream"),
+                render: {
+                    type: "ArrowFunctionExpression",
+                    expression: false,
+                    params: [stream],
+                    body: {
+                        type: "BlockStatement",
+                        body: body.map(expr => ({
+                            type: "ExpressionStatement",
+                            expression: expr
+                        }))
+                    }
+                }
+            });
         }
         else { // raw
             const selector: ESTree.ArrowFunctionExpression = {
@@ -363,7 +438,19 @@ export class OptimizingBuilder extends ESTreeBuilder {
             return node;
         }
         else if (this.mode === "stream") {
-            throw new Error("unsupported");
+            const [stream, streamAdd] = this.streamGenAdd();
+            return Reify.object({
+                astType: Reify.string("stream"),
+                render: {
+                    type: "ArrowFunctionExpression",
+                    expression: false,
+                    params: [stream],
+                    body: streamAdd({
+                        type: "Literal",
+                        value: escapeHTML(text)
+                    })
+                }
+            });
         }
         else { // raw
             const ast = Raw.astBuilder.text(text);
