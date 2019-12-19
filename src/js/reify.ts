@@ -1,7 +1,8 @@
 import * as ESTree from "estree";
+import {Object} from "../util";
 
-export function object(fields: Map<string, ESTree.Expression>): ESTree.ObjectExpression {
-    const props = [...fields.entries()].map(field => {
+export function object(fields: Object<ESTree.Expression>): ESTree.ObjectExpression {
+    const props = Object.entries(fields).map(field => {
         const [key, value] = field;
         const prop: ESTree.Property = {
             type: "Property",
@@ -55,7 +56,7 @@ export function any(x: any): ESTree.Expression {
 
     if (typeof x === "object") {
         const o = x as object;
-        const map = new Map(Object.entries(o).map(entry => {
+        const map = Object.fromEntries(Object.entries(o).map(entry => {
             const [key, value] = entry;
             return [key, any(value)];
         }));

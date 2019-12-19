@@ -1,7 +1,13 @@
-export interface Builder<A, P = never> {
+import {Object} from "../util";
+
+export type AttributeValue = string | null;
+export type Attributes<AV = AttributeValue> = Object<AV>;
+
+export interface Builder<A, P = never, AV = AttributeValue> {
     text(text: string): A
     prerendered(p: P): A
-    element(tag: string, attributes?: object, ...children: A[]): A
+    element(tag: string, attributes?: Attributes<AV>, ...children: A[]): A
+    attributeValue(value: AttributeValue): AV
 }
 
 export function fromDOM<A>(builder: Builder<A>, node: Node): A {

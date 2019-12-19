@@ -1,11 +1,12 @@
 import * as Structured from "../ast/structured";
+import {Attributes} from "../ast/builder";
 
 export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
     constructor() {
         super((p: P) => p);
     }
 
-    element(tag: string, attributes: object, ...children: Structured.AST<P>[]): Structured.AST<P> {
+    element(tag: string, attributes: Attributes, ...children: Structured.AST<P>[]): Structured.AST<P> {
         const newChildren = new Array<Structured.AST<P>>();
         let currentText = "";
         for (const child of children) {

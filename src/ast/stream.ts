@@ -1,5 +1,5 @@
 import {Stream} from "../stream";
-import {Builder} from "./builder";
+import {Attributes, AttributeValue, Builder} from "./builder";
 import * as Universal from "./universal";
 import {escapeHTML} from "../util";
 
@@ -21,18 +21,19 @@ export class ASTBuilder<P> implements Builder<AST, P> {
     ) {
     }
 
-    element(tag: string, attributes?: object, ...children: AST[]): AST {
+    element(tag: string, attributes?: Attributes, ...children: AST[]): AST {
         return create(stream => {
             stream.add("<");
             stream.add(tag);
             if (attributes)
-                for (const [key, value] of Object.entries(attributes)) {
-                    stream.add(" ");
-                    stream.add(key);
-                    stream.add("=\"");
-                    stream.add(escapeHTML(value));
-                    stream.add("\"");
-                }
+                for (const [key, value] of Object.entries(attributes))
+                    if (value !== null) {
+                        stream.add(" ");
+                        stream.add(key);
+                        stream.add("=\"");
+                        stream.add(escapeHTML(value));
+                        stream.add("\"");
+                    }
             stream.add(">");
             children.forEach(child => child.render(stream));
             stream.add("</");
@@ -53,6 +54,9 @@ export class ASTBuilder<P> implements Builder<AST, P> {
         });
     }
 
+    attributeValue(value: AttributeValue): AttributeValue {
+        return value;
+    }
 }
 
 export const astBuilder = new ASTBuilder<string>(x => stream => stream.add(x));

@@ -30,13 +30,10 @@ describe("Reify", () => {
 
     it("object", () => {
         const gen = fc.array(fc.tuple(fc.fullUnicodeString(), fc.fullUnicodeString()));
-        checkReify(gen, array => {
-            const entries: [string, ESTree.Expression][] = array.map(entry => {
-                const [key, value] = entry;
-                return [key, Reify.string(value)]
-            });
-            return Reify.object(new Map(entries));
-        }, array => Object.fromEntries(array));
+        checkReify(gen, array =>
+            Reify.any(Object.fromEntries(array)),
+            array => Object.fromEntries(array)
+        );
     });
     it("any(object)", () => {
         const gen = fc.array(fc.tuple(fc.fullUnicodeString(), fc.fullUnicodeString())).map(entries => Object.fromEntries(entries));

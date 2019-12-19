@@ -1,4 +1,4 @@
-import {Builder} from "./builder";
+import {Attributes, AttributeValue, Builder} from "./builder";
 import * as Universal from "./universal";
 import {escapeHTML} from "../util";
 
@@ -15,18 +15,19 @@ export function create(value: string): AST {
 }
 
 export class ASTBuilder implements Builder<AST, string> {
-    element(tag: string, attributes?: object, ...children: AST[]): AST {
+    element(tag: string, attributes?: Attributes, ...children: AST[]): AST {
         let raw = "";
         raw += "<";
         raw += tag;
         if (attributes)
-            for (const [key, value] of Object.entries(attributes)) {
-                raw += " ";
-                raw += key;
-                raw += "=\"";
-                raw += escapeHTML(value);
-                raw += "\"";
-            }
+            for (const [key, value] of Object.entries(attributes))
+                if (value !== null) {
+                    raw += " ";
+                    raw += key;
+                    raw += "=\"";
+                    raw += escapeHTML(value);
+                    raw += "\"";
+                }
         raw += ">";
         children.forEach(child => raw += child.value);
         raw += "</";
@@ -43,6 +44,9 @@ export class ASTBuilder implements Builder<AST, string> {
         return create(escapeHTML(text));
     }
 
+    attributeValue(value: AttributeValue): AttributeValue {
+        return value;
+    }
 }
 
 export const astBuilder = new ASTBuilder();

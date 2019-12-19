@@ -7,8 +7,8 @@ import * as Structured from "./structured";
 import * as Raw from "./raw";
 import {JSXElement, JSXExpressionContainer, JSXText} from "../js/jsx";
 import _ from "lodash";
-import {Builder} from "./builder";
-import {isMacro} from "../util";
+import {Attributes, AttributeValue, Builder} from "./builder";
+import {Object, isMacro, mapObject} from "../util";
 
 // TODO use import
 const jsx = require("acorn-jsx");
@@ -67,29 +67,51 @@ class Runtime {
     }
 }
 
-// not exactly a `Builder`: attributes are already expressions, not strings
-export interface ESTreeBuilder {
-    element(tag: string, attributes: Map<string, ESTree.Expression>, children: ESTree.Expression[]): ESTree.Expression
-    macro(macro: string, attributes: Map<string, ESTree.Expression>, children: ESTree.Expression[]): ESTree.Expression
-    text(text: string): ESTree.Expression
-    readonly canStatic: boolean
-}
-
-export class RuntimeBuilder implements ESTreeBuilder {
-    private readonly runtime: Runtime;
-    readonly canStatic = false;
+export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree.Expression, ESTree.Expression> {
+    protected readonly runtime: Runtime;
 
     constructor(
-        private readonly mode: Universal.Kind,
+        readonly canStatic: boolean,
         runtime?: string
     ) {
         this.runtime = new Runtime(runtimeExpression(runtime));
     }
 
+    abstract element(
+        macro: string,
+        attributes?: Attributes<ESTree.Expression>,
+        ...children: ESTree.Expression[]
+    ): ESTree.Expression;
+
+    abstract macro(
+        macro: string,
+        attributes: Attributes<ESTree.Expression>,
+        ...children: ESTree.Expression[]
+    ): ESTree.Expression;
+
+    abstract text(text: string): ESTree.Expression;
+
+    prerendered(p: ESTree.Expression): ESTree.Expression {
+        return p;
+    }
+
+    attributeValue(value: AttributeValue): ESTree.Expression {
+        return Reify.any(value);
+    }
+}
+
+export class RuntimeBuilder extends ESTreeBuilder {
+    constructor(
+        private readonly mode: Universal.Kind,
+        runtime?: string
+    ) {
+        super(false, runtime);
+    }
+
     private elementish(
         callee: ESTree.Expression,
         tag: string | null,
-        attributes: Map<string, ESTree.Expression>,
+        attributes: Attributes<ESTree.Expression>,
         children: ESTree.Expression[]
     ): ESTree.Expression {
         const tagish = tag !== null ? [Reify.string(tag)] : [];
@@ -116,8 +138,8 @@ export class RuntimeBuilder implements ESTreeBuilder {
 
     element(
         tag: string,
-        attributes: Map<string, ESTree.Expression>,
-        children: ESTree.Expression[]
+        attributes?: Attributes<ESTree.Expression>,
+        ...children: ESTree.Expression[]
     ): ESTree.Expression {
         return this.elementish(
             {
@@ -130,15 +152,15 @@ export class RuntimeBuilder implements ESTreeBuilder {
                 computed: false
             },
             tag,
-            attributes,
+            attributes ? attributes : {},
             children
         );
     }
 
     macro(
         macro: string,
-        attributes: Map<string, ESTree.Expression>,
-        children: ESTree.Expression[]
+        attributes: Attributes<ESTree.Expression>,
+        ...children: ESTree.Expression[]
     ): ESTree.Expression {
         return this.elementish(
             { type: "Identifier", name: macro },
@@ -165,16 +187,14 @@ export class RuntimeBuilder implements ESTreeBuilder {
     }
 }
 
-export class OptimizingBuilder implements ESTreeBuilder {
-    private readonly runtime: Runtime;
+export class OptimizingBuilder extends ESTreeBuilder {
     private readonly builder?: Builder<Universal.AST>;
-    readonly canStatic = true;
 
     constructor(
         private readonly mode: Universal.Kind,
         runtime?: string
     ) {
-        this.runtime = new Runtime(runtimeExpression(runtime));
+        super(true, runtime);
         if (this.mode === "structured")
             this.builder = Structured.astBuilder;
         else if (this.mode === "raw")
@@ -212,9 +232,11 @@ export class OptimizingBuilder implements ESTreeBuilder {
 
     element(
         tag: string,
-        attributes: Map<string, ESTree.Expression>,
-        children: ESTree.Expression[]
+        _attributes?: Attributes<ESTree.Expression>,
+        ...children: ESTree.Expression[]
     ): ESTree.Expression {
+        const attributes: Attributes<ESTree.Expression> = _attributes ? _attributes : {};
+
         // normally, we would emit a `ESTree.Node` that, when executed, evaluates to the desired JSX AST
         // this is the general case because e.g. macros can perform arbitrary computations at runtime
         // however, if `isStatic` is true, we can also compute the full JSX AST at compile-time
@@ -223,7 +245,7 @@ export class OptimizingBuilder implements ESTreeBuilder {
         // caveat: we may do superfluous work here, but that's okay, since all of this happens at compile time
         const staticChildren = this.staticChildren(children);
         const isStaticChildren = staticChildren !== null;
-        const isStaticAttributes = _.every([...attributes.values()], { type: "Literal" });
+        const isStaticAttributes = _.every([...Object.values(attributes)], { type: "Literal" });
         const isStatic =
             // streaming AST can't be reified because it contains a function
             this.mode !== "stream" &&
@@ -232,12 +254,9 @@ export class OptimizingBuilder implements ESTreeBuilder {
             // all attributes must be literal
             isStaticAttributes;
 
-        let staticAttributes: object | null;
+        let staticAttributes: Attributes<AttributeValue> | null;
         if (isStaticAttributes)
-            staticAttributes = Object.fromEntries([...attributes.entries()].map(entry => {
-                const [key, value] = entry;
-                return [key, (value as ESTree.Literal).value];
-            }));
+            staticAttributes = mapObject(attributes, value => (value as ESTree.Literal).value as AttributeValue);
 
         if (isStatic) {
             const ast = this.builder!.element(
@@ -255,13 +274,13 @@ export class OptimizingBuilder implements ESTreeBuilder {
         const normalizedChildren = this.normalizeChildren(isStaticChildren, children);
 
         if (this.mode === "structured") {
-            return Reify.object(new Map<string, ESTree.Expression>([
-                ["astType", Reify.string("structured")],
-                ["nodeType", Reify.string("element")],
-                ["tag", Reify.string(tag)],
-                ["attributes", Reify.object(attributes)],
-                ["children", normalizedChildren]
-            ]));
+            return Reify.object({
+                astType: Reify.string("structured"),
+                nodeType: Reify.string("element"),
+                tag: Reify.string(tag),
+                attributes: Reify.object(attributes),
+                children: normalizedChildren
+            });
         }
         else if (this.mode === "stream") {
             throw new Error("unsupported");
@@ -285,7 +304,7 @@ export class OptimizingBuilder implements ESTreeBuilder {
             const parts = [
                 Reify.string("<" + tag),
                 // TODO escaping attributes needs to take false/true/null/undefined into account
-                ...[...attributes.entries()].map(attribute => {
+                ...Object.entries(attributes).map(attribute => {
                     const [key, value] = attribute;
                     return Reify.functions.binaryPlus(
                         Reify.string(` ${key}="`),
@@ -303,17 +322,17 @@ export class OptimizingBuilder implements ESTreeBuilder {
                 children,
                 Reify.string(`</${tag}>`)
             ];
-            return Reify.object(new Map<string, ESTree.Expression>([
-                ["astType", Reify.string("raw")],
-                ["value", Reify.functions.arrayJoin(Reify.array(parts))]
-            ]));
+            return Reify.object({
+                astType: Reify.string("raw"),
+                value: Reify.functions.arrayJoin(Reify.array(parts))
+            });
         }
     }
 
     macro(
         tag: string,
-        attributes: Map<string, ESTree.Expression>,
-        children: ESTree.Expression[]
+        attributes: Attributes<ESTree.Expression>,
+        ...children: ESTree.Expression[]
     ): ESTree.Expression {
         const normalizedChildren = this.normalizeChildren(
             this.staticChildren(children) !== null,
@@ -353,7 +372,6 @@ export class OptimizingBuilder implements ESTreeBuilder {
             return node;
         }
     }
-
 }
 
 export function parse(js: string): ESTree.Node {
@@ -369,7 +387,7 @@ export function preprocess(ast: ESTree.Node, builder: ESTreeBuilder): ESTree.Pro
             if (node.type === "JSXElement") {
                 const element = node as any as JSXElement;
                 const tag = element.openingElement.name.name;
-                const attributes = new Map<string, ESTree.Expression>(
+                const attributes = Object.fromEntries(
                     element.openingElement.attributes.map(attr =>
                         [attr.name.name, attr.value as ESTree.Expression]
                     )
@@ -377,8 +395,8 @@ export function preprocess(ast: ESTree.Node, builder: ESTreeBuilder): ESTree.Pro
                 const children = element.children as ESTree.Expression[];
                 const replacement =
                     isMacro(tag) ?
-                        builder.macro(tag, attributes, children) :
-                        builder.element(tag, attributes, children);
+                        builder.macro(tag, attributes, ...children) :
+                        builder.element(tag, attributes, ...children);
                 this.replace(replacement);
             }
             // @ts-ignore
