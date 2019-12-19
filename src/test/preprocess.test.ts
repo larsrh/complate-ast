@@ -1,38 +1,13 @@
-import {ESTreeBuilder, extractAST, OptimizingBuilder, parse, preprocess, RuntimeBuilder} from "../ast/jsx";
+import {extractAST, parse, preprocess} from "../ast/jsx";
 import * as ESTree from "estree";
 import * as Structured from "../ast/structured";
-import * as Raw from "../ast/raw";
-import * as Universal from "../ast/universal";
 import {generate} from "escodegen";
 import {runInNewContext} from "vm";
+import {matrix} from "./util/roundtrip-matrix";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../runtime/jsx-runtime";
 
-// TODO add stream
-const kinds: { [name: string]: Universal.Builder } = {
-    "raw": Raw.astBuilder,
-    "structured": Structured.astBuilder
-};
-
-function builders(kind: Universal.Kind): { [name: string]: ESTreeBuilder } {
-    return {
-        "runtime": new RuntimeBuilder(kind),
-        "optimizing": new OptimizingBuilder(kind)
-    };
-}
-
-function matrix(
-    action: (kind: Universal.Kind, astBuilder: Universal.Builder, name: string, esBuilder: ESTreeBuilder) => void
-) {
-    for (const [kind, astBuilder] of Object.entries(kinds))
-        describe(`Kind: ${kind}`, () => {
-            for (const [name, esBuilder] of Object.entries(builders(kind as Universal.Kind /* TODO remove */)))
-                describe(`Builder: ${name}`, () => {
-                    action(kind as Universal.Kind /* TODO remove */, astBuilder, name, esBuilder);
-                });
-        });
-}
 
 describe("Preprocessing (examples)", () => {
 

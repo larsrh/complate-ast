@@ -194,7 +194,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
         private readonly mode: Universal.Kind,
         runtime?: string
     ) {
-        super(true, runtime);
+        super(mode !== "stream", runtime);
         if (this.mode === "structured")
             this.builder = Structured.astBuilder;
         else if (this.mode === "raw")
