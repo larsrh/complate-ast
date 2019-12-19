@@ -5,7 +5,7 @@ import {JSDOM} from "jsdom";
 import {fromDOM} from "../ast/builder";
 import {StringStream} from "../stream";
 import {jsdomBuilder} from "../renderers/nodejs-dom";
-import {NormalizingBuilder} from "../renderers/normalize";
+import {CompactingBuilder} from "../renderers/compact";
 import {genNoPrerendered} from "../ast/gen";
 
 function parseHTML(html: string): Node {
@@ -50,7 +50,7 @@ describe("Structured AST roundtrips", () => {
             fc.assert(fc.property(gen, ast => {
                 const stream = new StringStream();
                 Structured.render(ast, Stream.astBuilderNoPrerender).render(stream);
-                const ast1 = Structured.render(ast, new NormalizingBuilder());
+                const ast1 = Structured.render(ast, new CompactingBuilder());
                 const ast2 = fromDOM(builder, parseHTML(stream.content));
                 expect(ast2).toEqual(ast1);
             }));
@@ -62,7 +62,7 @@ describe("Structured AST roundtrips", () => {
                 const stream2 = new StringStream();
                 Structured.render(ast, Stream.astBuilderNoPrerender).render(stream1);
                 Structured.render(
-                    Structured.render(ast, new NormalizingBuilder()),
+                    Structured.render(ast, new CompactingBuilder()),
                     Stream.astBuilderNoPrerender
                 ).render(stream2);
                 expect(stream2.content).toEqual(stream1.content);

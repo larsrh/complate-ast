@@ -2,7 +2,7 @@ import * as Structured from "../ast/structured";
 import * as Stream from "../ast/stream";
 import {genNoPrerendered, genWithPrerendered} from "../ast/gen";
 import fc from "fast-check";
-import {NormalizingBuilder} from "../renderers/normalize";
+import {CompactingBuilder} from "../renderers/compact";
 import {StringStream} from "../stream";
 
 describe("Structured AST basics", () => {
@@ -26,8 +26,8 @@ describe("Structured AST basics", () => {
 
     it("normalize idempotence", () => {
         fc.assert(fc.property(gen, ast => {
-            const ast2 = Structured.render(ast, new NormalizingBuilder());
-            const ast3 = Structured.render(ast2, new NormalizingBuilder());
+            const ast2 = Structured.render(ast, new CompactingBuilder());
+            const ast3 = Structured.render(ast2, new CompactingBuilder());
             expect(ast3).toEqual(ast2);
         }));
     });

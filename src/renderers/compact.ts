@@ -1,6 +1,6 @@
 import * as Structured from "../ast/structured";
 
-export class NormalizingBuilder<P> extends Structured.MappingBuilder<P, P> {
+export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
     constructor() {
         super((p: P) => p);
     }
