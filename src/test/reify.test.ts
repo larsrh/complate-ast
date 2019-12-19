@@ -5,6 +5,7 @@ import {generate} from "escodegen";
 import fc, {Arbitrary} from "fast-check";
 import * as Reify from "../js/reify";
 import {genNoPrerendered, genWithPrerendered} from "../ast/gen";
+import {runInNewContext} from "vm";
 
 function checkReify<T>(arb: Arbitrary<T>, reify: (t: T) => ESTree.Expression, post?: (t: T) => any) {
     fc.assert(fc.property(arb, t => {
@@ -14,7 +15,7 @@ function checkReify<T>(arb: Arbitrary<T>, reify: (t: T) => ESTree.Expression, po
             type: "ExpressionStatement"
         };
         const string = generate(stmt);
-        const t2 = eval(string);
+        const t2 = runInNewContext(string, {});
         expect(t2).toEqual(post ? post(t) : t);
     }));
 }

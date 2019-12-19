@@ -4,6 +4,7 @@ import * as Structured from "../ast/structured";
 import * as Raw from "../ast/raw";
 import * as Universal from "../ast/universal";
 import {generate} from "escodegen";
+import {runInNewContext} from "vm";
 
 function check(name: string, mode: Universal.Kind, jsx: string, expected: Universal.AST, expectStatic?: boolean) {
     describe(name, () => {
@@ -11,7 +12,7 @@ function check(name: string, mode: Universal.Kind, jsx: string, expected: Univer
         const processed = preprocess(input, mode) as ESTree.Program;
 
         it("Equivalence", () => {
-            const result = eval(generate(processed));
+            const result = runInNewContext(generate(processed), {});
             expect(result).toEqual(expected);
         });
 
