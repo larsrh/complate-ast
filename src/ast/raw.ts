@@ -2,7 +2,6 @@ import {Builder} from "./builder";
 import * as Universal from "./universal";
 import {escapeHTML} from "../util";
 
-
 export interface AST extends Universal.AST {
     readonly astType: "raw"
     readonly value: string

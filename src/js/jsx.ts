@@ -26,7 +26,7 @@ export interface JSXExpressionContainer extends JSXNode {
 export interface JSXAttribute extends JSXNode {
     readonly type: "JSXAttribute";
     readonly name: JSXIdentifier;
-    readonly value: JSXExpression | ESTree.Literal;
+    readonly value: ESTree.BaseExpression;
 }
 
 export interface JSXOpeningElement extends JSXNode {

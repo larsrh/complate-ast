@@ -1,4 +1,4 @@
-import {extractAST, parse, preprocess} from "../ast/jsx";
+import {ESTreeBuilder, extractAST, OptimizingBuilder, parse, preprocess, RuntimeBuilder} from "../ast/jsx";
 import * as ESTree from "estree";
 import * as Structured from "../ast/structured";
 import * as Raw from "../ast/raw";
@@ -6,99 +6,126 @@ import * as Universal from "../ast/universal";
 import {generate} from "escodegen";
 import {runInNewContext} from "vm";
 
-function check(name: string, mode: Universal.Kind, jsx: string, expected: Universal.AST, expectStatic?: boolean) {
-    describe(name, () => {
-        const input = parse(jsx);
-        const processed = preprocess(input, mode) as ESTree.Program;
+// underscored to test correct scoping (generated code references `JSXRuntime`)
+import * as _JSXRuntime from "../runtime/jsx-runtime";
 
-        it("Equivalence", () => {
-            const result = runInNewContext(generate(processed), {});
-            expect(result).toEqual(expected);
-        });
+// TODO add stream
+const kinds: { [name: string]: Universal.Builder } = {
+    "raw": Raw.astBuilder,
+    "structured": Structured.astBuilder
+};
 
-        const name = expectStatic ? "Static" : "Non-static";
-
-        it(name, () => {
-            const inner = (processed.body[0] as ESTree.ExpressionStatement).expression;
-            const extracted = extractAST(inner);
-            if (expectStatic)
-                expect(extracted).toEqual(expected);
-            else
-                expect(extracted).toBeNull();
-        });
-    });
+function builders(kind: Universal.Kind): { [name: string]: ESTreeBuilder } {
+    return {
+        "runtime": new RuntimeBuilder(kind),
+        "optimizing": new OptimizingBuilder(kind)
+    };
 }
 
-const builder = new Structured.ASTBuilder<any>();
+function matrix(
+    action: (kind: Universal.Kind, astBuilder: Universal.Builder, name: string, esBuilder: ESTreeBuilder) => void
+) {
+    for (const [kind, astBuilder] of Object.entries(kinds))
+        describe(`Kind: ${kind}`, () => {
+            for (const [name, esBuilder] of Object.entries(builders(kind as Universal.Kind /* TODO remove */)))
+                describe(`Builder: ${name}`, () => {
+                    action(kind as Universal.Kind /* TODO remove */, astBuilder, name, esBuilder);
+                });
+        });
+}
 
-describe("Preprocessing (structured)", () => {
+describe("Preprocessing (examples)", () => {
 
-    check(
-        "Simple wrapped text",
-        "structured",
-        "<div class='y'>test</div>",
-        // TODO replace with object literal
-        builder.element("div", {class: "y"}, builder.text("test")),
-        true
-    );
+    matrix((kind, astBuilder, name, esBuilder) => {
 
-    check(
-        "Computed attribute",
-        "structured",
-        "<div id={'a' + 'b'}></div>",
-        builder.element("div", {id: "ab"})
-    );
+        function check(name: string, jsx: string, _expected: Structured.AST<never>, expectStatic?: boolean) {
+            const doStatic = expectStatic && esBuilder.canStatic;
+            const expected = Structured.render(_expected, astBuilder);
+            describe(name, () => {
+                const input = parse(jsx);
+                const processed = preprocess(input, esBuilder) as ESTree.Program;
 
-    check(
-        "Computed child",
-        "structured",
-        "<div>{'a' + 'b'}</div>",
-        builder.element("div", {}, builder.prerendered("ab"))
-    );
+                const sandbox = doStatic ? {} : {JSXRuntime: _JSXRuntime};
 
-    check(
-        "Mixed children",
-        "structured",
-        "<div>{'a'}<br />{<span />}</div>",
-        builder.element(
-            "div",
-            {},
-            builder.prerendered("a"),
-            builder.element("br"),
-            builder.prerendered(builder.element("span"))
-        )
-    );
+                it("Equivalence", () => {
+                    const result = runInNewContext(generate(processed), sandbox);
+                    expect(result).toEqual(expected);
+                });
 
-});
+                const name = doStatic ? "Static" : "Non-static";
 
-describe("Preprocessing (raw)", () => {
+                it(name, () => {
+                    const inner = (processed.body[0] as ESTree.ExpressionStatement).expression;
+                    const extracted = extractAST(inner);
+                    if (doStatic)
+                        expect(extracted).toEqual(expected);
+                    else
+                        expect(extracted).toBeNull();
+                });
+            });
+        }
 
-    check(
-        "Simple wrapped text",
-        "raw",
-        "<div class='y'>test</div>",
-        Raw.create("<div class=\"y\">test</div>"),
-        true
-    );
+        function checkRuntimeFailure(name: string, jsx: string) {
+            const sandbox = {JSXRuntime: _JSXRuntime};
+            it(name, () => {
+                const input = parse(jsx);
+                const processed = preprocess(input, esBuilder) as ESTree.Program;
+                const generated = generate(processed);
+                expect(() => runInNewContext(generated, sandbox)).toThrow();
+            })
+        }
 
-    check(
-        "Computed attribute",
-        "raw",
-        "<div id={'a' + 'b'}><span /></div>",
-        builder.element("div", {id: "ab"}, builder.prerendered(Raw.astBuilder.element("span")))
-    );
 
-    check(
-        "Mixed children",
-        "raw",
-        "<div>{'a'}<br />{<span />}</div>",
-        builder.element(
-            "div",
-            {},
-            builder.prerendered("a"),
-            builder.prerendered(Raw.astBuilder.element("br")),
-            builder.prerendered(Raw.astBuilder.element("span"))
-        )
-    );
+        check(
+            "Simple wrapped text",
+            "<div class='y'>test</div>",
+            // TODO replace with object literal
+            Structured.astBuilder.element("div", {class: "y"}, Structured.astBuilder.text("test")),
+            true
+        );
+
+        check(
+            "Computed attribute",
+            "<div id={'a' + 'b'}></div>",
+            Structured.astBuilder.element("div", {id: "ab"})
+        );
+
+        check(
+            "Computed child",
+            "<div>{'a' + 'b'}</div>",
+            Structured.astBuilder.element("div", {}, Structured.astBuilder.text("ab"))
+        );
+
+        check(
+            "Mixed children",
+            "<div>{'a'}<br />{<span />}</div>",
+            Structured.astBuilder.element(
+                "div",
+                {},
+                Structured.astBuilder.text("a"),
+                Structured.astBuilder.element("br"),
+                Structured.astBuilder.element("span")
+            )
+        );
+
+        check(
+            "Mixed children (nested arrays)",
+            "<div>{['a', 'b']}<br />{[<span />, <br />]}</div>",
+            Structured.astBuilder.element(
+                "div",
+                {},
+                Structured.astBuilder.text("a"),
+                Structured.astBuilder.text("b"),
+                Structured.astBuilder.element("br"),
+                Structured.astBuilder.element("span"),
+                Structured.astBuilder.element("br")
+            )
+        );
+
+        checkRuntimeFailure(
+            "Invalid children",
+            "<div>{ 3 }</div>"
+        );
+    });
 
 });

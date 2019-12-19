@@ -20,7 +20,7 @@ export function object(fields: Map<string, ESTree.Expression>): ESTree.ObjectExp
     };
 }
 
-export function array(items: ESTree.Expression[]): ESTree.ArrayExpression {
+export function array(items: (ESTree.Expression | ESTree.SpreadElement)[]): ESTree.ArrayExpression {
     return {
         type: "ArrayExpression",
         elements: items
@@ -67,4 +67,49 @@ export function any(x: any): ESTree.Expression {
     }
 
     throw new Error("Unknown value");
+}
+
+export namespace functions {
+
+    export function arrayJoin(array: ESTree.Expression): ESTree.CallExpression {
+        return {
+            type: "CallExpression",
+            callee: {
+                type: "MemberExpression",
+                object: array,
+                property: {
+                    type: "Identifier",
+                    name: "join"
+                },
+                computed: false
+            },
+            arguments: [string("")]
+        }
+    }
+
+    export function arrayMap(array: ESTree.Expression, fn: ESTree.Expression): ESTree.CallExpression {
+        return {
+            type: "CallExpression",
+            callee: {
+                type: "MemberExpression",
+                object: array,
+                property: {
+                    type: "Identifier",
+                    name: "map"
+                },
+                computed: false
+            },
+            arguments: [fn]
+        }
+    }
+
+    export function binaryPlus(left: ESTree.Expression, right: ESTree.Expression): ESTree.BinaryExpression {
+        return {
+            type: "BinaryExpression",
+            operator: "+",
+            left: left,
+            right: right
+        };
+    }
+
 }
