@@ -49,6 +49,13 @@ describe("Preprocessing (examples)", () => {
             })
         }
 
+        function checkCompileFailure(name: string, jsx: string) {
+            it(name, () => {
+                const input = parse(jsx);
+                expect(() => preprocess(input, esBuilder)).toThrow();
+            })
+        }
+
 
         check(
             "Simple wrapped text",
@@ -94,6 +101,26 @@ describe("Preprocessing (examples)", () => {
                 Structured.astBuilder.element("span"),
                 Structured.astBuilder.element("br")
             )
+        );
+
+        check(
+            "Void element with attribute",
+            "<br class='foo' />",
+            Structured.astBuilder.element( "br", {class: "foo"}),
+            true
+        );
+
+        check(
+            "Void element with computed attribute",
+            "<br class={'fo' + 'o'} />",
+            Structured.astBuilder.element( "br", {class: "foo"})
+        );
+
+        check(
+            "Void element but not self-closing",
+            "<br></br>",
+            Structured.astBuilder.element("br"),
+            true
         );
 
         check(
@@ -143,6 +170,11 @@ describe("Preprocessing (examples)", () => {
         checkRuntimeFailure(
             "Invalid children",
             "<div>{ 3 }</div>"
+        );
+
+        checkCompileFailure(
+            "Statically non-empty void elements",
+            "<br>{null}</br>"
         );
     });
 

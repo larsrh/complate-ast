@@ -8,7 +8,7 @@ import * as Raw from "../ast/raw";
 import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
 import _ from "lodash";
 import {Attributes, AttributeValue, Builder} from "../ast/builder";
-import {isMacro, escapeHTML} from "./syntax";
+import {isMacro, escapeHTML, isVoidElement} from "./syntax";
 import {Object, mapObject} from "../util";
 
 // TODO use import
@@ -165,6 +165,9 @@ export class RuntimeBuilder extends ESTreeBuilder {
         attributes?: Attributes<ESTree.Expression>,
         ...children: ESTree.Expression[]
     ): ESTree.Expression {
+        if (isVoidElement(tag) && children.length > 0)
+            throw new Error(`Void element ${tag} must not have children`);
+
         return this.elementish(
             {
                 type: "MemberExpression",
@@ -317,6 +320,13 @@ export class OptimizingBuilder extends ESTreeBuilder {
         }
 
         // at this point, `isStatic` is false
+        // static AST computation would already throw if void rule is violated, so we only have to check at this point
+        // note that we disallow any children if they turn out to be empty
+        // e.g. <br>{null}</br> is not admissible because it is nonsensical
+
+        const isVoid = isVoidElement(tag);
+        if (isVoid && children.length > 0)
+            throw new Error(`Void element ${tag} must not have children`);
 
         const normalizedChildren = this.normalizeChildren(isStaticChildren, children);
 
@@ -364,8 +374,14 @@ export class OptimizingBuilder extends ESTreeBuilder {
                     ]
                 }),
                 bufferWrite(Reify.string(">")),
-                Reify.functions.arrayForEach(normalizedChildren, render),
-                bufferWrite(Reify.string(`</${tag}>`))
+                ...(
+                    isVoid ?
+                        [] :
+                        [
+                            Reify.functions.arrayForEach(normalizedChildren, render),
+                            bufferWrite(Reify.string(`</${tag}>`))
+                        ]
+                )
             ];
 
             return Reify.object({
@@ -418,8 +434,14 @@ export class OptimizingBuilder extends ESTreeBuilder {
                     );
                 }),
                 Reify.string(">"),
-                children,
-                Reify.string(`</${tag}>`)
+                ...(
+                    isVoid ?
+                        [] :
+                        [
+                            children,
+                            Reify.string(`</${tag}>`)
+                        ]
+                )
             ];
             return Reify.object({
                 astType: Reify.string("raw"),

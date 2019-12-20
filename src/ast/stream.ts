@@ -1,6 +1,6 @@
 import {Attributes, AttributeValue, Builder} from "./builder";
 import * as Universal from "./universal";
-import {escapeHTML} from "../jsx/syntax";
+import {escapeHTML, isVoidElement} from "../jsx/syntax";
 
 export interface Buffer {
     write(content: string): void
@@ -37,6 +37,10 @@ export class ASTBuilder<P> implements Builder<AST, P> {
     }
 
     element(tag: string, attributes?: Attributes, ...children: AST[]): AST {
+        const isVoid = isVoidElement(tag);
+        if (isVoid && children.length > 0)
+            throw new Error(`Void element ${tag} must not have children`);
+
         return create(buffer => {
             buffer.write("<");
             buffer.write(tag);
@@ -50,10 +54,12 @@ export class ASTBuilder<P> implements Builder<AST, P> {
                         buffer.write("\"");
                     }
             buffer.write(">");
-            children.forEach(child => child.render(buffer));
-            buffer.write("</");
-            buffer.write(tag);
-            buffer.write(">");
+            if (!isVoid) {
+                children.forEach(child => child.render(buffer));
+                buffer.write("</");
+                buffer.write(tag);
+                buffer.write(">");
+            }
         });
     }
 

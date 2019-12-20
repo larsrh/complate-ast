@@ -1,6 +1,6 @@
 import {Attributes, AttributeValue, Builder} from "./builder";
 import * as Universal from "./universal";
-import {escapeHTML} from "../jsx/syntax";
+import {escapeHTML, isVoidElement} from "../jsx/syntax";
 
 export interface AST extends Universal.AST {
     readonly astType: "raw"
@@ -29,10 +29,16 @@ export class ASTBuilder implements Builder<AST, string> {
                     raw += "\"";
                 }
         raw += ">";
-        children.forEach(child => raw += child.value);
-        raw += "</";
-        raw += tag;
-        raw += ">";
+        if (isVoidElement(tag)) {
+            if (children.length > 0)
+                throw new Error(`Void element ${tag} must not have children`);
+        }
+        else {
+            children.forEach(child => raw += child.value);
+            raw += "</";
+            raw += tag;
+            raw += ">";
+        }
         return create(raw);
     }
 

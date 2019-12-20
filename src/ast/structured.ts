@@ -1,6 +1,7 @@
 import {Attributes, AttributeValue, Builder} from "./builder"
 import * as Universal from "./universal";
 import {mapObject} from "../util";
+import {isVoidElement} from "../jsx/syntax";
 
 export type NodeType = "text" | "element" | "prerendered"
 
@@ -45,7 +46,10 @@ export class ElementNode<P> implements AST<P> {
         public readonly tag: string,
         public readonly attributes: Attributes,
         public readonly children: AST<P>[]
-    ) {}
+    ) {
+        if (this.children.length > 0 && isVoidElement(this.tag))
+            throw new Error(`Void element ${tag} must not have children`);
+    }
 }
 
 export class PrerenderedNode<P> implements AST<P> {
