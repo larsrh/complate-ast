@@ -1,4 +1,4 @@
-import {Attributes, AttributeValue, Builder} from "../ast/builder";
+import {Attributes, AttributeValue, Builder} from "../builder";
 
 export class DOMBuilder implements Builder<Node, Node> {
     constructor(

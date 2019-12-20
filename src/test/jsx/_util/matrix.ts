@@ -1,8 +1,8 @@
-import * as Universal from "../../ast/universal";
-import {ESTreeBuilder, OptimizingBuilder, RuntimeBuilder} from "../../ast/jsx";
-import {allBuilders} from "../../ast/builders";
-import * as Stream from "../../ast/stream";
-import {StringStream} from "../../stream";
+import * as Universal from "../../../ast/universal";
+import {ESTreeBuilder, OptimizingBuilder, RuntimeBuilder} from "../../../jsx/preprocess";
+import {allBuilders} from "../../../ast/builders";
+import * as Stream from "../../../ast/stream";
+import {StringStream} from "../../../stream";
 
 function builders(kind: Universal.Kind): { [name: string]: ESTreeBuilder } {
     return {

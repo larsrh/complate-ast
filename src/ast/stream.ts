@@ -1,7 +1,7 @@
 import {Stream} from "../stream";
 import {Attributes, AttributeValue, Builder} from "./builder";
 import * as Universal from "./universal";
-import {escapeHTML} from "../util";
+import {escapeHTML} from "../jsx/syntax";
 
 export interface AST extends Universal.AST {
     readonly astType: "stream"

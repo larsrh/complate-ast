@@ -1,10 +1,10 @@
-import * as Structured from "../ast/structured";
-import * as Raw from "../ast/raw";
+import * as Structured from "../../ast/structured";
+import * as Raw from "../../ast/raw";
 import * as ESTree from "estree";
 import {generate} from "escodegen";
 import fc, {Arbitrary} from "fast-check";
-import * as Reify from "../js/reify";
-import {genNoPrerendered, genWithPrerendered} from "../ast/gen";
+import * as Reify from "../../estree/reify";
+import {genNoPrerendered, genWithPrerendered} from "../../ast/gen";
 import {runInNewContext} from "vm";
 
 function checkReify<T>(arb: Arbitrary<T>, reify: (t: T) => ESTree.Expression, post?: (t: T) => any) {

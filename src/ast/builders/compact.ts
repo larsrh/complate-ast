@@ -1,5 +1,5 @@
-import * as Structured from "../ast/structured";
-import {Attributes} from "../ast/builder";
+import * as Structured from "../structured";
+import {Attributes} from "../builder";
 
 export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
     constructor() {

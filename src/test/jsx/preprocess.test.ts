@@ -1,12 +1,12 @@
-import {extractAST, parse, preprocess} from "../ast/jsx";
+import {extractAST, parse, preprocess} from "../../jsx/preprocess";
 import * as ESTree from "estree";
-import * as Structured from "../ast/structured";
+import * as Structured from "../../ast/structured";
 import {generate} from "escodegen";
 import {runInNewContext} from "vm";
-import {force, matrix} from "./util/roundtrip-matrix";
+import {force, matrix} from "./_util/matrix";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
-import * as _JSXRuntime from "../runtime/jsx-runtime";
+import * as _JSXRuntime from "../../jsx/runtime";
 
 describe("Preprocessing (examples)", () => {
 

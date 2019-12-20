@@ -1,16 +1,16 @@
-import {force, matrix} from "./util/roundtrip-matrix";
+import {force, matrix} from "./_util/matrix";
 import fc from "fast-check";
-import {genNoPrerendered} from "../ast/gen";
-import * as Structured from "../ast/structured";
-import * as Raw from "../ast/raw";
-import {extractAST, parse, preprocess} from "../ast/jsx";
+import {genNoPrerendered} from "../../ast/gen";
+import * as Structured from "../../ast/structured";
+import * as Raw from "../../ast/raw";
+import {extractAST, parse, preprocess} from "../../jsx/preprocess";
 import * as ESTree from "estree";
 import {runInNewContext} from "vm";
 import {generate} from "escodegen";
-import {CompactingBuilder} from "../renderers/compact";
+import {CompactingBuilder} from "../../ast/builders/compact";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
-import * as _JSXRuntime from "../runtime/jsx-runtime";
+import * as _JSXRuntime from "../../jsx/runtime";
 
 describe("Preprocessing roundtrips", () => {
 

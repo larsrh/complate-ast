@@ -1,14 +1,15 @@
 import {Parser} from "acorn";
 import {walk} from "estree-walker";
 import * as ESTree from "estree";
-import * as Reify from "../js/reify";
-import * as Universal from "./universal";
-import * as Structured from "./structured";
-import * as Raw from "./raw";
-import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../js/jsx";
+import * as Reify from "../estree/reify";
+import * as Universal from "../ast/universal";
+import * as Structured from "../ast/structured";
+import * as Raw from "../ast/raw";
+import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
 import _ from "lodash";
-import {Attributes, AttributeValue, Builder} from "./builder";
-import {Object, isMacro, mapObject, Gensym, escapeHTML} from "../util";
+import {Attributes, AttributeValue, Builder} from "../ast/builder";
+import {isMacro, escapeHTML} from "./syntax";
+import {Object, mapObject} from "../util";
 
 // TODO use import
 const jsx = require("acorn-jsx");
@@ -68,6 +69,25 @@ class Runtime {
 
     get fragment(): ESTree.Expression {
         return this.select("Fragment");
+    }
+}
+
+// TODO use hygiene?
+class Gensym {
+    private counter: bigint;
+
+    constructor(
+        readonly prefix: string
+    ) {
+        this.counter = BigInt(0);
+    }
+
+    sym(): ESTree.Identifier {
+        this.counter += BigInt(1);
+        return {
+            type: "Identifier",
+            name: this.prefix + this.counter
+        };
     }
 }
 

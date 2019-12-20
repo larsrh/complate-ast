@@ -1,9 +1,9 @@
-import * as Structured from "../ast/structured";
-import * as Stream from "../ast/stream";
-import {genNoPrerendered, genWithPrerendered} from "../ast/gen";
+import * as Structured from "../../ast/structured";
+import * as Stream from "../../ast/stream";
+import {genNoPrerendered, genWithPrerendered} from "../../ast/gen";
 import fc from "fast-check";
-import {CompactingBuilder} from "../renderers/compact";
-import {StringStream} from "../stream";
+import {CompactingBuilder} from "../../ast/builders/compact";
+import {StringStream} from "../../stream";
 
 describe("Structured AST basics", () => {
 

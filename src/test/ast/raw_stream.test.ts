@@ -1,9 +1,9 @@
-import * as Structured from "../ast/structured";
-import * as Raw from "../ast/raw";
-import * as Stream from "../ast/stream";
-import {genNoPrerendered} from "../ast/gen";
+import * as Structured from "../../ast/structured";
+import * as Raw from "../../ast/raw";
+import * as Stream from "../../ast/stream";
+import {genNoPrerendered} from "../../ast/gen";
 import fc from "fast-check";
-import {StringStream} from "../stream";
+import {StringStream} from "../../stream";
 
 describe("Raw AST", () => {
 

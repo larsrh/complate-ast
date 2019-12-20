@@ -1,6 +1,6 @@
-import * as Universal from "../ast/universal";
+import * as Universal from "../universal";
 import * as _ from "lodash";
-import {allBuilders} from "../ast/builders";
+import {allBuilders} from "../builders";
 
 // TODO implement as builder
 
