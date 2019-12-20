@@ -16,6 +16,11 @@ describe("Raw AST", () => {
             Structured.render(ast, Stream.astBuilder).render(buffer);
             expect(raw.value).toEqual(buffer.content);
         }));
-    })
+    });
+
+    it("Void element", () => {
+        const raw = Structured.render(Structured.astBuilder.element("br"), Raw.astBuilder);
+        expect(raw.value).toEqual("<br>");
+    });
 
 });
