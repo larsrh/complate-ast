@@ -21,10 +21,10 @@ function gen<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbit
                         ]
                 )
             ),
-        text: fc.fullUnicodeString().filter(text => text.trim() !== "").map(builder.text),
+        text: fc.fullUnicodeString().filter(text => text.trim() !== "").map(text => builder.text(text)),
         prerendered:
             prerenderedGen ?
-                prerenderedGen.map(builder.prerendered) :
+                prerenderedGen.map(p => builder.prerendered(p)) :
                 fc.constant(undefined),
         element:
             fc.tuple(
