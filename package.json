@@ -12,7 +12,6 @@
   "dependencies": {
     "acorn": "^7.1.0",
     "acorn-jsx": "^5.1.0",
-    "escape-html": "^1.0.3",
     "escodegen": "^1.12.0",
     "estree-walker": "^1.0.0",
     "jsdom": "^15.2.1",
