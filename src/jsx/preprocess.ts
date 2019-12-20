@@ -258,23 +258,23 @@ export class OptimizingBuilder extends ESTreeBuilder {
             };
     }
 
-    private streamGenAdd(): [ESTree.Identifier, (expr: ESTree.Expression) => ESTree.Expression] {
+    private streamGenWrite(): [ESTree.Identifier, (expr: ESTree.Expression) => ESTree.Expression] {
         const stream = this.gen.sym();
 
-        function streamAdd(expr: ESTree.Expression): ESTree.Expression {
+        function streamWrite(expr: ESTree.Expression): ESTree.Expression {
             return {
                 type: "CallExpression",
                 callee: {
                     type: "MemberExpression",
                     object: stream,
-                    property: {type: "Identifier", name: "add"},
+                    property: {type: "Identifier", name: "write"},
                     computed: false
                 },
                 arguments: [expr]
             };
         }
 
-        return [stream, streamAdd];
+        return [stream, streamWrite];
     }
 
     element(
@@ -330,7 +330,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             });
         }
         else if (this.mode === "stream") {
-            const [stream, streamAdd] = this.streamGenAdd();
+            const [stream, streamWrite] = this.streamGenWrite();
 
             const render: ESTree.ArrowFunctionExpression = {
                 type: "ArrowFunctionExpression",
@@ -349,23 +349,23 @@ export class OptimizingBuilder extends ESTreeBuilder {
             };
 
             const body = [
-                streamAdd(Reify.string("<" + tag)),
+                streamWrite(Reify.string("<" + tag)),
                 // TODO escaping attributes needs to take false/true/null/undefined into account
                 ..._.flatMap(Object.entries(attributes), attribute => {
                     const[key, value] = attribute;
                     return [
-                        streamAdd(Reify.string(` ${key}="`)),
-                        streamAdd({
+                        streamWrite(Reify.string(` ${key}="`)),
+                        streamWrite({
                             type: "CallExpression",
                             callee: this.runtime.escapeHTML,
                             arguments: [value]
                         }),
-                        streamAdd(Reify.string('"'))
+                        streamWrite(Reify.string('"'))
                     ]
                 }),
-                streamAdd(Reify.string(">")),
+                streamWrite(Reify.string(">")),
                 Reify.functions.arrayForEach(normalizedChildren, render),
-                streamAdd(Reify.string(`</${tag}>`))
+                streamWrite(Reify.string(`</${tag}>`))
             ];
 
             return Reify.object({
@@ -459,14 +459,14 @@ export class OptimizingBuilder extends ESTreeBuilder {
             return node;
         }
         else if (this.mode === "stream") {
-            const [stream, streamAdd] = this.streamGenAdd();
+            const [stream, streamWrite] = this.streamGenWrite();
             return Reify.object({
                 astType: Reify.string("stream"),
                 render: {
                     type: "ArrowFunctionExpression",
                     expression: false,
                     params: [stream],
-                    body: streamAdd({
+                    body: streamWrite({
                         type: "Literal",
                         value: escapeHTML(text)
                     })

@@ -23,22 +23,22 @@ export class ASTBuilder<P> implements Builder<AST, P> {
 
     element(tag: string, attributes?: Attributes, ...children: AST[]): AST {
         return create(stream => {
-            stream.add("<");
-            stream.add(tag);
+            stream.write("<");
+            stream.write(tag);
             if (attributes)
                 for (const [key, value] of Object.entries(attributes))
                     if (value !== null) {
-                        stream.add(" ");
-                        stream.add(key);
-                        stream.add("=\"");
-                        stream.add(escapeHTML(value));
-                        stream.add("\"");
+                        stream.write(" ");
+                        stream.write(key);
+                        stream.write("=\"");
+                        stream.write(escapeHTML(value));
+                        stream.write("\"");
                     }
-            stream.add(">");
+            stream.write(">");
             children.forEach(child => child.render(stream));
-            stream.add("</");
-            stream.add(tag);
-            stream.add(">");
+            stream.write("</");
+            stream.write(tag);
+            stream.write(">");
         });
     }
 
@@ -50,7 +50,7 @@ export class ASTBuilder<P> implements Builder<AST, P> {
 
     text(text: string): AST {
         return create(stream => {
-            stream.add(escapeHTML(text))
+            stream.write(escapeHTML(text))
         });
     }
 
@@ -59,5 +59,5 @@ export class ASTBuilder<P> implements Builder<AST, P> {
     }
 }
 
-export const astBuilder = new ASTBuilder<string>(x => stream => stream.add(x));
+export const astBuilder = new ASTBuilder<string>(x => stream => stream.write(x));
 export const astBuilderNoPrerender = new ASTBuilder<never>(x => stream => {});
