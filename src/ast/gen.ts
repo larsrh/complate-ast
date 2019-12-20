@@ -21,7 +21,15 @@ function gen<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbit
                         ]
                 )
             ),
-        text: fc.fullUnicodeString().filter(text => text.trim() !== "").map(text => builder.text(text)),
+        text:
+            fc.fullUnicodeString()
+                .filter(text =>
+                    text.trim() !== "" &&
+                        // required for preprocess_roundtrip: strings containing { or } produce JSX parse errors
+                        !text.includes('{') &&
+                        !text.includes('}')
+                )
+                .map(text => builder.text(text)),
         prerendered:
             prerenderedGen ?
                 prerenderedGen.map(p => builder.prerendered(p)) :
