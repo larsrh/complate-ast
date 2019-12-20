@@ -38,7 +38,8 @@ function runtimeExpression(_runtime?: string): ESTree.Identifier {
 
 class Runtime {
     constructor(
-        private readonly runtime: ESTree.Expression
+        private readonly runtime: ESTree.Expression,
+        private readonly mode: Universal.Kind
     ) {}
 
     private select(name: string): ESTree.Expression {
@@ -52,27 +53,38 @@ class Runtime {
             property: identifier,
             computed: false
         };
+    }
 
+    private call(name: string, ...args: (ESTree.Expression | ESTree.SpreadElement)[]): ESTree.Expression {
+        return {
+            type: "CallExpression",
+            callee: this.select(name),
+            arguments: args
+        };
     }
 
     builder(mode: Universal.Kind): ESTree.Expression {
         return this.select(`${mode}Builder`);
     }
 
-    get normalizeChildren(): ESTree.Expression {
-        return this.select("normalizeChildren");
+    normalizeChildren(children: ESTree.Expression[]): ESTree.Expression {
+        return this.call(
+            "normalizeChildren",
+            Reify.string(this.mode),
+            ...children
+        );
     }
 
-    get escapeHTML(): ESTree.Expression {
-        return this.select("escapeHTML");
+    escapeHTML(argument: ESTree.Expression): ESTree.Expression {
+        return this.call("escapeHTML", argument);
     }
 
     get fragment(): ESTree.Expression {
         return this.select("Fragment");
     }
 
-    get isVoidElement(): ESTree.Expression {
-        return this.select("isVoidElement");
+    isVoidElement(argument: ESTree.Expression): ESTree.Expression {
+        return this.call("isVoidElement", argument);
     }
 }
 
@@ -100,9 +112,10 @@ export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree
 
     constructor(
         readonly canStatic: boolean,
+        readonly mode: Universal.Kind,
         runtime?: string
     ) {
-        this.runtime = new Runtime(runtimeExpression(runtime));
+        this.runtime = new Runtime(runtimeExpression(runtime), mode);
     }
 
     abstract element(
@@ -130,10 +143,10 @@ export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree
 
 export class RuntimeBuilder extends ESTreeBuilder {
     constructor(
-        private readonly mode: Universal.Kind,
+        mode: Universal.Kind,
         runtime?: string
     ) {
-        super(false, runtime);
+        super(false, mode, runtime);
     }
 
     private elementish(
@@ -151,14 +164,7 @@ export class RuntimeBuilder extends ESTreeBuilder {
                 Reify.object(attributes),
                 {
                     type: "SpreadElement",
-                    argument: {
-                        type: "CallExpression",
-                        callee: this.runtime.normalizeChildren,
-                        arguments: [
-                            Reify.string(this.mode),
-                            ...children
-                        ]
-                    }
+                    argument: this.runtime.normalizeChildren(children)
                 }
             ]
         };
@@ -225,17 +231,17 @@ function makeStatement(expr: ESTree.Expression): ESTree.Statement {
         type: "ExpressionStatement",
         expression: expr
     }
-};
+}
 
 export class OptimizingBuilder extends ESTreeBuilder {
     private readonly builder?: Builder<Universal.AST>;
     private readonly gen: Gensym;
 
     constructor(
-        private readonly mode: Universal.Kind,
+        mode: Universal.Kind,
         runtime?: string
     ) {
-        super(mode !== "stream", runtime);
+        super(mode !== "stream", mode, runtime);
 
         if (this.mode === "structured")
             this.builder = Structured.astBuilder;
@@ -267,11 +273,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             return Reify.array(children);
         else
             // fallback: insert a call to `normalizeChildren`
-            return {
-                type: "CallExpression",
-                callee: this.runtime.normalizeChildren,
-                arguments: [Reify.string(this.mode), ...children]
-            };
+            return this.runtime.normalizeChildren(children);
     }
 
     private bufferGenWrite(): [ESTree.Identifier, (expr: ESTree.Expression) => ESTree.Expression] {
@@ -404,11 +406,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                     const[key, value] = attribute;
                     return [
                         bufferWrite(Reify.string(` ${key}="`)),
-                        bufferWrite({
-                            type: "CallExpression",
-                            callee: this.runtime.escapeHTML,
-                            arguments: [value]
-                        }),
+                        bufferWrite(this.runtime.escapeHTML(value)),
                         bufferWrite(Reify.string('"'))
                     ]
                 }),
@@ -428,11 +426,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                 // TODO runtime check: void && children > 0
                 bodyClose = [{
                     type: "IfStatement",
-                    test: {
-                        type: "CallExpression",
-                        callee: this.runtime.isVoidElement,
-                        arguments: [tagIdentifier]
-                    },
+                    test: this.runtime.isVoidElement(tagIdentifier),
                     consequent: {
                         type: "BlockStatement",
                         body: []
@@ -477,14 +471,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                     const [key, value] = attribute;
                     return Reify.functions.binaryPlus(
                         Reify.string(` ${key}="`),
-                        Reify.functions.binaryPlus(
-                            {
-                                type: "CallExpression",
-                                callee: this.runtime.escapeHTML,
-                                arguments: [value]
-                            },
-                            Reify.string('"')
-                        )
+                        Reify.functions.binaryPlus(this.runtime.escapeHTML(value), Reify.string('"'))
                     );
                 }),
                 Reify.string(">"),
@@ -508,11 +495,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                         type: "SpreadElement",
                         argument: {
                             type: "ConditionalExpression",
-                            test: {
-                                type: "CallExpression",
-                                callee: this.runtime.isVoidElement,
-                                arguments: [tagIdentifier]
-                            },
+                            test: this.runtime.isVoidElement(tagIdentifier),
                             consequent: {
                                 type: "ArrayExpression",
                                 elements: []
