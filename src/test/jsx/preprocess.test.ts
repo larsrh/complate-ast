@@ -176,6 +176,38 @@ describe("Preprocessing (examples)", () => {
             "Statically non-empty void elements",
             "<br>{null}</br>"
         );
+
+
+        if (name !== "runtime") {
+
+            describe("Dynamic tags", () => {
+
+                check(
+                    "Simple",
+                    `(() => {
+                        const tag = "h3";
+                        return <$tag class="foo">abc</$tag>
+                    })()`,
+                    Structured.astBuilder.element("h3", {class: "foo"}, Structured.astBuilder.text("abc"))
+                );
+
+                describe.skip("Void check", () => {
+
+                    checkRuntimeFailure(
+                        "Void check",
+                        `(() => {
+                            const tag = "br";
+                            return <$tag>abc</$tag>
+                        })()`
+                    );
+
+                });
+
+            });
+
+        }
+
     });
+
 
 });

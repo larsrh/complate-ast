@@ -8,8 +8,11 @@ export function escapeHTML(s: string): string {
 }
 
 export function isMacro(tag: string): boolean {
-    const first = tag.charAt(0);
-    return first.toLowerCase() !== first;
+    return /^[A-Z]/.test(tag);
+}
+
+export function isDynamic(tag: string): boolean {
+    return tag.charAt(0) === '$';
 }
 
 export const voidElements = new Set([

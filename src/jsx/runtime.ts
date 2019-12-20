@@ -1,5 +1,5 @@
 export {normalizeChildren} from "../ast/builders/normalize";
-export {escapeHTML} from "./syntax";
+export {escapeHTML, isVoidElement} from "./syntax";
 
 export {astBuilder as streamBuilder} from "../ast/stream";
 export {astBuilder as structuredBuilder} from "../ast/structured";

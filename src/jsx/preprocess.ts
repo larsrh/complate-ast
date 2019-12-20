@@ -8,7 +8,7 @@ import * as Raw from "../ast/raw";
 import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
 import _ from "lodash";
 import {Attributes, AttributeValue, Builder} from "../ast/builder";
-import {isMacro, escapeHTML, isVoidElement} from "./syntax";
+import {isMacro, escapeHTML, isVoidElement, isDynamic} from "./syntax";
 import {Object, mapObject} from "../util";
 
 // TODO use import
@@ -69,6 +69,10 @@ class Runtime {
 
     get fragment(): ESTree.Expression {
         return this.select("Fragment");
+    }
+
+    get isVoidElement(): ESTree.Expression {
+        return this.select("isVoidElement");
     }
 }
 
@@ -167,6 +171,8 @@ export class RuntimeBuilder extends ESTreeBuilder {
     ): ESTree.Expression {
         if (isVoidElement(tag) && children.length > 0)
             throw new Error(`Void element ${tag} must not have children`);
+        if (isDynamic(tag))
+            throw new Error(`Dynamic element ${tag} not supported in runtime mode (requires "eval")`);
 
         return this.elementish(
             {
@@ -213,6 +219,13 @@ export class RuntimeBuilder extends ESTreeBuilder {
         };
     }
 }
+
+function makeStatement(expr: ESTree.Expression): ESTree.Statement {
+    return {
+        type: "ExpressionStatement",
+        expression: expr
+    }
+};
 
 export class OptimizingBuilder extends ESTreeBuilder {
     private readonly builder?: Builder<Universal.AST>;
@@ -296,13 +309,16 @@ export class OptimizingBuilder extends ESTreeBuilder {
         const staticChildren = this.staticChildren(children);
         const isStaticChildren = staticChildren !== null;
         const isStaticAttributes = _.every([...Object.values(attributes)], { type: "Literal" });
+        const isDynamicTag = isDynamic(tag);
         const isStatic =
             // streaming AST can't be reified because it contains a function
             this.mode !== "stream" &&
             // all children need to be static
             isStaticChildren &&
             // all attributes must be literal
-            isStaticAttributes;
+            isStaticAttributes &&
+            // tag must not be dynamic
+            !isDynamicTag;
 
         let staticAttributes: Attributes<AttributeValue> | null;
         if (isStaticAttributes)
@@ -323,18 +339,41 @@ export class OptimizingBuilder extends ESTreeBuilder {
         // static AST computation would already throw if void rule is violated, so we only have to check at this point
         // note that we disallow any children if they turn out to be empty
         // e.g. <br>{null}</br> is not admissible because it is nonsensical
+        // if the tag is dynamic, we need to perform the check at runtime
 
         const isVoid = isVoidElement(tag);
-        if (isVoid && children.length > 0)
+        if (!isDynamicTag && isVoid && children.length > 0)
             throw new Error(`Void element ${tag} must not have children`);
 
         const normalizedChildren = this.normalizeChildren(isStaticChildren, children);
 
+        let tagIdentifier: ESTree.Expression;
+        if (isDynamicTag)
+            tagIdentifier = {
+                type: "Identifier",
+                name: tag.substring(1)
+            };
+        else
+            tagIdentifier = Reify.string(tag);
+
+        let tagOpen: ESTree.Expression;
+        if (isDynamicTag)
+            tagOpen = Reify.functions.binaryPlus(Reify.string("<"), tagIdentifier);
+        else
+            tagOpen = Reify.string("<" + tag);
+
+        let tagClose: ESTree.Expression;
+        if (isDynamicTag)
+            tagClose = Reify.functions.binaryPlus(Reify.string("</"), Reify.functions.binaryPlus(tagIdentifier, Reify.string(">")));
+        else
+            tagClose = Reify.string(`</${tag}>`);
+
         if (this.mode === "structured") {
+            // we could put a runtime check here, but this will throw an error at some point during rendering
             return Reify.object({
                 astType: Reify.string("structured"),
                 nodeType: Reify.string("element"),
-                tag: Reify.string(tag),
+                tag: tagIdentifier,
                 attributes: Reify.object(attributes),
                 children: normalizedChildren
             });
@@ -358,8 +397,8 @@ export class OptimizingBuilder extends ESTreeBuilder {
                 }
             };
 
-            const body = [
-                bufferWrite(Reify.string("<" + tag)),
+            const bodyOpen = [
+                bufferWrite(tagOpen),
                 // TODO escaping attributes needs to take false/true/null/undefined into account
                 ..._.flatMap(Object.entries(attributes), attribute => {
                     const[key, value] = attribute;
@@ -373,16 +412,36 @@ export class OptimizingBuilder extends ESTreeBuilder {
                         bufferWrite(Reify.string('"'))
                     ]
                 }),
-                bufferWrite(Reify.string(">")),
-                ...(
-                    isVoid ?
-                        [] :
-                        [
-                            Reify.functions.arrayForEach(normalizedChildren, render),
-                            bufferWrite(Reify.string(`</${tag}>`))
-                        ]
-                )
-            ];
+                bufferWrite(Reify.string(">"))
+            ].map(makeStatement);
+
+            const regularBodyClose = [
+                Reify.functions.arrayForEach(normalizedChildren, render),
+                bufferWrite(tagClose)
+            ].map(makeStatement);
+            let bodyClose: ESTree.Statement[];
+            if (isVoid)
+                bodyClose = [];
+            else if (!isDynamicTag)
+                bodyClose = regularBodyClose;
+            else
+                // TODO runtime check: void && children > 0
+                bodyClose = [{
+                    type: "IfStatement",
+                    test: {
+                        type: "CallExpression",
+                        callee: this.runtime.isVoidElement,
+                        arguments: [tagIdentifier]
+                    },
+                    consequent: {
+                        type: "BlockStatement",
+                        body: []
+                    },
+                    alternate: {
+                        type: "BlockStatement",
+                        body: regularBodyClose
+                    }
+                }];
 
             return Reify.object({
                 astType: Reify.string("stream"),
@@ -392,10 +451,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                     params: [buffer],
                     body: {
                         type: "BlockStatement",
-                        body: body.map(expr => ({
-                            type: "ExpressionStatement",
-                            expression: expr
-                        }))
+                        body: [...bodyOpen, ...bodyClose]
                     }
                 }
             });
@@ -412,12 +468,10 @@ export class OptimizingBuilder extends ESTreeBuilder {
                     computed: false
                 }
             };
-            const children: ESTree.SpreadElement = {
-                type: "SpreadElement",
-                argument: Reify.functions.arrayMap(normalizedChildren, selector)
-            };
-            const parts = [
-                Reify.string("<" + tag),
+            const children = Reify.functions.arrayMap(normalizedChildren, selector);
+
+            const partsOpen = [
+                tagOpen,
                 // TODO escaping attributes needs to take false/true/null/undefined into account
                 ...Object.entries(attributes).map(attribute => {
                     const [key, value] = attribute;
@@ -434,18 +488,44 @@ export class OptimizingBuilder extends ESTreeBuilder {
                     );
                 }),
                 Reify.string(">"),
-                ...(
-                    isVoid ?
-                        [] :
-                        [
-                            children,
-                            Reify.string(`</${tag}>`)
-                        ]
-                )
             ];
+
+            let partsClosed: (ESTree.Expression | ESTree.SpreadElement)[];
+            if (isVoid)
+                partsClosed = [];
+            else if (!isDynamicTag)
+                partsClosed = [
+                    {
+                        type: "SpreadElement",
+                        argument: children
+                    },
+                    tagClose
+                ];
+            else
+                // TODO runtime check: void && children > 0
+                partsClosed = [
+                    {
+                        type: "SpreadElement",
+                        argument: {
+                            type: "ConditionalExpression",
+                            test: {
+                                type: "CallExpression",
+                                callee: this.runtime.isVoidElement,
+                                arguments: [tagIdentifier]
+                            },
+                            consequent: {
+                                type: "ArrayExpression",
+                                elements: []
+                            },
+                            alternate: children
+                        }
+                    },
+                    tagClose
+                ];
+
             return Reify.object({
                 astType: Reify.string("raw"),
-                value: Reify.functions.arrayJoin(Reify.array(parts))
+                value: Reify.functions.arrayJoin(Reify.array([...partsOpen, ...partsClosed]))
             });
         }
     }

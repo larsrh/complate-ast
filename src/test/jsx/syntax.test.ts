@@ -6,6 +6,7 @@ describe("JSX/HTML syntax", () => {
 
        it("Upper-case is macro", () => expect(isMacro("Hello")).toBe(true));
        it("Lower-case is not macro", () => expect(isMacro("hello")).toBe(false));
+       it("$ is not macro", () => expect(isMacro("$Test")).toBe(false));
 
    });
 
