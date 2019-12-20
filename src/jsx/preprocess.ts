@@ -227,7 +227,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             this.builder = Raw.astBuilder;
         // "stream" intentionally left blank
 
-        this.gen = new Gensym("__stream__");
+        this.gen = new Gensym("__buffer__");
     }
 
     private staticChildren(children: ESTree.Expression[]): Universal.AST[] | null {
@@ -258,15 +258,15 @@ export class OptimizingBuilder extends ESTreeBuilder {
             };
     }
 
-    private streamGenWrite(): [ESTree.Identifier, (expr: ESTree.Expression) => ESTree.Expression] {
-        const stream = this.gen.sym();
+    private bufferGenWrite(): [ESTree.Identifier, (expr: ESTree.Expression) => ESTree.Expression] {
+        const buffer = this.gen.sym();
 
-        function streamWrite(expr: ESTree.Expression): ESTree.Expression {
+        function bufferWrite(expr: ESTree.Expression): ESTree.Expression {
             return {
                 type: "CallExpression",
                 callee: {
                     type: "MemberExpression",
-                    object: stream,
+                    object: buffer,
                     property: {type: "Identifier", name: "write"},
                     computed: false
                 },
@@ -274,7 +274,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             };
         }
 
-        return [stream, streamWrite];
+        return [buffer, bufferWrite];
     }
 
     element(
@@ -330,7 +330,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             });
         }
         else if (this.mode === "stream") {
-            const [stream, streamWrite] = this.streamGenWrite();
+            const [buffer, bufferWrite] = this.bufferGenWrite();
 
             const render: ESTree.ArrowFunctionExpression = {
                 type: "ArrowFunctionExpression",
@@ -344,28 +344,28 @@ export class OptimizingBuilder extends ESTreeBuilder {
                         property: {type: "Identifier", name: "render"},
                         computed: false
                     },
-                    arguments: [stream]
+                    arguments: [buffer]
                 }
             };
 
             const body = [
-                streamWrite(Reify.string("<" + tag)),
+                bufferWrite(Reify.string("<" + tag)),
                 // TODO escaping attributes needs to take false/true/null/undefined into account
                 ..._.flatMap(Object.entries(attributes), attribute => {
                     const[key, value] = attribute;
                     return [
-                        streamWrite(Reify.string(` ${key}="`)),
-                        streamWrite({
+                        bufferWrite(Reify.string(` ${key}="`)),
+                        bufferWrite({
                             type: "CallExpression",
                             callee: this.runtime.escapeHTML,
                             arguments: [value]
                         }),
-                        streamWrite(Reify.string('"'))
+                        bufferWrite(Reify.string('"'))
                     ]
                 }),
-                streamWrite(Reify.string(">")),
+                bufferWrite(Reify.string(">")),
                 Reify.functions.arrayForEach(normalizedChildren, render),
-                streamWrite(Reify.string(`</${tag}>`))
+                bufferWrite(Reify.string(`</${tag}>`))
             ];
 
             return Reify.object({
@@ -373,7 +373,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                 render: {
                     type: "ArrowFunctionExpression",
                     expression: false,
-                    params: [stream],
+                    params: [buffer],
                     body: {
                         type: "BlockStatement",
                         body: body.map(expr => ({
@@ -459,14 +459,14 @@ export class OptimizingBuilder extends ESTreeBuilder {
             return node;
         }
         else if (this.mode === "stream") {
-            const [stream, streamWrite] = this.streamGenWrite();
+            const [buffer, bufferWrite] = this.bufferGenWrite();
             return Reify.object({
                 astType: Reify.string("stream"),
                 render: {
                     type: "ArrowFunctionExpression",
                     expression: false,
-                    params: [stream],
-                    body: streamWrite({
+                    params: [buffer],
+                    body: bufferWrite({
                         type: "Literal",
                         value: escapeHTML(text)
                     })

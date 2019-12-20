@@ -3,7 +3,6 @@ import * as Raw from "../../ast/raw";
 import * as Stream from "../../ast/stream";
 import {genNoPrerendered} from "../../ast/gen";
 import fc from "fast-check";
-import {StringStream} from "../../stream";
 
 describe("Raw AST", () => {
 
@@ -13,9 +12,9 @@ describe("Raw AST", () => {
     it("Equivalent to Stream", () => {
         fc.assert(fc.property(gen, ast => {
             const raw = Structured.render(ast, Raw.astBuilder);
-            const stream = new StringStream();
-            Structured.render(ast, Stream.astBuilder).render(stream);
-            expect(raw.value).toEqual(stream.content);
+            const buffer = new Stream.StringBuffer();
+            Structured.render(ast, Stream.astBuilder).render(buffer);
+            expect(raw.value).toEqual(buffer.content);
         }));
     })
 

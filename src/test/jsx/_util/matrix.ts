@@ -2,7 +2,6 @@ import * as Universal from "../../../ast/universal";
 import {ESTreeBuilder, OptimizingBuilder, RuntimeBuilder} from "../../../jsx/preprocess";
 import {allBuilders} from "../../../ast/builders";
 import * as Stream from "../../../ast/stream";
-import {StringStream} from "../../../stream";
 
 function builders(kind: Universal.Kind): { [name: string]: ESTreeBuilder } {
     return {
@@ -29,7 +28,7 @@ export function force(ast: any): any {
         // streaming ASTs need to be forced because we can't compare functions
         if (type === "stream") {
             const streamAST = ast as Stream.AST;
-            const buffer = new StringStream();
+            const buffer = new Stream.StringBuffer();
             streamAST.render(buffer);
             return buffer.content;
         }

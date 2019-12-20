@@ -1,14 +1,29 @@
-import {Stream} from "../stream";
 import {Attributes, AttributeValue, Builder} from "./builder";
 import * as Universal from "./universal";
 import {escapeHTML} from "../jsx/syntax";
 
-export interface AST extends Universal.AST {
-    readonly astType: "stream"
-    render(stream: Stream): void
+export interface Buffer {
+    write(content: string): void
 }
 
-export function create(fn: (stream: Stream) => void): AST {
+export class StringBuffer implements Buffer {
+    private buffer: string = "";
+
+    write(content: string): void {
+        this.buffer += content;
+    }
+
+    get content(): string {
+        return this.buffer;
+    }
+}
+
+export interface AST extends Universal.AST {
+    readonly astType: "stream"
+    render(buffer: Buffer): void
+}
+
+export function create(fn: (buffer: Buffer) => void): AST {
     return {
         astType: "stream",
         render: fn
@@ -17,40 +32,40 @@ export function create(fn: (stream: Stream) => void): AST {
 
 export class ASTBuilder<P> implements Builder<AST, P> {
     constructor(
-        private readonly renderP: (p: P) => ((stream: Stream) => void)
+        private readonly renderP: (p: P) => ((buffer: Buffer) => void)
     ) {
     }
 
     element(tag: string, attributes?: Attributes, ...children: AST[]): AST {
-        return create(stream => {
-            stream.write("<");
-            stream.write(tag);
+        return create(buffer => {
+            buffer.write("<");
+            buffer.write(tag);
             if (attributes)
                 for (const [key, value] of Object.entries(attributes))
                     if (value !== null) {
-                        stream.write(" ");
-                        stream.write(key);
-                        stream.write("=\"");
-                        stream.write(escapeHTML(value));
-                        stream.write("\"");
+                        buffer.write(" ");
+                        buffer.write(key);
+                        buffer.write("=\"");
+                        buffer.write(escapeHTML(value));
+                        buffer.write("\"");
                     }
-            stream.write(">");
-            children.forEach(child => child.render(stream));
-            stream.write("</");
-            stream.write(tag);
-            stream.write(">");
+            buffer.write(">");
+            children.forEach(child => child.render(buffer));
+            buffer.write("</");
+            buffer.write(tag);
+            buffer.write(">");
         });
     }
 
     prerendered(p: P): AST {
-        return create(stream => {
-            this.renderP(p)(stream);
+        return create(buffer => {
+            this.renderP(p)(buffer);
         });
     }
 
     text(text: string): AST {
-        return create(stream => {
-            stream.write(escapeHTML(text))
+        return create(buffer => {
+            buffer.write(escapeHTML(text))
         });
     }
 
@@ -59,5 +74,5 @@ export class ASTBuilder<P> implements Builder<AST, P> {
     }
 }
 
-export const astBuilder = new ASTBuilder<string>(x => stream => stream.write(x));
-export const astBuilderNoPrerender = new ASTBuilder<never>(x => stream => {});
+export const astBuilder = new ASTBuilder<string>(x => buffer => buffer.write(x));
+export const astBuilderNoPrerender = new ASTBuilder<never>(x => buffer => {});

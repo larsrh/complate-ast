@@ -3,7 +3,6 @@ import * as Stream from "../../ast/stream";
 import {genNoPrerendered, genWithPrerendered} from "../../ast/gen";
 import fc from "fast-check";
 import {CompactingBuilder} from "../../ast/builders/compact";
-import {StringStream} from "../../stream";
 
 describe("Structured AST basics", () => {
 
@@ -38,13 +37,13 @@ describe("Structured AST basics", () => {
             const ast1 = Structured.flatten(ast);
             const ast2 = Structured.map(ast, inner => Structured.render(inner, Stream.astBuilderNoPrerender));
 
-            const stream1 = new StringStream();
-            const stream2 = new StringStream();
+            const buffer1 = new Stream.StringBuffer();
+            const buffer2 = new Stream.StringBuffer();
 
-            Structured.render(ast1, Stream.astBuilderNoPrerender).render(stream1);
-            Structured.render(ast2, new Stream.ASTBuilder(x => stream => x.render(stream))).render(stream2);
+            Structured.render(ast1, Stream.astBuilderNoPrerender).render(buffer1);
+            Structured.render(ast2, new Stream.ASTBuilder(x => buffer => x.render(buffer))).render(buffer2);
 
-            expect(stream2.content).toEqual(stream1.content);
+            expect(buffer2.content).toEqual(buffer1.content);
         }));
     });
 

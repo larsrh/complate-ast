@@ -3,7 +3,6 @@ import * as Structured from "../../../ast/structured";
 import * as Stream from "../../../ast/stream";
 import {JSDOM} from "jsdom";
 import {fromDOM} from "../../../ast/builder";
-import {StringStream} from "../../../stream";
 import {jsdomBuilder} from "../../../ast/builders/nodejs-dom";
 import {CompactingBuilder} from "../../../ast/builders/compact";
 import {genNoPrerendered} from "../../../ast/gen";
@@ -48,24 +47,24 @@ describe("Structured AST roundtrips", () => {
 
         it("Roundtrip property", () => {
             fc.assert(fc.property(gen, ast => {
-                const stream = new StringStream();
-                Structured.render(ast, Stream.astBuilderNoPrerender).render(stream);
+                const buffer = new Stream.StringBuffer();
+                Structured.render(ast, Stream.astBuilderNoPrerender).render(buffer);
                 const ast1 = Structured.render(ast, new CompactingBuilder());
-                const ast2 = fromDOM(builder, parseHTML(stream.content));
+                const ast2 = fromDOM(builder, parseHTML(buffer.content));
                 expect(ast2).toEqual(ast1);
             }));
         });
 
         it("Equal after normalization", () => {
             fc.assert(fc.property(gen, ast => {
-                const stream1 = new StringStream();
-                const stream2 = new StringStream();
-                Structured.render(ast, Stream.astBuilderNoPrerender).render(stream1);
+                const buffer1 = new Stream.StringBuffer();
+                const buffer2 = new Stream.StringBuffer();
+                Structured.render(ast, Stream.astBuilderNoPrerender).render(buffer1);
                 Structured.render(
                     Structured.render(ast, new CompactingBuilder()),
                     Stream.astBuilderNoPrerender
-                ).render(stream2);
-                expect(stream2.content).toEqual(stream1.content);
+                ).render(buffer2);
+                expect(buffer2.content).toEqual(buffer1.content);
             }));
         });
 
@@ -75,9 +74,9 @@ describe("Structured AST roundtrips", () => {
 
         fc.assert(fc.property(gen.filter(ast => ast.nodeType !== "text"), ast => {
             const html2 = (Structured.render(ast, jsdomBuilder) as Element).outerHTML;
-            const stream = new StringStream();
-            Structured.render(ast, Stream.astBuilderNoPrerender).render(stream);
-            compareHTML(stream.content, html2);
+            const buffer = new Stream.StringBuffer();
+            Structured.render(ast, Stream.astBuilderNoPrerender).render(buffer);
+            compareHTML(buffer.content, html2);
         }));
 
     })
