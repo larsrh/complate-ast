@@ -2,6 +2,7 @@ import {Parser} from "acorn";
 import {walk} from "estree-walker";
 import * as ESTree from "estree";
 import * as Reify from "../estree/reify";
+import * as Operations from "../estree/operations";
 import * as Universal from "../ast/universal";
 import * as Structured from "../ast/structured";
 import * as Raw from "../ast/raw";
@@ -28,12 +29,8 @@ function injectAST(node: ESTree.Node, ast: Universal.AST) {
     (node as any)._static_ast = ast;
 }
 
-function runtimeExpression(_runtime?: string): ESTree.Identifier {
-    const runtime = _runtime === undefined ? "JSXRuntime" : _runtime;
-    return {
-        type: "Identifier",
-        name: runtime
-    };
+function runtimeExpression(runtime?: string): ESTree.Identifier {
+    return Operations.identifier(runtime === undefined ? "JSXRuntime" : runtime);
 }
 
 class Runtime {
@@ -42,29 +39,16 @@ class Runtime {
         private readonly mode: Universal.Kind
     ) {}
 
-    private select(name: string): ESTree.Expression {
-        const identifier: ESTree.Identifier = {
-            type: "Identifier",
-            name: name
-        };
-        return {
-            type: "MemberExpression",
-            object: this.runtime,
-            property: identifier,
-            computed: false
-        };
+    private member(name: string): ESTree.Expression {
+        return Operations.member(this.runtime, Operations.identifier(name));
     }
 
     private call(name: string, ...args: (ESTree.Expression | ESTree.SpreadElement)[]): ESTree.Expression {
-        return {
-            type: "CallExpression",
-            callee: this.select(name),
-            arguments: args
-        };
+        return Operations.call(this.member(name), ...args);
     }
 
     builder(mode: Universal.Kind): ESTree.Expression {
-        return this.select(`${mode}Builder`);
+        return this.member(`${mode}Builder`);
     }
 
     normalizeChildren(children: ESTree.Expression[]): ESTree.Expression {
@@ -80,7 +64,7 @@ class Runtime {
     }
 
     get fragment(): ESTree.Expression {
-        return this.select("Fragment");
+        return this.member("Fragment");
     }
 
     isVoidElement(argument: ESTree.Expression): ESTree.Expression {
@@ -100,10 +84,7 @@ class Gensym {
 
     sym(): ESTree.Identifier {
         this.counter += BigInt(1);
-        return {
-            type: "Identifier",
-            name: this.prefix + this.counter
-        };
+        return Operations.identifier(this.prefix + this.counter);
     }
 }
 
@@ -156,18 +137,12 @@ export class RuntimeBuilder extends ESTreeBuilder {
         children: ESTree.Expression[]
     ): ESTree.Expression {
         const tagish = tag !== null ? [Reify.string(tag)] : [];
-        return {
-            type: "CallExpression",
-            callee: callee,
-            arguments: [
-                ...tagish,
-                Reify.object(attributes),
-                {
-                    type: "SpreadElement",
-                    argument: this.runtime.normalizeChildren(children)
-                }
-            ]
-        };
+        return Operations.call(
+            callee,
+            ...tagish,
+            Reify.object(attributes),
+            Reify.esarray(this.runtime.normalizeChildren(children)).spread()
+        );
     }
 
     element(
@@ -181,15 +156,7 @@ export class RuntimeBuilder extends ESTreeBuilder {
             throw new Error(`Dynamic element ${tag} not supported in runtime mode (requires "eval")`);
 
         return this.elementish(
-            {
-                type: "MemberExpression",
-                object: this.runtime.builder(this.mode),
-                property: {
-                    type: "Identifier",
-                    name: "element"
-                },
-                computed: false
-            },
+            Operations.member(this.runtime.builder(this.mode), Operations.identifier("element")),
             tag,
             attributes ? attributes : {},
             children
@@ -210,26 +177,13 @@ export class RuntimeBuilder extends ESTreeBuilder {
     }
 
     text(text: string): ESTree.Expression {
-        return {
-            type: "CallExpression",
-            callee: {
-                type: "MemberExpression",
-                object: this.runtime.builder(this.mode),
-                property: {
-                    type: "Identifier",
-                    name: "text"
-                },
-                computed: false
-            },
-            arguments: [Reify.string(text)]
-        };
-    }
-}
-
-function makeStatement(expr: ESTree.Expression): ESTree.Statement {
-    return {
-        type: "ExpressionStatement",
-        expression: expr
+        return Operations.call(
+            Operations.member(
+                this.runtime.builder(this.mode),
+                Operations.identifier("text")
+            ),
+            Reify.string(text)
+        );
     }
 }
 
@@ -268,8 +222,8 @@ export class OptimizingBuilder extends ESTreeBuilder {
     private normalizeChildren(isStaticChildren: boolean, children: ESTree.Expression[]): ESTree.Expression {
         if (isStaticChildren)
             // children are statically known --> we don't have to normalize them
-            // (this is a sufficient condition, but not the necessary condition! a child that directly stems from
-            // a macro also doesn't have to be normalized; future performance optimization)
+            // children that stem from macros may also have to be normalized (they may return a list of children
+            // like `Fragment` does)
             return Reify.array(children);
         else
             // fallback: insert a call to `normalizeChildren`
@@ -280,16 +234,10 @@ export class OptimizingBuilder extends ESTreeBuilder {
         const buffer = this.gen.sym();
 
         function bufferWrite(expr: ESTree.Expression): ESTree.Expression {
-            return {
-                type: "CallExpression",
-                callee: {
-                    type: "MemberExpression",
-                    object: buffer,
-                    property: {type: "Identifier", name: "write"},
-                    computed: false
-                },
-                arguments: [expr]
-            };
+            return Operations.call(
+                Operations.member(buffer, Operations.identifier("write")),
+                expr
+            );
         }
 
         return [buffer, bufferWrite];
@@ -351,22 +299,19 @@ export class OptimizingBuilder extends ESTreeBuilder {
 
         let tagIdentifier: ESTree.Expression;
         if (isDynamicTag)
-            tagIdentifier = {
-                type: "Identifier",
-                name: tag.substring(1)
-            };
+            tagIdentifier = Operations.identifier(tag.substring(1));
         else
             tagIdentifier = Reify.string(tag);
 
         let tagOpen: ESTree.Expression;
         if (isDynamicTag)
-            tagOpen = Reify.functions.binaryPlus(Reify.string("<"), tagIdentifier);
+            tagOpen = Operations.binaryPlus(Reify.string("<"), tagIdentifier);
         else
             tagOpen = Reify.string("<" + tag);
 
         let tagClose: ESTree.Expression;
         if (isDynamicTag)
-            tagClose = Reify.functions.binaryPlus(Reify.string("</"), Reify.functions.binaryPlus(tagIdentifier, Reify.string(">")));
+            tagClose = Operations.binaryPlus(Reify.string("</"), Operations.binaryPlus(tagIdentifier, Reify.string(">")));
         else
             tagClose = Reify.string(`</${tag}>`);
 
@@ -386,17 +331,11 @@ export class OptimizingBuilder extends ESTreeBuilder {
             const render: ESTree.ArrowFunctionExpression = {
                 type: "ArrowFunctionExpression",
                 expression: true,
-                params: [{type: "Identifier", name: "x"}],
-                body: {
-                    type: "CallExpression",
-                    callee: {
-                        type: "MemberExpression",
-                        object: {type: "Identifier", name: "x"},
-                        property: {type: "Identifier", name: "render"},
-                        computed: false
-                    },
-                    arguments: [buffer]
-                }
+                params: [Operations.identifier("x")],
+                body: Operations.call(
+                    Operations.member(Operations.identifier("x"), Operations.identifier("render")),
+                    buffer
+                )
             };
 
             const bodyOpen = [
@@ -411,12 +350,12 @@ export class OptimizingBuilder extends ESTreeBuilder {
                     ]
                 }),
                 bufferWrite(Reify.string(">"))
-            ].map(makeStatement);
+            ].map(Operations.expressionStatement);
 
             const regularBodyClose = [
-                Reify.functions.arrayForEach(normalizedChildren, render),
+                Reify.esarray(normalizedChildren).forEach(render),
                 bufferWrite(tagClose)
-            ].map(makeStatement);
+            ].map(Operations.expressionStatement);
             let bodyClose: ESTree.Statement[];
             if (isVoid)
                 bodyClose = [];
@@ -427,14 +366,8 @@ export class OptimizingBuilder extends ESTreeBuilder {
                 bodyClose = [{
                     type: "IfStatement",
                     test: this.runtime.isVoidElement(tagIdentifier),
-                    consequent: {
-                        type: "BlockStatement",
-                        body: []
-                    },
-                    alternate: {
-                        type: "BlockStatement",
-                        body: regularBodyClose
-                    }
+                    consequent: Operations.block(),
+                    alternate: Operations.block(...regularBodyClose)
                 }];
 
             return Reify.object({
@@ -443,10 +376,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                     type: "ArrowFunctionExpression",
                     expression: false,
                     params: [buffer],
-                    body: {
-                        type: "BlockStatement",
-                        body: [...bodyOpen, ...bodyClose]
-                    }
+                    body: Operations.block(...bodyOpen, ...bodyClose)
                 }
             });
         }
@@ -454,24 +384,19 @@ export class OptimizingBuilder extends ESTreeBuilder {
             const selector: ESTree.ArrowFunctionExpression = {
                 type: "ArrowFunctionExpression",
                 expression: true,
-                params: [{type: "Identifier", name: "x"}],
-                body: {
-                    type: "MemberExpression",
-                    object: {type: "Identifier", name: "x"},
-                    property: {type: "Identifier", name: "value"},
-                    computed: false
-                }
+                params: [Operations.identifier("x")],
+                body: Operations.member(Operations.identifier("x"), Operations.identifier("value"))
             };
-            const children = Reify.functions.arrayMap(normalizedChildren, selector);
+            const children = Reify.esarray(normalizedChildren).map(selector);
 
             const partsOpen = [
                 tagOpen,
                 // TODO escaping attributes needs to take false/true/null/undefined into account
                 ...Object.entries(attributes).map(attribute => {
                     const [key, value] = attribute;
-                    return Reify.functions.binaryPlus(
+                    return Operations.binaryPlus(
                         Reify.string(` ${key}="`),
-                        Reify.functions.binaryPlus(this.runtime.escapeHTML(value), Reify.string('"'))
+                        Operations.binaryPlus(this.runtime.escapeHTML(value), Reify.string('"'))
                     );
                 }),
                 Reify.string(">"),
@@ -481,34 +406,22 @@ export class OptimizingBuilder extends ESTreeBuilder {
             if (isVoid)
                 partsClosed = [];
             else if (!isDynamicTag)
-                partsClosed = [
-                    {
-                        type: "SpreadElement",
-                        argument: children
-                    },
-                    tagClose
-                ];
+                partsClosed = [Reify.esarray(children).spread(), tagClose];
             else
                 // TODO runtime check: void && children > 0
                 partsClosed = [
-                    {
-                        type: "SpreadElement",
-                        argument: {
-                            type: "ConditionalExpression",
-                            test: this.runtime.isVoidElement(tagIdentifier),
-                            consequent: {
-                                type: "ArrayExpression",
-                                elements: []
-                            },
-                            alternate: children
-                        }
-                    },
+                    Reify.esarray({
+                        type: "ConditionalExpression",
+                        test: this.runtime.isVoidElement(tagIdentifier),
+                        consequent: Reify.array([]),
+                        alternate: children
+                    }).spread(),
                     tagClose
                 ];
 
             return Reify.object({
                 astType: Reify.string("raw"),
-                value: Reify.functions.arrayJoin(Reify.array([...partsOpen, ...partsClosed]))
+                value: Reify.esarray(Reify.array([...partsOpen, ...partsClosed])).join()
             });
         }
     }
@@ -523,17 +436,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             children
         );
 
-        return {
-            type: "CallExpression",
-            callee: macro,
-            arguments: [
-                Reify.object(attributes),
-                {
-                    type: "SpreadElement",
-                    argument: normalizedChildren
-                }
-            ]
-        };
+        return Operations.call(macro, Reify.object(attributes), Reify.esarray(normalizedChildren).spread());
     }
 
     text(text: string): ESTree.Expression {
@@ -551,10 +454,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                     type: "ArrowFunctionExpression",
                     expression: false,
                     params: [buffer],
-                    body: bufferWrite({
-                        type: "Literal",
-                        value: escapeHTML(text)
-                    })
+                    body: bufferWrite(Reify.string(escapeHTML(text)))
                 }
             });
         }
@@ -588,7 +488,7 @@ export function preprocess(ast: ESTree.Node, builder: ESTreeBuilder): ESTree.Pro
                 const children = element.children as ESTree.Expression[];
                 const replacement =
                     isMacro(tag) ?
-                        builder.macro({ type: "Identifier", name: tag }, attributes, ...children) :
+                        builder.macro(Operations.identifier(tag), attributes, ...children) :
                         builder.element(tag, attributes, ...children);
                 this.replace(replacement);
             }

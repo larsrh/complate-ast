@@ -27,7 +27,9 @@ function gen<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbit
                     text.trim() !== "" &&
                         // required for preprocess_roundtrip: strings containing { or } produce JSX parse errors
                         !text.includes('{') &&
-                        !text.includes('}')
+                        !text.includes('}') &&
+                        // no NUL bytes
+                        !text.includes('\u0000')
                 )
                 .map(text => builder.text(text)),
         prerendered:

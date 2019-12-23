@@ -167,6 +167,20 @@ describe("Preprocessing (examples)", () => {
             Structured.astBuilder.element("div", {}, Structured.astBuilder.text("abc"))
         );
 
+        check(
+            "Complex macro",
+            `(() => {
+                function RDiv(props, ...children) {
+                    return <div>{children.reverse()}</div>;
+                }
+                return <RDiv>abc<span>def</span></RDiv>
+            })()`,
+            Structured.astBuilder.element("div", {},
+                Structured.astBuilder.element("span", {}, Structured.astBuilder.text("def")),
+                Structured.astBuilder.text("abc")
+            )
+        );
+
         checkRuntimeFailure(
             "Invalid children",
             "<div>{ 3 }</div>"

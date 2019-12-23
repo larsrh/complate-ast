@@ -1,5 +1,6 @@
 import * as ESTree from "estree";
 import {Object} from "../util";
+import {call, identifier, member} from "./operations";
 
 export function object(fields: Object<ESTree.Expression>): ESTree.ObjectExpression {
     const props = Object.entries(fields).map(field => {
@@ -70,63 +71,32 @@ export function any(x: any): ESTree.Expression {
     throw new Error("Unknown value");
 }
 
-export namespace functions {
+// TODO implements SpreadElement
+export class ESArray {
+    constructor(
+        private readonly array: ESTree.Expression
+    ) {}
 
-    export function arrayJoin(array: ESTree.Expression): ESTree.CallExpression {
+    join(): ESTree.CallExpression {
+        return call(member(this.array, identifier("join")), string(""));
+    }
+
+    map(fn: ESTree.Expression): ESTree.CallExpression {
+        return call(member(this.array, identifier("map")), fn);
+    }
+
+    forEach(fn: ESTree.Expression): ESTree.CallExpression {
+        return call(member(this.array, identifier("forEach")), fn);
+    }
+
+    spread(): ESTree.SpreadElement {
         return {
-            type: "CallExpression",
-            callee: {
-                type: "MemberExpression",
-                object: array,
-                property: {
-                    type: "Identifier",
-                    name: "join"
-                },
-                computed: false
-            },
-            arguments: [string("")]
+            type: "SpreadElement",
+            argument: this.array
         }
     }
+}
 
-    export function arrayMap(array: ESTree.Expression, fn: ESTree.Expression): ESTree.CallExpression {
-        return {
-            type: "CallExpression",
-            callee: {
-                type: "MemberExpression",
-                object: array,
-                property: {
-                    type: "Identifier",
-                    name: "map"
-                },
-                computed: false
-            },
-            arguments: [fn]
-        }
-    }
-
-    export function arrayForEach(array: ESTree.Expression, fn: ESTree.Expression): ESTree.CallExpression {
-        return {
-            type: "CallExpression",
-            callee: {
-                type: "MemberExpression",
-                object: array,
-                property: {
-                    type: "Identifier",
-                    name: "forEach"
-                },
-                computed: false
-            },
-            arguments: [fn]
-        }
-    }
-
-    export function binaryPlus(left: ESTree.Expression, right: ESTree.Expression): ESTree.BinaryExpression {
-        return {
-            type: "BinaryExpression",
-            operator: "+",
-            left: left,
-            right: right
-        };
-    }
-
+export function esarray(tree: ESTree.Expression): ESArray {
+    return new ESArray(tree);
 }
