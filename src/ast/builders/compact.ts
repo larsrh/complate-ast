@@ -5,7 +5,7 @@ export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
     private readonly doChildren: boolean;
     private readonly doAttributes: boolean;
 
-    constructor(what?: { children: boolean, attributes: boolean }) {
+    constructor(what?: { children: boolean; attributes: boolean }) {
         super((p: P) => p);
 
         this.doChildren = !what || what.children;

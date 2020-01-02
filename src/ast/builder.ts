@@ -1,14 +1,13 @@
-import {Object} from "../util";
 import {Attributes, AttributeValue} from "../jsx/syntax";
 import * as Universal from "./universal";
 import {allBuilders} from "./builders";
 import * as _ from "lodash";
 
 export interface Builder<A, P = never, AV = AttributeValue> {
-    text(text: string): A
-    prerendered(p: P): A
-    element(tag: string, attributes?: Attributes<AV>, ...children: A[]): A
-    attributeValue(key: string, value: AttributeValue): AV
+    text(text: string): A;
+    prerendered(p: P): A;
+    element(tag: string, attributes?: Attributes<AV>, ...children: A[]): A;
+    attributeValue(key: string, value: AttributeValue): AV;
 }
 
 export function fromDOM<A>(builder: Builder<A>, node: Node): A {

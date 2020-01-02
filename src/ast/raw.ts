@@ -10,8 +10,8 @@ import {
 } from "../jsx/syntax";
 
 export interface AST extends Universal.AST {
-    readonly astType: "raw"
-    readonly value: string
+    readonly astType: "raw";
+    readonly value: string;
 }
 
 export function create(value: string): AST {

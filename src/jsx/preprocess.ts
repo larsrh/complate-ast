@@ -10,23 +10,21 @@ import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estre
 import _ from "lodash";
 import {Builder} from "../ast/builder";
 import {Attributes, AttributeValue, isMacro, escapeHTML, isVoidElement, isDynamic, normalizeAttribute} from "./syntax";
-import {Object, mapObject} from "../util";
-
-// TODO use import
-const jsx = require("acorn-jsx");
+import {mapObject} from "../util";
+import jsx from "acorn-jsx";
 
 export const acorn = Parser.extend(jsx());
 
 export function extractAST(node: ESTree.Node): Universal.AST | null {
-    const richNode = node as any as { _static_ast?: Universal.AST };
-    if (richNode._static_ast)
-        return richNode._static_ast;
+    const richNode = node as any as { _staticAST?: Universal.AST };
+    if (richNode._staticAST)
+        return richNode._staticAST;
     else
         return null;
 }
 
-function injectAST(node: ESTree.Node, ast: Universal.AST) {
-    (node as any)._static_ast = ast;
+function injectAST(node: ESTree.Node, ast: Universal.AST): void {
+    (node as any)._staticAST = ast;
 }
 
 function processStaticAttribute(literal: ESTree.Literal): string | boolean | null {
@@ -226,7 +224,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
     }
 
     private staticChildren(children: ESTree.Expression[]): Universal.AST[] | null {
-        if (_.every(children, '_static_ast'))
+        if (_.every(children, '_staticAST'))
             return children.map(child => extractAST(child as ESTree.Node)!);
 
         return null;
@@ -581,9 +579,7 @@ export function parse(js: string): ESTree.Node {
 
 export function preprocess(ast: ESTree.Node, builder: ESTreeBuilder): ESTree.Program {
     const compiled = walk(ast, {
-        enter(node, parent, prop, index) {
-        },
-        leave(node, parent, prop, index) {
+        leave(node) {
             // @ts-ignore
             if (node.type === "JSXElement") {
                 const element = node as any as JSXElement;

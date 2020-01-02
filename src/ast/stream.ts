@@ -10,11 +10,11 @@ import {
 } from "../jsx/syntax";
 
 export interface Buffer {
-    write(content: string): void
+    write(content: string): void;
 }
 
 export class StringBuffer implements Buffer {
-    private buffer: string = "";
+    private buffer = "";
 
     write(content: string): void {
         this.buffer += content;
@@ -26,8 +26,8 @@ export class StringBuffer implements Buffer {
 }
 
 export interface AST extends Universal.AST {
-    readonly astType: "stream"
-    render(buffer: Buffer): void
+    readonly astType: "stream";
+    render(buffer: Buffer): void;
 }
 
 export function create(fn: (buffer: Buffer) => void): AST {
@@ -87,5 +87,7 @@ export class ASTBuilder<P> implements Builder<AST, P> {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const astBuilder = new ASTBuilder<string>(x => buffer => buffer.write(x));
-export const astBuilderNoPrerender = new ASTBuilder<never>(x => buffer => {});
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const astBuilderNoPrerender = new ASTBuilder<never>(() => () => {/* do nothing */});

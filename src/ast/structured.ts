@@ -1,13 +1,13 @@
 import {Builder} from "./builder"
 import * as Universal from "./universal";
-import {filterObject, mapObject} from "../util";
+import {mapObject} from "../util";
 import {Attributes, AttributeValue, isMacro, isVoidElement} from "../jsx/syntax";
 
 export type NodeType = "text" | "element" | "prerendered"
 
 export interface AST<P> extends Universal.AST {
-    readonly nodeType: NodeType
-    readonly astType: "structured"
+    readonly nodeType: NodeType;
+    readonly astType: "structured";
 }
 
 export function render<P, O, AV>(ast: AST<P>, renderer: Builder<O, P, AV>): O {

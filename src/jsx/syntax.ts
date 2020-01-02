@@ -1,6 +1,6 @@
-import {filterObject, mapObject, Object} from "../util";
+import {filterObject, mapObject} from "../util";
 
-export type Attributes<AV = AttributeValue> = Object<AV>;
+export type Attributes<AV = AttributeValue> = Record<string, AV>;
 export type AttributeValue = string | boolean | null | undefined;
 
 export function escapeHTML(s: string): string {
@@ -28,7 +28,9 @@ export const voidElements = new Set([
 export const isVoidElement: (s: string) => boolean =
     voidElements.has.bind(voidElements);
 
-export const isFalsy = (x: any) => x === null || x === undefined || x === false;
+export function isFalsy(x: any): boolean {
+    return x === null || x === undefined || x === false;
+}
 
 export function normalizeAttribute(key: string, value: AttributeValue): string | null {
     if (value === true)

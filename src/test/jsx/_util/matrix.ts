@@ -12,7 +12,7 @@ function builders(kind: Universal.Kind): { [name: string]: ESTreeBuilder } {
 
 export function matrix(
     action: (kind: Universal.Kind, astBuilder: Universal.Builder, name: string, esBuilder: ESTreeBuilder) => void
-) {
+): void {
     for (const [kind, astBuilder] of Object.entries(allBuilders))
         describe(`Kind: ${kind}`, () => {
             for (const [name, esBuilder] of Object.entries(builders(kind as Universal.Kind)))

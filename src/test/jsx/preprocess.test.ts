@@ -12,7 +12,7 @@ describe("Preprocessing (examples)", () => {
 
     matrix((kind, astBuilder, name, esBuilder) => {
 
-        function check(name: string, jsx: string, _expected: Structured.AST<never>, expectStatic?: boolean) {
+        function check(name: string, jsx: string, _expected: Structured.AST<never>, expectStatic?: boolean): void {
             const doStatic = expectStatic && esBuilder.canStatic;
             const expected = Structured.render(_expected, astBuilder);
             describe(name, () => {
@@ -39,7 +39,7 @@ describe("Preprocessing (examples)", () => {
             });
         }
 
-        function checkRuntimeFailure(name: string, jsx: string) {
+        function checkRuntimeFailure(name: string, jsx: string): void {
             const sandbox = {JSXRuntime: _JSXRuntime};
             it(name, () => {
                 const input = parse(jsx);
@@ -49,7 +49,7 @@ describe("Preprocessing (examples)", () => {
             })
         }
 
-        function checkCompileFailure(name: string, jsx: string) {
+        function checkCompileFailure(name: string, jsx: string): void {
             it(name, () => {
                 const input = parse(jsx);
                 expect(() => preprocess(input, esBuilder)).toThrow();
