@@ -7,7 +7,7 @@ import * as Reify from "../../estree/reify";
 import {genNoPrerendered, genWithPrerendered} from "../../ast/gen";
 import {runInNewContext} from "vm";
 
-function checkReified(expr: ESTree.Expression, t: any) {
+function checkReified(expr: ESTree.Expression, t: any): void {
     const stmt: ESTree.ExpressionStatement = {
         expression: expr,
         type: "ExpressionStatement"
@@ -17,7 +17,7 @@ function checkReified(expr: ESTree.Expression, t: any) {
     expect(t2).toEqual(t);
 }
 
-function checkReify<T>(arb: Arbitrary<T>, reify: (t: T) => ESTree.Expression, post?: (t: T) => any) {
+function checkReify<T>(arb: Arbitrary<T>, reify: (t: T) => ESTree.Expression, post?: (t: T) => any): void  {
     fc.assert(fc.property(arb, t => {
         checkReified(reify(t), post ? post(t): t);
     }));
@@ -71,7 +71,7 @@ describe("Reify", () => {
     });
 
     it("function", () => {
-        expect(() => Reify.any(() => {})).toThrow(/function/i);
+        expect(() => Reify.any(() => {/* do nothing */})).toThrow(/function/i);
     })
 
 });

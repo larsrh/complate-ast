@@ -13,6 +13,9 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/ban-ts-ignore': 'off',
+    '@typescript-eslint/explicit-function-return-type': ['error', {
+      allowExpressions: true
+    }],
     'no-inner-declarations': 'off'
-  }
+  },
 };
