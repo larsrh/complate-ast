@@ -7,20 +7,26 @@ import * as Reify from "../../estree/reify";
 import {genNoPrerendered, genWithPrerendered} from "../../ast/gen";
 import {runInNewContext} from "vm";
 
+function checkReified(expr: ESTree.Expression, t: any) {
+    const stmt: ESTree.ExpressionStatement = {
+        expression: expr,
+        type: "ExpressionStatement"
+    };
+    const string = generate(stmt);
+    const t2 = runInNewContext(string, {});
+    expect(t2).toEqual(t);
+}
+
 function checkReify<T>(arb: Arbitrary<T>, reify: (t: T) => ESTree.Expression, post?: (t: T) => any) {
     fc.assert(fc.property(arb, t => {
-        const expr = reify(t);
-        const stmt: ESTree.ExpressionStatement = {
-            expression: expr,
-            type: "ExpressionStatement"
-        };
-        const string = generate(stmt);
-        const t2 = runInNewContext(string, {});
-        expect(t2).toEqual(post ? post(t) : t);
+        checkReified(reify(t), post ? post(t): t);
     }));
 }
 
 describe("Reify", () => {
+
+    it("null", () => checkReified(Reify.any(null), null));
+    it("undefined", () => checkReified(Reify.any(undefined), undefined));
 
     it("string", () => checkReify(fc.fullUnicodeString(), Reify.string));
     it("any(string)", () => checkReify(fc.fullUnicodeString(), Reify.any));
