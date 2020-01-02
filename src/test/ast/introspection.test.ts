@@ -63,4 +63,10 @@ describe("Introspection", () => {
 
     });
 
+    it("Accepts string children", () => {
+        const ast1 = Structured.astBuilder.element("span");
+        const ast2 = addItems(ast1, {}, "hi");
+        expect(ast2).toEqual(Structured.astBuilder.element("span", {}, Structured.astBuilder.text("hi")));
+    });
+
 });

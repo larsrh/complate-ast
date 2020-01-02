@@ -2,8 +2,8 @@ import * as Universal from "./universal";
 import * as Structured from "./structured";
 import * as Raw from "./raw";
 import * as Stream from "./stream";
-import _ from "lodash";
 import {Attributes} from "../jsx/syntax";
+import {normalizeChildren} from "./builder";
 
 export const allKinds: Set<Universal.Kind> = new Set(["structured", "stream", "raw"]);
 
@@ -41,9 +41,8 @@ function streamAttributeAdder(attributes?: Attributes): Stream.Modifier<Attribut
         return oldAttributes => ({... oldAttributes, ...attributes});
 }
 
-export function addItems<AST extends Universal.AST>(ast: AST, attributes?: Attributes, ...children: Universal.AST[]): AST {
-    if (!_.every(children, { astType: ast.astType }))
-        throw new Error(`Expected children of kind ${ast.astType}`);
+export function addItems<AST extends Universal.AST>(ast: AST, attributes?: Attributes, ..._children: any[]): AST {
+    const children = normalizeChildren(ast.astType, ..._children);
 
     if (isStructured(ast)) {
         if (Structured.isElement(ast)) {
