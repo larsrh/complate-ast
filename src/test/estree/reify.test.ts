@@ -28,6 +28,9 @@ describe("Reify", () => {
     it("number", () => checkReify(fc.nat(), Reify.number));
     it("any(number)", () => checkReify(fc.nat(), Reify.any));
 
+    it("boolean", () => checkReify(fc.boolean(), Reify.boolean));
+    it("any(boolean)", () => checkReify(fc.boolean(), Reify.any));
+
     it("object", () => {
         const gen = fc.array(fc.tuple(fc.fullUnicodeString(), fc.fullUnicodeString()));
         checkReify(gen, array =>

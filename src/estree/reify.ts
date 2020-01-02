@@ -33,17 +33,33 @@ export function string(s: string): ESTree.SimpleLiteral {
     return {
         type: "Literal",
         value: s
-    }
+    };
 }
 
 export function number(i: number): ESTree.SimpleLiteral {
     return {
         type: "Literal",
         value: i
-    }
+    };
+}
+
+export function boolean(b: boolean): ESTree.SimpleLiteral {
+    return {
+        type: "Literal",
+        value: b
+    };
 }
 
 export function any(x: any): ESTree.Expression {
+    if (x === null)
+        return {
+            type: "Literal",
+            value: null
+        };
+
+    if (typeof x === "boolean")
+        return boolean(x as boolean);
+
     if (typeof x === "number")
         return number(x as number);
 
