@@ -51,7 +51,7 @@ describe("Reify", () => {
 
     it("array", () => {
         const gen = fc.array(fc.fullUnicodeString());
-        checkReify(gen, array => Reify.array(array.map(x => Reify.string(x))));
+        checkReify(gen, array => Reify.array(array.map(x => Reify.string(x))).raw);
     });
     it("any(array)", () => checkReify(fc.array(fc.fullUnicodeString()), Reify.any));
 

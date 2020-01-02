@@ -1,18 +1,18 @@
 import * as ESTree from "estree";
-import {call, identifier, member} from "./operations";
-
-export function array(items: (ESTree.Expression | ESTree.SpreadElement)[]): ESTree.ArrayExpression {
-    return {
-        type: "ArrayExpression",
-        elements: items
-    };
-}
+import {ArrayExpr} from "./expr";
 
 export function string(s: string): ESTree.SimpleLiteral {
     return {
         type: "Literal",
         value: s
     };
+}
+
+export function array(items: (ESTree.Expression | ESTree.SpreadElement)[]): ArrayExpr {
+    return new ArrayExpr({
+        type: "ArrayExpression",
+        elements: items
+    });
 }
 
 export function number(i: number): ESTree.SimpleLiteral {
@@ -78,7 +78,7 @@ export function any(x: any): ESTree.Expression {
 
     if (Array.isArray(x)) {
         const a = x as any[];
-        return array(a.map(item => any(item)));
+        return array(a.map(item => any(item))).raw;
     }
 
     if (typeof x === "object") {
@@ -93,34 +93,4 @@ export function any(x: any): ESTree.Expression {
         throw new Error("Functions can't be reified");
 
     throw new Error("Unknown value");
-}
-
-// TODO implements SpreadElement
-export class ESArray {
-    constructor(
-        private readonly array: ESTree.Expression
-    ) {}
-
-    join(): ESTree.CallExpression {
-        return call(member(this.array, identifier("join")), string(""));
-    }
-
-    map(fn: ESTree.Expression): ESTree.CallExpression {
-        return call(member(this.array, identifier("map")), fn);
-    }
-
-    forEach(fn: ESTree.Expression): ESTree.CallExpression {
-        return call(member(this.array, identifier("forEach")), fn);
-    }
-
-    spread(): ESTree.SpreadElement {
-        return {
-            type: "SpreadElement",
-            argument: this.array
-        }
-    }
-}
-
-export function esarray(tree: ESTree.Expression): ESArray {
-    return new ESArray(tree);
 }

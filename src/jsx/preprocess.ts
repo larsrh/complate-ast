@@ -12,6 +12,7 @@ import {Builder} from "../ast/builder";
 import {Attributes, AttributeValue, isMacro, escapeHTML, isVoidElement, isDynamic, normalizeAttribute} from "./syntax";
 import {mapObject} from "../util";
 import jsx from "acorn-jsx";
+import {ArrayExpr} from "../estree/expr";
 
 export const acorn = Parser.extend(jsx());
 
@@ -60,12 +61,12 @@ class Runtime {
         return this.member(`${mode}Builder`);
     }
 
-    normalizeChildren(children: ESTree.Expression[]): ESTree.Expression {
-        return this.call(
+    normalizeChildren(children: ESTree.Expression[]): ArrayExpr {
+        return new ArrayExpr(this.call(
             "normalizeChildren",
             Reify.string(this.mode),
             ...children
-        );
+        ));
     }
 
     escapeHTML(argument: ESTree.Expression): ESTree.Expression {
@@ -157,7 +158,7 @@ export class RuntimeBuilder extends ESTreeBuilder {
             callee,
             ...tagish,
             Reify.object(attributes),
-            Reify.esarray(this.runtime.normalizeChildren(children)).spread()
+            this.runtime.normalizeChildren(children)
         );
     }
 
@@ -230,7 +231,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
         return null;
     }
 
-    private normalizeChildren(isStaticChildren: boolean, children: ESTree.Expression[]): ESTree.Expression {
+    private normalizeChildren(isStaticChildren: boolean, children: ESTree.Expression[]): ArrayExpr {
         if (isStaticChildren)
             // children are statically known --> we don't have to normalize them
             // children that stem from macros may also have to be normalized (they may return a list of children
@@ -342,7 +343,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
 
         let tagClose: ESTree.Expression;
         if (isDynamicTag)
-            tagClose = Operations.binaryPlus(Reify.string("</"), Operations.binaryPlus(tagIdentifier, Reify.string(">")));
+            tagClose = Operations.binaryPlus(Reify.string("</"), tagIdentifier, Reify.string(">"));
         else
             tagClose = Reify.string(`</${tag}>`);
 
@@ -353,7 +354,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                 tag: tagIdentifier,
                 // structured mode doesn't care about falsy attributes; renderers will take care of it
                 attributes: Reify.object(attributes),
-                children: normalizedChildren
+                children: normalizedChildren.raw
             });
         }
         else if (this.mode === "stream") {
@@ -396,19 +397,10 @@ export class OptimizingBuilder extends ESTreeBuilder {
                             init: value
                         }]
                     };
-                    const condition: ESTree.Statement = {
-                        type: "IfStatement",
-                        test: {
-                            type: "BinaryExpression",
-                            operator: "!==",
-                            left: Reify.any(null),
-                            right: sym
-                        },
-                        consequent: {
-                            type: "BlockStatement",
-                            body: defaultWrite(runtime.escapeHTML(sym))
-                        }
-                    };
+                    const condition = Operations.ifthenelse(
+                        Operations.notEqual(Reify.any(null), sym),
+                        Operations.block(...defaultWrite(runtime.escapeHTML(sym)))
+                    );
                     return [decl, condition];
                 }
             }
@@ -420,7 +412,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             ];
 
             const regularBodyClose = [
-                Reify.esarray(normalizedChildren).forEach(render),
+                normalizedChildren.forEach(render),
                 bufferWrite(tagClose)
             ].map(Operations.expressionStatement);
             let bodyClose: ESTree.Statement[];
@@ -429,12 +421,11 @@ export class OptimizingBuilder extends ESTreeBuilder {
             else if (!isDynamicTag)
                 bodyClose = regularBodyClose;
             else
-                bodyClose = [{
-                    type: "IfStatement",
-                    test: this.runtime.isVoidElement(tagIdentifier),
-                    consequent: Operations.block(),
-                    alternate: Operations.block(...regularBodyClose)
-                }];
+                bodyClose = [Operations.ifthenelse(
+                    this.runtime.isVoidElement(tagIdentifier),
+                    Operations.block(),
+                    Operations.block(...regularBodyClose)
+                )];
 
             return Reify.object({
                 astType: Reify.string("stream"),
@@ -456,15 +447,12 @@ export class OptimizingBuilder extends ESTreeBuilder {
                 params: [Operations.identifier("x")],
                 body: Operations.member(Operations.identifier("x"), Operations.identifier("value"))
             };
-            const children = Reify.esarray(normalizedChildren).map(selector);
+            const children = normalizedChildren.map(selector);
 
             function mkPartAttr(attribute: [string, [boolean, ESTree.Expression]]): ESTree.Expression {
                 const [key, [literal, value]] = attribute;
                 function defaultString(value: ESTree.Expression): ESTree.Expression {
-                    return Operations.binaryPlus(
-                        Reify.string(` ${key}="`),
-                        Operations.binaryPlus(value, Reify.string('"'))
-                    );
+                    return Operations.binaryPlus(Reify.string(` ${key}="`), value, Reify.string('"'));
                 }
 
                 if (literal) {
@@ -481,23 +469,11 @@ export class OptimizingBuilder extends ESTreeBuilder {
                             init: value
                         }]
                     };
-                    const condition: ESTree.Statement = {
-                        type: "IfStatement",
-                        test: {
-                            type: "BinaryExpression",
-                            operator: "!==",
-                            left: Reify.any(null),
-                            right: sym
-                        },
-                        consequent: {
-                            type: "ReturnStatement",
-                            argument: defaultString(runtime.escapeHTML(sym))
-                        },
-                        alternate: {
-                            type: "ReturnStatement",
-                            argument: Reify.string("")
-                        }
-                    };
+                    const condition = Operations.ifthenelse(
+                        Operations.notEqual(Reify.any(null), sym),
+                        Operations.ret(defaultString(runtime.escapeHTML(sym))),
+                        Operations.ret(Reify.string(""))
+                    );
                     return Operations.iife(decl, condition);
                 }
             }
@@ -512,21 +488,20 @@ export class OptimizingBuilder extends ESTreeBuilder {
             if (isVoid)
                 partsClosed = [];
             else if (!isDynamicTag)
-                partsClosed = [Reify.esarray(children).spread(), tagClose];
+                partsClosed = [new ArrayExpr(children), tagClose];
             else
                 partsClosed = [
-                    Reify.esarray({
-                        type: "ConditionalExpression",
-                        test: this.runtime.isVoidElement(tagIdentifier),
-                        consequent: Reify.array([]),
-                        alternate: children
-                    }).spread(),
+                    new ArrayExpr(Operations.conditional(
+                        this.runtime.isVoidElement(tagIdentifier),
+                        Reify.array([]).raw,
+                        children
+                    )),
                     tagClose
                 ];
 
             return Reify.object({
                 astType: Reify.string("raw"),
-                value: Reify.esarray(Reify.array([...partsOpen, ...partsClosed])).join()
+                value: Reify.array([...partsOpen, ...partsClosed]).join(Reify.string(""))
             });
         }
     }
@@ -541,7 +516,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             children
         );
 
-        return Operations.call(macro, Reify.object(attributes), Reify.esarray(normalizedChildren).spread());
+        return Operations.call(macro, Reify.object(attributes), normalizedChildren);
     }
 
     text(text: string): ESTree.Expression {

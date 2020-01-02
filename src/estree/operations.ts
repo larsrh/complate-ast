@@ -1,10 +1,21 @@
 import * as ESTree from "estree";
 
-// TODO n-ary
-export function binaryPlus(left: ESTree.Expression, right: ESTree.Expression): ESTree.BinaryExpression {
+export function binaryPlus(left: ESTree.Expression, ...rights: ESTree.Expression[]): ESTree.Expression {
+    let result = left;
+    for (const right of rights)
+        result = {
+            type: "BinaryExpression",
+            operator: "+",
+            left: result,
+            right: right
+        };
+    return result;
+}
+
+export function notEqual(left: ESTree.Expression, right: ESTree.Expression): ESTree.BinaryExpression {
     return {
         type: "BinaryExpression",
-        operator: "+",
+        operator: "!==",
         left: left,
         right: right
     };
@@ -58,4 +69,29 @@ export function iife(...statements: ESTree.Statement[]): ESTree.CallExpression {
             body: statements
         }
     });
+}
+
+export function ifthenelse(test: ESTree.Expression, consequent: ESTree.Statement, alternate?: ESTree.Statement): ESTree.IfStatement {
+    return {
+        type: "IfStatement",
+        test: test,
+        consequent: consequent,
+        alternate: alternate
+    };
+}
+
+export function conditional(test: ESTree.Expression, consequent: ESTree.Expression, alternate: ESTree.Expression): ESTree.ConditionalExpression {
+    return {
+        type: "ConditionalExpression",
+        test: test,
+        consequent: consequent,
+        alternate: alternate
+    };
+}
+
+export function ret(value: ESTree.Expression): ESTree.ReturnStatement {
+    return {
+        type: "ReturnStatement",
+        argument: value
+    };
 }
