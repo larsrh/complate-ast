@@ -6,7 +6,7 @@ export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
         super((p: P) => p);
     }
 
-    element(tag: string, attributes: Attributes, ...children: Structured.AST<P>[]): Structured.AST<P> {
+    element(tag: string, attributes?: Attributes, ...children: Structured.AST<P>[]): Structured.AST<P> {
         const newChildren = new Array<Structured.AST<P>>();
         let currentText = "";
         for (const child of children) {
@@ -23,6 +23,6 @@ export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
         }
         if (currentText !== "")
             newChildren.push(new Structured.TextNode(currentText));
-        return new Structured.ElementNode(tag, attributes, newChildren);
+        return new Structured.ElementNode(tag, attributes ? attributes : {}, newChildren);
     }
 }
