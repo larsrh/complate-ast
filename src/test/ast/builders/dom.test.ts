@@ -37,7 +37,8 @@ describe("Structured AST roundtrips", () => {
             fc.assert(fc.property(gen, ast => {
                 const dom = Structured.render(ast, jsdomBuilder);
                 const ast2 = fromDOM(builder, dom);
-                expect(ast2).toEqual(ast);
+                const ast1 = Structured.render(ast, new CompactingBuilder({ children: false, attributes: true }));
+                expect(ast2).toEqual(ast1);
             }));
         });
 

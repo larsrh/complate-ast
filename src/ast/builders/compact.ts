@@ -1,28 +1,44 @@
 import * as Structured from "../structured";
-import {Attributes} from "../builder";
+import {Attributes, normalizeAttributes} from "../../jsx/syntax";
 
 export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
-    constructor() {
+    private readonly doChildren: boolean;
+    private readonly doAttributes: boolean;
+
+    constructor(what?: { children: boolean, attributes: boolean }) {
         super((p: P) => p);
+
+        this.doChildren = !what || what.children;
+        this.doAttributes = !what || what.attributes;
     }
 
-    element(tag: string, attributes: Attributes, ...children: Structured.AST<P>[]): Structured.AST<P> {
-        const newChildren = new Array<Structured.AST<P>>();
-        let currentText = "";
-        for (const child of children) {
-            if (child.nodeType === "text") {
-                currentText += (child as Structured.TextNode).text;
-            }
-            else {
-                if (currentText !== "") {
-                    newChildren.push(new Structured.TextNode(currentText));
-                    currentText = "";
+    element(tag: string, attributes?: Attributes, ...children: Structured.AST<P>[]): Structured.AST<P> {
+        let newChildren: Structured.AST<P>[];
+        if (this.doChildren) {
+            newChildren = [];
+            let currentText = "";
+            for (const child of children) {
+                if (child.nodeType === "text") {
+                    currentText += (child as Structured.TextNode).text;
+                } else {
+                    if (currentText !== "") {
+                        newChildren.push(new Structured.TextNode(currentText));
+                        currentText = "";
+                    }
+                    newChildren.push(child);
                 }
-                newChildren.push(child);
             }
+            if (currentText !== "")
+                newChildren.push(new Structured.TextNode(currentText));
         }
-        if (currentText !== "")
-            newChildren.push(new Structured.TextNode(currentText));
-        return new Structured.ElementNode(tag, attributes, newChildren);
+        else {
+            newChildren = children;
+        }
+
+        let newAttributes: Attributes = attributes ? attributes : {};
+        if (this.doAttributes)
+            newAttributes = normalizeAttributes(false, newAttributes);
+
+        return new Structured.ElementNode(tag, newAttributes, newChildren);
     }
 }

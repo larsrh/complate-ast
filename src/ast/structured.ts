@@ -1,7 +1,7 @@
-import {Attributes, AttributeValue, Builder} from "./builder"
+import {Builder} from "./builder"
 import * as Universal from "./universal";
-import {mapObject} from "../util";
-import {isVoidElement} from "../jsx/syntax";
+import {filterObject, mapObject} from "../util";
+import {Attributes, AttributeValue, isMacro, isVoidElement} from "../jsx/syntax";
 
 export type NodeType = "text" | "element" | "prerendered"
 
@@ -16,7 +16,7 @@ export function render<P, O, AV>(ast: AST<P>, renderer: Builder<O, P, AV>): O {
     }
     if (ast.nodeType == "element") {
         const node = ast as ElementNode<P>;
-        const attributes = mapObject(node.attributes, attr => renderer.attributeValue(attr));
+        const attributes = mapObject(node.attributes, (attr, key) => renderer.attributeValue(key, attr));
         return renderer.element(
             node.tag,
             attributes,
@@ -49,6 +49,8 @@ export class ElementNode<P> implements AST<P> {
     ) {
         if (this.children.length > 0 && isVoidElement(this.tag))
             throw new Error(`Void element ${tag} must not have children`);
+        if (isMacro(tag))
+            throw new Error(`Macro tag ${tag} not allowed in an AST`);
     }
 }
 
@@ -65,11 +67,7 @@ export type DOMNodeAST = AST<Node>
 
 export class ASTBuilder<P> implements Builder<AST<P>, P> {
     element(tag: string, attributes?: Attributes, ...children: AST<P>[]): AST<P> {
-        return new ElementNode<P>(
-            tag,
-            attributes ? attributes : {},
-            children ? children : []
-        );
+        return new ElementNode<P>(tag, attributes ? attributes : {}, children);
     }
 
     prerendered(p: P): AST<P> {
@@ -80,7 +78,7 @@ export class ASTBuilder<P> implements Builder<AST<P>, P> {
         return new TextNode(text);
     }
 
-    attributeValue(value: AttributeValue): AttributeValue {
+    attributeValue(key: string, value: AttributeValue): AttributeValue {
         return value;
     }
 }
@@ -104,7 +102,7 @@ export class MappingBuilder<P, Q> implements Builder<AST<Q>, P> {
         return new TextNode(text);
     }
 
-    attributeValue(value: AttributeValue): AttributeValue {
+    attributeValue(key: string, value: AttributeValue): AttributeValue {
         return value;
     }
 }
@@ -126,7 +124,7 @@ export class FlatteningBuilder<P> implements Builder<AST<P>, AST<P>> {
         return new TextNode(text);
     }
 
-    attributeValue(value: AttributeValue): AttributeValue {
+    attributeValue(key: string, value: AttributeValue): AttributeValue {
         return value;
     }
 }

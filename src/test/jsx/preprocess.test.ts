@@ -130,7 +130,7 @@ describe("Preprocessing (examples)", () => {
         );
 
         check(
-            "Coalesce void children",
+            "Eliminate void children",
             "<div>{null}{false}{undefined}</div>",
             Structured.astBuilder.element("div")
         );
@@ -191,35 +191,111 @@ describe("Preprocessing (examples)", () => {
             "<br>{null}</br>"
         );
 
+        describe("Kind-specific", () => {
 
-        if (name !== "runtime") {
-
-            describe("Dynamic tags", () => {
+            if (kind !== "structured") {
 
                 check(
-                    "Simple",
-                    `(() => {
-                        const tag = "h3";
-                        return <$tag class="foo">abc</$tag>
-                    })()`,
-                    Structured.astBuilder.element("h3", {class: "foo"}, Structured.astBuilder.text("abc"))
+                    "Eliminate void attributes (static)",
+                    "<span class={null} id={false} />",
+                    Structured.astBuilder.element("span"),
+                    true
                 );
 
-                describe.skip("Void check", () => {
+                check(
+                    "Eliminate void attributes",
+                    "<span class={null} id={false && true} style={undefined} />",
+                    Structured.astBuilder.element("span")
+                );
 
-                    checkRuntimeFailure(
-                        "Void check",
+                check(
+                    "Render true attributes (static)",
+                    "<button disabled={ true } />",
+                    Structured.astBuilder.element("button", { disabled: "disabled" }),
+                    true
+                );
+
+                check(
+                    "Render true attributes",
+                    "<button disabled={ true || false } />",
+                    Structured.astBuilder.element("button", { disabled: "disabled" })
+                );
+
+            }
+
+            else {
+
+                check(
+                    "Keep void attributes (static)",
+                    "<span class={null} id={false} />",
+                    Structured.astBuilder.element("span", { class: null, id: false }),
+                    true
+                );
+
+                check(
+                    "Keep void attributes",
+                    "<span class={null} id={false && true} style={undefined} />",
+                    Structured.astBuilder.element("span", { class: null, id: false, style: undefined })
+                );
+
+                check(
+                    "Keep true attributes (static)",
+                    "<button disabled={ true } />",
+                    Structured.astBuilder.element("button", { disabled: true }),
+                    true
+                );
+
+                check(
+                    "Keep true attributes",
+                    "<button disabled={ true || false } />",
+                    Structured.astBuilder.element("button", { disabled: true })
+                );
+
+            }
+
+        });
+
+        describe("Builder-specific", () => {
+
+            if (name !== "runtime") {
+
+                describe("Dynamic tags", () => {
+
+                    check(
+                        "Simple",
                         `(() => {
+                            const tag = "h3";
+                            return <$tag class="foo">abc</$tag>
+                        })()`,
+                        Structured.astBuilder.element("h3", {class: "foo"}, Structured.astBuilder.text("abc"))
+                    );
+
+                    describe.skip("Void check", () => {
+
+                        checkRuntimeFailure(
+                            "Void check",
+                            `(() => {
                             const tag = "br";
                             return <$tag>abc</$tag>
                         })()`
-                    );
+                        );
+
+                    });
 
                 });
 
-            });
+            }
 
-        }
+            else {
+
+                checkCompileFailure(
+                    "Dynamic tags",
+                    "<$tag />"
+                )
+
+            }
+
+        });
 
     });
 

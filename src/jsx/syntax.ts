@@ -1,3 +1,8 @@
+import {filterObject, mapObject, Object} from "../util";
+
+export type Attributes<AV = AttributeValue> = Object<AV>;
+export type AttributeValue = string | boolean | null | undefined;
+
 export function escapeHTML(s: string): string {
     return s
         .replace(/&/g, "&amp;")
@@ -22,3 +27,28 @@ export const voidElements = new Set([
 
 export const isVoidElement: (s: string) => boolean =
     voidElements.has.bind(voidElements);
+
+export const isFalsy = (x: any) => x === null || x === undefined || x === false;
+
+export function normalizeAttribute(key: string, value: AttributeValue): string | null {
+    if (value === true)
+        return key;
+    else if (isFalsy(value))
+        return null;
+    else if (typeof value === "string")
+        return value;
+    else
+        // in TypeScript-typed calls this can't happen
+        throw new Error(`Unknown value type for attribute ${value}`);
+}
+
+export function normalizeAttributes(escape: boolean, attrs?: Attributes): Attributes<string> {
+    if (attrs === undefined)
+        return {};
+
+    const normalized = filterObject(mapObject(attrs, (value, key) => normalizeAttribute(key, value)));
+    if (escape)
+        return mapObject(normalized, value => escapeHTML(value));
+
+    return normalized;
+}

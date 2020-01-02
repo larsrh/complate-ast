@@ -1,10 +1,17 @@
 import fc, {Arbitrary} from "fast-check";
 import {Builder} from "./builder";
+import {AttributeValue} from "../jsx/syntax";
 
 const alphabetic =
     fc.array(fc.integer(0, 25).map(int => String.fromCharCode(int + 97 /* 'a' */)), 10, 20).map(array => array.join(""));
 
 function gen<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbitrary<A> {
+    const attrGen = fc.oneof<AttributeValue>(
+        fc.fullUnicodeString(),
+        fc.boolean(),
+        fc.constant(null),
+        fc.constant(undefined)
+    );
     const { ast } = fc.letrec(tie => ({
         ast:
             fc.frequency(
@@ -39,7 +46,7 @@ function gen<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbit
         element:
             fc.tuple(
                 alphabetic,
-                fc.array(fc.tuple(alphabetic, fc.fullUnicodeString())),
+                fc.array(fc.tuple(alphabetic, attrGen)),
                 fc.array(tie("ast"), 5)
             ).map(args => {
                 const [tag, attrs, children] = args;
