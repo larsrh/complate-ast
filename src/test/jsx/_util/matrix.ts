@@ -2,6 +2,7 @@ import * as Universal from "../../../ast/universal";
 import {ESTreeBuilder, OptimizingBuilder, RuntimeBuilder} from "../../../jsx/preprocess";
 import {allBuilders} from "../../../ast/builders";
 import * as Stream from "../../../ast/stream";
+import {isAST, isStream} from "../../../ast/introspection";
 
 function builders(kind: Universal.Kind): { [name: string]: ESTreeBuilder } {
     return {
@@ -23,15 +24,10 @@ export function matrix(
 }
 
 export function force(ast: any): any {
-    if (ast.astType) {
-        const type = ast.astType as Universal.Kind;
-        // streaming ASTs need to be forced because we can't compare functions
-        if (type === "stream") {
-            const streamAST = ast as Stream.AST;
-            const buffer = new Stream.StringBuffer();
-            streamAST.render(buffer);
-            return buffer.content;
-        }
+    if (isAST(ast)) {
+        // stream ASTs need to be forced because we can't compare functions
+        if (isStream(ast))
+            return Stream.force(ast);
 
         return ast;
     }

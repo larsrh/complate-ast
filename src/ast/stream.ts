@@ -147,3 +147,9 @@ export class ASTBuilder<P> implements Builder<AST, P> {
 export const astBuilder = new ASTBuilder<string>(x => buffer => buffer.write(x));
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const astBuilderNoPrerender = new ASTBuilder<never>(() => () => {/* do nothing */});
+
+export function force(ast: AST): string {
+    const buffer = new StringBuffer();
+    ast.render(buffer);
+    return buffer.content;
+}

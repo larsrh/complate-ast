@@ -63,7 +63,17 @@ export class PrerenderedNode<P> implements AST<P> {
     ) {}
 }
 
-export type DOMNodeAST = AST<Node>
+export function isText(ast: AST<any>): ast is TextNode {
+    return ast.nodeType === "text";
+}
+
+export function isElement<P>(ast: AST<P>): ast is ElementNode<P> {
+    return ast.nodeType === "element";
+}
+
+export function isPrerendered<P>(ast: AST<P>): ast is PrerenderedNode<P> {
+    return ast.nodeType === "prerendered";
+}
 
 export class ASTBuilder<P> implements Builder<AST<P>, P> {
     element(tag: string, attributes?: Attributes, ...children: AST<P>[]): AST<P> {
