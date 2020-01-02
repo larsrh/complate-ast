@@ -295,7 +295,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
         const isStaticChildren = staticChildren !== null;
         const isDynamicTag = isDynamic(tag);
         const isStatic =
-            // streaming AST can't be reified because it contains a function
+            // stream AST can't be reified because it contains a function
             this.mode !== "stream" &&
             // all children need to be static
             isStaticChildren &&

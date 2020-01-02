@@ -5,7 +5,7 @@ import {JSDOM} from "jsdom";
 import {fromDOM} from "../../../ast/builder";
 import {jsdomBuilder} from "../../../ast/builders/nodejs-dom";
 import {CompactingBuilder} from "../../../ast/builders/compact";
-import {genNoPrerendered} from "../../../ast/gen";
+import * as Gen from "../../../ast/gen";
 
 function parseHTML(html: string): Node {
     const document = new JSDOM().window.document;
@@ -29,7 +29,7 @@ function compareHTML(html1: string, html2: string): void {
 describe("Structured AST roundtrips", () => {
 
     const builder = Structured.astBuilder;
-    const gen = genNoPrerendered(builder);
+    const gen = Gen.astNoPrerendered(builder);
 
     describe("DOM rendering", () => {
 

@@ -1,17 +1,21 @@
 import fc, {Arbitrary} from "fast-check";
 import {Builder} from "./builder";
-import {AttributeValue} from "../jsx/syntax";
+import {Attributes, AttributeValue} from "../jsx/syntax";
 
 const alphabetic =
     fc.array(fc.integer(0, 25).map(int => String.fromCharCode(int + 97 /* 'a' */)), 10, 20).map(array => array.join(""));
 
-function gen<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbitrary<A> {
-    const attrGen = fc.oneof<AttributeValue>(
-        fc.fullUnicodeString(),
-        fc.boolean(),
-        fc.constant(null),
-        fc.constant(undefined)
-    );
+export const attr: Arbitrary<AttributeValue> = fc.oneof<AttributeValue>(
+    fc.fullUnicodeString(),
+    fc.boolean(),
+    fc.constant(null),
+    fc.constant(undefined)
+);
+
+export const attrs: Arbitrary<Attributes> =
+    fc.array(fc.tuple(alphabetic, attr)).map(attrs => Object.fromEntries(attrs));
+
+function ast<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbitrary<A> {
     const { ast } = fc.letrec(tie => ({
         ast:
             fc.frequency(
@@ -46,22 +50,22 @@ function gen<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbit
         element:
             fc.tuple(
                 alphabetic,
-                fc.array(fc.tuple(alphabetic, attrGen)),
+                attrs,
                 fc.array(tie("ast"), 5)
             ).map(args => {
                 const [tag, attrs, children] = args;
-                return builder.element(tag, Object.fromEntries(attrs), ...(children as A[]));
+                return builder.element(tag, attrs, ...(children as A[]));
             })
     }));
 
     return ast as Arbitrary<A>;
 }
 
-export function genNoPrerendered<A>(builder: Builder<A, never>): Arbitrary<A> {
-    return gen(builder);
+export function astNoPrerendered<A>(builder: Builder<A, never>): Arbitrary<A> {
+    return ast(builder);
 }
 
-export function genWithPrerendered<A, P>(builder: Builder<A, P>, genP: Arbitrary<P>): Arbitrary<A> {
+export function astWithPrerendered<A, P>(builder: Builder<A, P>, genP: Arbitrary<P>): Arbitrary<A> {
     // TODO test this
-    return gen(builder, genP);
+    return ast(builder, genP);
 }

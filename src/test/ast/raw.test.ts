@@ -1,13 +1,13 @@
 import * as Structured from "../../ast/structured";
 import * as Raw from "../../ast/raw";
 import * as Stream from "../../ast/stream";
-import {genNoPrerendered} from "../../ast/gen";
+import * as Gen from "../../ast/gen";
 import fc from "fast-check";
 
 describe("Raw AST", () => {
 
     const builder = Structured.astBuilder;
-    const gen = genNoPrerendered(builder);
+    const gen = Gen.astNoPrerendered(builder);
 
     it("Equivalent to Stream", () => {
         fc.assert(fc.property(gen, ast => {
