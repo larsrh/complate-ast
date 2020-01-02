@@ -27,3 +27,11 @@ export class DOMBuilder implements Builder<Node, Node> {
         return value;
     }
 }
+
+export function parseHTML(document: Document, html: string): Node {
+    const dummy = document.createElement("div");
+    dummy.innerHTML = html;
+    if (dummy.childNodes.length !== 1)
+        throw new Error("Expected exactly one child");
+    return dummy.childNodes[0];
+}
