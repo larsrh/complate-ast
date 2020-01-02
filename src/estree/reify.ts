@@ -1,26 +1,5 @@
 import * as ESTree from "estree";
-import {Object} from "../util";
 import {call, identifier, member} from "./operations";
-
-export function object(fields: Object<ESTree.Expression>): ESTree.ObjectExpression {
-    const props = Object.entries(fields).map(field => {
-        const [key, value] = field;
-        const prop: ESTree.Property = {
-            type: "Property",
-            key: string(key),
-            kind: "init",
-            computed: false,
-            method: false,
-            shorthand: false,
-            value: value
-        };
-        return prop;
-    });
-    return {
-        type: "ObjectExpression",
-        properties: props
-    };
-}
 
 export function array(items: (ESTree.Expression | ESTree.SpreadElement)[]): ESTree.ArrayExpression {
     return {
@@ -47,6 +26,26 @@ export function boolean(b: boolean): ESTree.SimpleLiteral {
     return {
         type: "Literal",
         value: b
+    };
+}
+
+export function object(fields: Record<string, ESTree.Expression>): ESTree.ObjectExpression {
+    const props = Object.entries(fields).map(field => {
+        const [key, value] = field;
+        const prop: ESTree.Property = {
+            type: "Property",
+            key: string(key),
+            kind: "init",
+            computed: false,
+            method: false,
+            shorthand: false,
+            value: value
+        };
+        return prop;
+    });
+    return {
+        type: "ObjectExpression",
+        properties: props
     };
 }
 
