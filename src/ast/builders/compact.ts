@@ -1,5 +1,5 @@
 import * as Structured from "../structured";
-import {Attributes} from "../builder";
+import {Attributes} from "../../jsx/syntax";
 
 export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
     constructor() {

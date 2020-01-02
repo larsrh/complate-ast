@@ -1,13 +1,14 @@
 import {Object} from "../util";
-
-export type AttributeValue = string | null;
-export type Attributes<AV = AttributeValue> = Object<AV>;
+import {Attributes, AttributeValue} from "../jsx/syntax";
+import * as Universal from "./universal";
+import {allBuilders} from "./builders";
+import * as _ from "lodash";
 
 export interface Builder<A, P = never, AV = AttributeValue> {
     text(text: string): A
     prerendered(p: P): A
     element(tag: string, attributes?: Attributes<AV>, ...children: A[]): A
-    attributeValue(value: AttributeValue): AV
+    attributeValue(key: string, value: AttributeValue): AV
 }
 
 export function fromDOM<A>(builder: Builder<A>, node: Node): A {
@@ -35,4 +36,20 @@ export function fromDOM<A>(builder: Builder<A>, node: Node): A {
         Object.fromEntries(tree.getAttributeNames().map(attr => [attr, tree.getAttribute(attr)])),
         ...Array.from(tree.childNodes).map(child => fromDOM(builder, child))
     );
+}
+
+export function normalizeChildren(kind: Universal.Kind, ...children: any[]): Universal.AST[] {
+    const builder = allBuilders[kind];
+    return _.flattenDeep(children).filter(child =>
+        child !== undefined && child !== false && child !== null
+    ).map(child => {
+        if (typeof child === "string")
+            return builder.text(child);
+
+        const ast = child as Universal.AST;
+        if (ast.astType !== kind)
+            throw new Error(`Cannot normalize heterogeneous children: Expected ${kind}, received ${ast.astType}`);
+
+        return ast;
+    });
 }

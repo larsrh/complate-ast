@@ -47,3 +47,15 @@ export function block(...statements: ESTree.Statement[]): ESTree.BlockStatement 
         body: statements
     };
 }
+
+export function iife(...statements: ESTree.Statement[]): ESTree.CallExpression {
+    return call({
+        type: "ArrowFunctionExpression",
+        expression: false,
+        params: [],
+        body: {
+            type: "BlockStatement",
+            body: statements
+        }
+    });
+}

@@ -1,6 +1,13 @@
-import {Attributes, AttributeValue, Builder} from "./builder";
+import {Builder} from "./builder";
 import * as Universal from "./universal";
-import {escapeHTML, isVoidElement} from "../jsx/syntax";
+import {
+    Attributes,
+    AttributeValue,
+    escapeHTML,
+    isMacro,
+    isVoidElement,
+    normalizeAttributes
+} from "../jsx/syntax";
 
 export interface Buffer {
     write(content: string): void
@@ -40,19 +47,19 @@ export class ASTBuilder<P> implements Builder<AST, P> {
         const isVoid = isVoidElement(tag);
         if (isVoid && children.length > 0)
             throw new Error(`Void element ${tag} must not have children`);
+        if (isMacro(tag))
+            throw new Error(`Macro tag ${tag} not allowed in an AST`);
 
         return create(buffer => {
             buffer.write("<");
             buffer.write(tag);
-            if (attributes)
-                for (const [key, value] of Object.entries(attributes))
-                    if (value !== null) {
-                        buffer.write(" ");
-                        buffer.write(key);
-                        buffer.write("=\"");
-                        buffer.write(escapeHTML(value));
-                        buffer.write("\"");
-                    }
+            for (const [key, value] of Object.entries(normalizeAttributes(true, attributes))) {
+                buffer.write(" ");
+                buffer.write(key);
+                buffer.write("=\"");
+                buffer.write(value);
+                buffer.write("\"");
+            }
             buffer.write(">");
             if (!isVoid) {
                 children.forEach(child => child.render(buffer));
@@ -75,7 +82,7 @@ export class ASTBuilder<P> implements Builder<AST, P> {
         });
     }
 
-    attributeValue(value: AttributeValue): AttributeValue {
+    attributeValue(key: string, value: AttributeValue): AttributeValue {
         return value;
     }
 }

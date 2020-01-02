@@ -1,6 +1,13 @@
-import {Attributes, AttributeValue, Builder} from "./builder";
+import {Builder} from "./builder";
 import * as Universal from "./universal";
-import {escapeHTML, isVoidElement} from "../jsx/syntax";
+import {
+    Attributes,
+    AttributeValue,
+    escapeHTML,
+    isMacro,
+    isVoidElement,
+    normalizeAttributes
+} from "../jsx/syntax";
 
 export interface AST extends Universal.AST {
     readonly astType: "raw"
@@ -16,18 +23,18 @@ export function create(value: string): AST {
 
 export class ASTBuilder implements Builder<AST, string> {
     element(tag: string, attributes?: Attributes, ...children: AST[]): AST {
+        if (isMacro(tag))
+            throw new Error(`Macro tag ${tag} not allowed in an AST`);
         let raw = "";
         raw += "<";
         raw += tag;
-        if (attributes)
-            for (const [key, value] of Object.entries(attributes))
-                if (value !== null) {
-                    raw += " ";
-                    raw += key;
-                    raw += "=\"";
-                    raw += escapeHTML(value);
-                    raw += "\"";
-                }
+        for (const [key, value] of Object.entries(normalizeAttributes(true, attributes))) {
+            raw += " ";
+            raw += key;
+            raw += "=\"";
+            raw += value;
+            raw += "\"";
+        }
         raw += ">";
         if (isVoidElement(tag)) {
             if (children.length > 0)
@@ -50,7 +57,7 @@ export class ASTBuilder implements Builder<AST, string> {
         return create(escapeHTML(text));
     }
 
-    attributeValue(value: AttributeValue): AttributeValue {
+    attributeValue(key: string, value: AttributeValue): AttributeValue {
         return value;
     }
 }
