@@ -1,6 +1,6 @@
 import {force, matrix} from "./_util/matrix";
 import fc from "fast-check";
-import {genNoPrerendered} from "../../ast/gen";
+import * as Gen from "../../ast/gen";
 import * as Structured from "../../ast/structured";
 import * as Raw from "../../ast/raw";
 import {extractAST, parse, preprocess} from "../../jsx/preprocess";
@@ -16,8 +16,8 @@ describe("Preprocessing roundtrips", () => {
 
     matrix((kind, astBuilder, name, esBuilder) => {
 
-        test("Roundtrip", () => {
-            const gen = genNoPrerendered(Structured.astBuilder).filter(ast => ast.nodeType !== "text");
+        it("Roundtrip", () => {
+            const gen = Gen.astNoPrerendered(Structured.astBuilder).filter(ast => ast.nodeType !== "text");
             fc.assert(fc.property(gen, ast => {
                 const ast1 = Structured.render(
                     Structured.render(ast, new CompactingBuilder()),

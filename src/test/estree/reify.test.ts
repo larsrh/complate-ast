@@ -4,7 +4,7 @@ import * as ESTree from "estree";
 import {generate} from "escodegen";
 import fc, {Arbitrary} from "fast-check";
 import * as Reify from "../../estree/reify";
-import {genNoPrerendered, genWithPrerendered} from "../../ast/gen";
+import * as Gen from "../../ast/gen";
 import {runInNewContext} from "vm";
 
 function checkReified(expr: ESTree.Expression, t: any): void {
@@ -56,17 +56,17 @@ describe("Reify", () => {
     it("any(array)", () => checkReify(fc.array(fc.fullUnicodeString()), Reify.any));
 
     it("any(raw)", () => {
-        const gen = genNoPrerendered(Raw.astBuilder);
+        const gen = Gen.astNoPrerendered(Raw.astBuilder);
         checkReify(gen, Reify.any);
     });
 
     it("any(structured)", () => {
-        const gen = genNoPrerendered(Structured.astBuilder);
+        const gen = Gen.astNoPrerendered(Structured.astBuilder);
         checkReify(gen, Reify.any);
     });
 
     it("any(structured(raw))", () => {
-        const gen = genWithPrerendered(new Structured.ASTBuilder(), genNoPrerendered(Raw.astBuilder));
+        const gen = Gen.astWithPrerendered(new Structured.ASTBuilder(), Gen.astNoPrerendered(Raw.astBuilder));
         checkReify(gen, Reify.any);
     });
 
