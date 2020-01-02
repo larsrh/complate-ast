@@ -20,7 +20,8 @@ export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
             for (const child of children) {
                 if (child.nodeType === "text") {
                     currentText += (child as Structured.TextNode).text;
-                } else {
+                }
+                else {
                     if (currentText !== "") {
                         newChildren.push(new Structured.TextNode(currentText));
                         currentText = "";

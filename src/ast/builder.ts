@@ -2,6 +2,7 @@ import {Attributes, AttributeValue} from "../jsx/syntax";
 import * as Universal from "./universal";
 import {allBuilders} from "./builders";
 import * as _ from "lodash";
+import {isAST} from "./introspection";
 
 export interface Builder<A, P = never, AV = AttributeValue> {
     text(text: string): A;
@@ -45,10 +46,11 @@ export function normalizeChildren(kind: Universal.Kind, ...children: any[]): Uni
         if (typeof child === "string")
             return builder.text(child);
 
-        const ast = child as Universal.AST;
-        if (ast.astType !== kind)
-            throw new Error(`Cannot normalize heterogeneous children: Expected ${kind}, received ${ast.astType}`);
+        if (!isAST(child))
+            throw new Error("Invalid child: Expected AST");
+        if (child.astType !== kind)
+            throw new Error(`Cannot normalize heterogeneous children: Expected ${kind}, received ${child.astType}`);
 
-        return ast;
+        return child;
     });
 }

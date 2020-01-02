@@ -43,6 +43,13 @@ function processStaticAttribute(literal: ESTree.Literal): string | boolean | nul
         throw new Error(`Unknown literal type ${literal}`);
 }
 
+function tagExpression(tag: string): ESTree.Expression {
+    if (isDynamic(tag))
+        return Operations.identifier(tag.substring(1));
+    else
+        return Reify.string(tag);
+}
+
 class Runtime {
     constructor(
         private readonly runtime: ESTree.Expression,
@@ -149,11 +156,11 @@ export class RuntimeBuilder extends ESTreeBuilder {
 
     private elementish(
         callee: ESTree.Expression,
-        tag: string | null,
+        tag: ESTree.Expression | null,
         attributes: Attributes<ESTree.Expression>,
         children: ESTree.Expression[]
     ): ESTree.Expression {
-        const tagish = tag !== null ? [Reify.string(tag)] : [];
+        const tagish = tag !== null ? [tag] : [];
         return Operations.call(
             callee,
             ...tagish,
@@ -169,12 +176,10 @@ export class RuntimeBuilder extends ESTreeBuilder {
     ): ESTree.Expression {
         if (isVoidElement(tag) && children.length > 0)
             throw new Error(`Void element ${tag} must not have children`);
-        if (isDynamic(tag))
-            throw new Error(`Dynamic element ${tag} not supported in runtime mode (requires "eval")`);
 
         return this.elementish(
             Operations.member(this.runtime.builder(this.mode), Operations.identifier("element")),
-            tag,
+            tagExpression(tag),
             attributes ? attributes : {},
             children
         );
@@ -329,21 +334,17 @@ export class OptimizingBuilder extends ESTreeBuilder {
 
         const normalizedChildren = this.normalizeChildren(isStaticChildren, children);
 
-        let tagIdentifier: ESTree.Expression;
-        if (isDynamicTag)
-            tagIdentifier = Operations.identifier(tag.substring(1));
-        else
-            tagIdentifier = Reify.string(tag);
+        const tagExpr = tagExpression(tag);
 
         let tagOpen: ESTree.Expression;
         if (isDynamicTag)
-            tagOpen = Operations.binaryPlus(Reify.string("<"), tagIdentifier);
+            tagOpen = Operations.binaryPlus(Reify.string("<"), tagExpr);
         else
             tagOpen = Reify.string("<" + tag);
 
         let tagClose: ESTree.Expression;
         if (isDynamicTag)
-            tagClose = Operations.binaryPlus(Reify.string("</"), tagIdentifier, Reify.string(">"));
+            tagClose = Operations.binaryPlus(Reify.string("</"), tagExpr, Reify.string(">"));
         else
             tagClose = Reify.string(`</${tag}>`);
 
@@ -351,7 +352,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             return Reify.object({
                 astType: Reify.string("structured"),
                 nodeType: Reify.string("element"),
-                tag: tagIdentifier,
+                tag: tagExpr,
                 // structured mode doesn't care about falsy attributes; renderers will take care of it
                 attributes: Reify.object(attributes),
                 children: normalizedChildren.raw
@@ -422,7 +423,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                 bodyClose = regularBodyClose;
             else
                 bodyClose = [Operations.ifthenelse(
-                    this.runtime.isVoidElement(tagIdentifier),
+                    this.runtime.isVoidElement(tagExpr),
                     Operations.block(),
                     Operations.block(...regularBodyClose)
                 )];
@@ -492,7 +493,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             else
                 partsClosed = [
                     new ArrayExpr(Operations.conditional(
-                        this.runtime.isVoidElement(tagIdentifier),
+                        this.runtime.isVoidElement(tagExpr),
                         Reify.array([]).raw,
                         children
                     )),

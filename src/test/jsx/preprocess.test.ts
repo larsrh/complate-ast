@@ -39,20 +39,20 @@ describe("Preprocessing (examples)", () => {
             });
         }
 
-        function checkRuntimeFailure(name: string, jsx: string): void {
+        function checkRuntimeFailure(name: string, jsx: string, regex: RegExp): void {
             const sandbox = {JSXRuntime: _JSXRuntime};
             it(name, () => {
                 const input = parse(jsx);
                 const processed = preprocess(input, esBuilder) as ESTree.Program;
                 const generated = generate(processed);
-                expect(() => force(runInNewContext(generated, sandbox))).toThrow();
+                expect(() => force(runInNewContext(generated, sandbox))).toThrow(regex);
             })
         }
 
-        function checkCompileFailure(name: string, jsx: string): void {
+        function checkCompileFailure(name: string, jsx: string, regex: RegExp): void {
             it(name, () => {
                 const input = parse(jsx);
-                expect(() => preprocess(input, esBuilder)).toThrow();
+                expect(() => preprocess(input, esBuilder)).toThrow(regex);
             })
         }
 
@@ -183,13 +183,41 @@ describe("Preprocessing (examples)", () => {
 
         checkRuntimeFailure(
             "Invalid children",
-            "<div>{ 3 }</div>"
+            "<div>{ 3 }</div>",
+            /invalid child/i
         );
 
         checkCompileFailure(
             "Statically non-empty void elements",
-            "<br>{null}</br>"
+            "<br>{null}</br>",
+            /children/
         );
+
+        describe("Dynamic tags", () => {
+
+            check(
+                "Simple",
+                `(() => {
+                    const tag = "h3";
+                    return <$tag class="foo">abc</$tag>
+                })()`,
+                Structured.astBuilder.element("h3", {class: "foo"}, Structured.astBuilder.text("abc"))
+            );
+
+            describe.skip("Void check", () => {
+
+                checkRuntimeFailure(
+                    "Void check",
+                    `(() => {
+                        const tag = "br";
+                        return <$tag>abc</$tag>
+                    })()`,
+                    /children/
+                );
+
+            });
+
+        });
 
         describe("Kind-specific", () => {
 
@@ -250,48 +278,6 @@ describe("Preprocessing (examples)", () => {
                     "<button disabled={ true || false } />",
                     Structured.astBuilder.element("button", { disabled: true })
                 );
-
-            }
-
-        });
-
-        describe("Builder-specific", () => {
-
-            if (name !== "runtime") {
-
-                describe("Dynamic tags", () => {
-
-                    check(
-                        "Simple",
-                        `(() => {
-                            const tag = "h3";
-                            return <$tag class="foo">abc</$tag>
-                        })()`,
-                        Structured.astBuilder.element("h3", {class: "foo"}, Structured.astBuilder.text("abc"))
-                    );
-
-                    describe.skip("Void check", () => {
-
-                        checkRuntimeFailure(
-                            "Void check",
-                            `(() => {
-                            const tag = "br";
-                            return <$tag>abc</$tag>
-                        })()`
-                        );
-
-                    });
-
-                });
-
-            }
-
-            else {
-
-                checkCompileFailure(
-                    "Dynamic tags",
-                    "<$tag />"
-                )
 
             }
 

@@ -8,3 +8,5 @@ export {astBuilder as rawBuilder} from "../ast/raw";
 export function Fragment<T>(props: {}, ...children: T[]): T[] {
     return children;
 }
+
+export {addItems} from "../ast/introspection";
