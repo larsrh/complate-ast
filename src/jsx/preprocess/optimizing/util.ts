@@ -25,12 +25,12 @@ export class Tag {
         this.isVoid = isVoidElement(tag);
 
         if (this.isDynamic)
-            this.open = Operations.binaryPlus(Reify.string("<"), this.expr);
+            this.open = Operations.plus(Reify.string("<"), this.expr);
         else
             this.open = Reify.string("<" + tag);
 
         if (this.isDynamic)
-            this.close = Operations.binaryPlus(Reify.string("</"), this.expr, Reify.string(">"));
+            this.close = Operations.plus(Reify.string("</"), this.expr, Reify.string(">"));
         else
             this.close = Reify.string(`</${tag}>`);
     }

@@ -100,7 +100,7 @@ export class StreamFactory implements Factory {
                 const condition = Operations.ifthenelse(
                     Operations.notEqual(Reify.any(null), sym),
                     Operations.block(
-                        bufferWrite(buffer, Operations.binaryPlus(Reify.string(" "), key, Reify.string(`="`))),
+                        bufferWrite(buffer, Operations.plus(Reify.string(" "), key, Reify.string(`="`))),
                         bufferWrite(buffer, runtime.escapeHTML(sym)),
                         bufferWrite(buffer, Reify.string('"'))
                     )

@@ -28,7 +28,7 @@ export class RawFactory implements Factory {
 
         function mkDynamicAttr(key: string, value: ESTree.Expression): ESTree.Expression {
             function defaultString(value: ESTree.Expression): ESTree.Expression {
-                return Operations.binaryPlus(Reify.string(` ${key}="`), value, Reify.string('"'));
+                return Operations.plus(Reify.string(` ${key}="`), value, Reify.string('"'));
             }
 
             const sym = gen.sym();
