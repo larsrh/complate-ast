@@ -14,8 +14,8 @@ export class ArrayExpr implements ESTree.SpreadElement, Expr {
         return call(member(this.argument, identifier("join")), separator);
     }
 
-    map(fn: ESTree.Expression): ESTree.CallExpression {
-        return call(member(this.argument, identifier("map")), fn);
+    map(fn: ESTree.Expression): ArrayExpr {
+        return new ArrayExpr(call(member(this.argument, identifier("map")), fn));
     }
 
     forEach(fn: ESTree.Expression): ESTree.CallExpression {

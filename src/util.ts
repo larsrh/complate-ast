@@ -12,3 +12,7 @@ export function filterObject<V>(object: Record<string, V | null>): Record<string
             newObject[key] = value;
     return newObject;
 }
+
+export function assertUnreachable(): never {
+    throw new Error("Bug: unreachable code");
+}

@@ -5,7 +5,7 @@ import {Attributes, AttributeValue, isMacro, isVoidElement} from "../jsx/syntax"
 
 export type NodeType = "text" | "element" | "prerendered"
 
-export interface AST<P> extends Universal.AST {
+export interface AST<P = never> extends Universal.AST {
     readonly nodeType: NodeType;
     readonly astType: "structured";
 }
@@ -29,7 +29,7 @@ export function render<P, O, AV>(ast: AST<P>, renderer: Builder<O, P, AV>): O {
     throw new Error("Invalid AST");
 }
 
-export class TextNode implements AST<never> {
+export class TextNode implements AST {
     public readonly nodeType = "text";
     public readonly astType = "structured";
 
@@ -75,7 +75,7 @@ export function isPrerendered<P>(ast: AST<P>): ast is PrerenderedNode<P> {
     return ast.nodeType === "prerendered";
 }
 
-export class ASTBuilder<P> implements Builder<AST<P>, P> {
+export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
     element(tag: string, attributes?: Attributes, ...children: AST<P>[]): AST<P> {
         return new ElementNode<P>(tag, attributes ? attributes : {}, children);
     }
@@ -93,7 +93,7 @@ export class ASTBuilder<P> implements Builder<AST<P>, P> {
     }
 }
 
-export const astBuilder = new ASTBuilder<never>();
+export const astBuilder = new ASTBuilder();
 
 export class MappingBuilder<P, Q> implements Builder<AST<Q>, P> {
     constructor(

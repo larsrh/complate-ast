@@ -24,22 +24,6 @@ describe("Stream AST", () => {
             expect(Stream.force(ast2)).toEqual(`<div class="foo"></div>`);
         });
 
-        it("Prevent extra children if not element", () => {
-            const ast1 = builder.text("hi");
-            const ast2 = Stream._clone(ast1, () => [builder.text("no")], attr => attr);
-            expect(() => Stream.force(ast2)).toThrow(/children/);
-            const ast3 = Stream._clone(ast2, () => [builder.text("NO")], attr => attr);
-            expect(() => Stream.force(ast3)).toThrow(/children/);
-        });
-
-        it("Prevent extra attributes if not element", () => {
-            const ast1 = builder.text("hi");
-            const ast2 = Stream._clone(ast1, children => children, () => ({ class: "foo" }));
-            expect(() => Stream.force(ast2)).toThrow(/attributes/);
-            const ast3 = Stream._clone(ast2, children => children, () => ({ class: "foo" }));
-            expect(() => Stream.force(ast3)).toThrow(/attributes/);
-        });
-
         it("Modifies extra children", () => {
             const ast1 = builder.element("div");
             const ast2 = Stream._clone(ast1, () => [builder.text("no")], attr => attr);
@@ -53,6 +37,12 @@ describe("Stream AST", () => {
             const ast3 = Stream._clone(ast2, children => children, () => ({ class: "bar" }));
             expect(Stream.force(ast3)).toEqual(`<div class="bar"></div>`);
         });
+
+        it("Prevent cloning if not element", () => {
+            const ast = builder.text("hi");
+            expect(() => Stream._clone(ast, children => children, attr => attr)).toThrow(/non-element/);
+        });
+
 
         it("Cloning creates independent objects", () => {
             const ast = builder.element("div");

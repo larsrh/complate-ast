@@ -23,7 +23,7 @@ export function processStaticAttribute(literal: ESTree.Literal): string | boolea
     else if (typeof value === "number")
         return value.toString();
     else
-    // RegExp, undefined or others
+        // RegExp, undefined or others
         throw new Error(`Unknown literal type ${literal}`);
 }
 
@@ -81,7 +81,7 @@ export class Runtime {
         return this.call("isVoidElement", argument);
     }
 
-    normalizeAttribute(key: string, value: ESTree.Expression): ESTree.Expression {
-        return this.call("normalizeAttribute", Reify.string(key), value);
+    normalizeAttribute(key: ESTree.Expression, value: ESTree.Expression): ESTree.Expression {
+        return this.call("normalizeAttribute", key, value);
     }
 }

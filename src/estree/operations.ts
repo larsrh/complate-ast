@@ -1,5 +1,6 @@
 import * as ESTree from "estree";
 
+// TODO rename to plus
 export function binaryPlus(left: ESTree.Expression, ...rights: ESTree.Expression[]): ESTree.Expression {
     let result = left;
     for (const right of rights)
@@ -12,12 +13,39 @@ export function binaryPlus(left: ESTree.Expression, ...rights: ESTree.Expression
     return result;
 }
 
+export function equal(left: ESTree.Expression, right: ESTree.Expression): ESTree.BinaryExpression {
+    return {
+        type: "BinaryExpression",
+        operator: "===",
+        left: left,
+        right: right
+    };
+}
+
+export function isin(key: ESTree.Expression, object: ESTree.Expression): ESTree.BinaryExpression {
+    return {
+        type: "BinaryExpression",
+        operator: "in",
+        left: key,
+        right: object
+    };
+}
+
 export function notEqual(left: ESTree.Expression, right: ESTree.Expression): ESTree.BinaryExpression {
     return {
         type: "BinaryExpression",
         operator: "!==",
         left: left,
         right: right
+    };
+}
+
+export function not(expr: ESTree.Expression): ESTree.UnaryExpression {
+    return {
+        type: "UnaryExpression",
+        prefix: true,
+        operator: "!",
+        argument: expr
     };
 }
 
@@ -29,12 +57,12 @@ export function call(callee: ESTree.Expression, ...args: (ESTree.Expression | ES
     };
 }
 
-export function member(object: ESTree.Expression, property: ESTree.Identifier): ESTree.MemberExpression {
+export function member(object: ESTree.Expression, property: ESTree.Expression, computed?: boolean): ESTree.MemberExpression {
     return {
         type: "MemberExpression",
         object: object,
         property: property,
-        computed: false
+        computed: computed === undefined ? false : computed
     };
 }
 

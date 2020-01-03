@@ -11,7 +11,7 @@ const childrenGen = fc.array(Gen.astNoPrerendered(Structured.astBuilder), 0, 5);
 
 function laws<AST extends Universal.AST>(
     kind: Universal.Kind,
-    make: (ast: Structured.AST<never>) => AST,
+    make: (ast: Structured.AST) => AST,
     force: (ast: AST) => any
 ): void {
     describe(`Kind: ${kind}`, () => {
