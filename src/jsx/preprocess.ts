@@ -3,7 +3,6 @@ import {walk} from "estree-walker";
 import * as ESTree from "estree";
 import * as Reify from "../estree/reify";
 import * as Operations from "../estree/operations";
-import * as Universal from "../ast/universal";
 import * as Structured from "../ast/structured";
 import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
 import {Builder} from "../ast/builder";
@@ -33,18 +32,10 @@ export function injectAST(node: ESTree.Node, ast: Structured.AST): void {
 }
 
 export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree.Expression, ESTree.Expression> {
-    readonly runtime: Runtime;
-
     constructor(
         readonly canStatic: boolean,
-        readonly mode: Universal.Kind,
-        runtime?: string
-    ) {
-        this.runtime = new Runtime(
-            Operations.identifier(runtime === undefined ? "JSXRuntime" : runtime),
-            mode
-        );
-    }
+        readonly runtime: Runtime
+    ) {}
 
     abstract element(
         tag: string,

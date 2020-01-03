@@ -3,26 +3,23 @@ import {ESTreeBuilder} from "../../../jsx/preprocess";
 import {allBuilders} from "../../../ast/builders";
 import * as Stream from "../../../ast/stream";
 import {isAST, isStream} from "../../../ast/introspection";
-import {OptimizingBuilder} from "../../../jsx/preprocess/optimizing";
-import {RuntimeBuilder} from "../../../jsx/preprocess/runtime";
+import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../../../jsx/preprocess/config";
 
-function builders(kind: Universal.Kind): { [name: string]: ESTreeBuilder } {
-    return {
-        "runtime": new RuntimeBuilder(kind),
-        "optimizing": new OptimizingBuilder(kind)
-    };
-}
+const allConfigs: ESTreeBuilderConfig[] = [
+    { mode: "runtime", target: "structured" },
+    { mode: "runtime", target: "stream" },
+    { mode: "runtime", target: "raw" },
+    { mode: "optimizing", target: "structured" },
+    { mode: "optimizing", target: "stream" },
+    { mode: "optimizing", target: "raw" }
+];
 
 export function matrix(
-    action: (kind: Universal.Kind, astBuilder: Universal.Builder, name: string, esBuilder: ESTreeBuilder) => void
+    action: (config: ESTreeBuilderConfig, astBuilder: Universal.Builder, esBuilder: ESTreeBuilder) => void
 ): void {
-    for (const [kind, astBuilder] of Object.entries(allBuilders))
-        describe(`Kind: ${kind}`, () => {
-            for (const [name, esBuilder] of Object.entries(builders(kind as Universal.Kind)))
-                describe(`Builder: ${name}`, () => {
-                    action(kind as Universal.Kind, astBuilder, name, esBuilder);
-                });
-        });
+    describe.each(allConfigs)(`%o`, config =>
+        action(config, allBuilders[config.target], esTreeBuilderFromConfig(config))
+    );
 }
 
 export function force(ast: any): any {

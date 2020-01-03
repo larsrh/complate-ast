@@ -13,7 +13,7 @@ import * as _JSXRuntime from "../../jsx/runtime";
 
 describe("Preprocessing (examples)", () => {
 
-    matrix((kind, astBuilder, name, esBuilder) => {
+    matrix((config, astBuilder, esBuilder) => {
 
         function check(name: string, jsx: string, _expected: Structured.AST | string, expectStatic?: boolean): void {
             const doStatic = expectStatic && esBuilder.canStatic;
@@ -214,7 +214,7 @@ describe("Preprocessing (examples)", () => {
             Structured.astBuilder.element("h3", {class: "foo"}, Structured.astBuilder.text("abc"))
         );
 
-        if (kind !== "structured") {
+        if (config.target !== "structured") {
 
             check(
                 "Eliminate void attributes (static)",
@@ -244,8 +244,7 @@ describe("Preprocessing (examples)", () => {
 
         }
 
-        else if (name === "optimizing") { // structured && optimizing
-
+        else if (config.mode === "optimizing") { // structured && optimizing
 
             check(
                 "Eliminate void attributes (static)",
@@ -305,7 +304,7 @@ describe("Preprocessing (examples)", () => {
 
         }
 
-        if (kind !== "raw") {
+        if (config.target !== "raw") {
 
             check(
                 "Introspection with children",

@@ -4,14 +4,14 @@ import {Attributes, isVoidElement} from "../syntax";
 import * as Operations from "../../estree/operations";
 import * as Reify from "../../estree/reify";
 import {ESTreeBuilder} from "../preprocess";
-import {tagExpression} from "./util";
+import {Runtime, tagExpression} from "./util";
 
 export class RuntimeBuilder extends ESTreeBuilder {
     constructor(
-        mode: Universal.Kind,
-        runtime?: string
+        private readonly mode: Universal.Kind,
+        runtime: Runtime
     ) {
-        super(false, mode, runtime);
+        super(false, runtime);
     }
 
     private elementish(

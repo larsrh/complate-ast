@@ -14,7 +14,7 @@ import * as _JSXRuntime from "../../jsx/runtime";
 
 describe("Preprocessing roundtrips", () => {
 
-    matrix((kind, astBuilder, name, esBuilder) => {
+    matrix((config, astBuilder, esBuilder) => {
 
         it("Roundtrip", () => {
             const gen = Gen.astNoPrerendered(Structured.astBuilder).filter(ast => ast.nodeType !== "text");
