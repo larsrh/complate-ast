@@ -33,7 +33,7 @@ describe("Structured AST", () => {
 
     it("structured collapse", () => {
         const gen = Gen.astWithPrerendered(
-            new Structured.ASTBuilder<Structured.AST<never>>(),
+            new Structured.ASTBuilder<Structured.AST>(),
             Gen.astNoPrerendered(builder)
         );
         fc.assert(fc.property(gen, ast => {

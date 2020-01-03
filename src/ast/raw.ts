@@ -1,13 +1,6 @@
 import {Builder} from "./builder";
 import * as Universal from "./universal";
-import {
-    Attributes,
-    AttributeValue,
-    escapeHTML,
-    isMacro,
-    isVoidElement,
-    normalizeAttributes
-} from "../jsx/syntax";
+import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, normalizeAttributes} from "../jsx/syntax";
 
 export interface AST extends Universal.AST {
     readonly astType: "raw";

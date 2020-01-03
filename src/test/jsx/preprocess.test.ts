@@ -4,6 +4,9 @@ import * as Structured from "../../ast/structured";
 import {generate} from "escodegen";
 import {runInNewContext} from "vm";
 import {force, matrix} from "./_util/matrix";
+import {JSDOM} from "jsdom";
+import {parseHTML} from "../../ast/builders/dom";
+import {fromDOM} from "../../ast/builder";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../../jsx/runtime";
@@ -12,9 +15,17 @@ describe("Preprocessing (examples)", () => {
 
     matrix((kind, astBuilder, name, esBuilder) => {
 
-        function check(name: string, jsx: string, _expected: Structured.AST<never>, expectStatic?: boolean): void {
+        function check(name: string, jsx: string, _expected: Structured.AST | string, expectStatic?: boolean): void {
             const doStatic = expectStatic && esBuilder.canStatic;
-            const expected = Structured.render(_expected, astBuilder);
+            let expected;
+            if (typeof _expected === "string") {
+                const document = new JSDOM().window.document;
+                const node = parseHTML(document, _expected);
+                expected = fromDOM(astBuilder, node);
+            }
+            else {
+                expected = Structured.render(_expected, astBuilder);
+            }
             describe(name, () => {
                 const input = parse(jsx);
                 const processed = preprocess(input, esBuilder) as ESTree.Program;
@@ -32,7 +43,8 @@ describe("Preprocessing (examples)", () => {
                     const inner = (processed.body[0] as ESTree.ExpressionStatement).expression;
                     const extracted = extractAST(inner);
                     if (doStatic)
-                        expect(extracted).toEqual(expected);
+                        // TODO more direct equality
+                        expect(force(Structured.render(extracted!, astBuilder))).toEqual(force(expected));
                     else
                         expect(extracted).toBeNull();
                 });
@@ -193,95 +205,171 @@ describe("Preprocessing (examples)", () => {
             /children/
         );
 
-        describe("Dynamic tags", () => {
+        check(
+            "Dynamic tag",
+            `(() => {
+                const tag = "h3";
+                return <$tag class="foo">abc</$tag>
+            })()`,
+            Structured.astBuilder.element("h3", {class: "foo"}, Structured.astBuilder.text("abc"))
+        );
+
+        if (kind !== "structured") {
 
             check(
-                "Simple",
-                `(() => {
-                    const tag = "h3";
-                    return <$tag class="foo">abc</$tag>
-                })()`,
-                Structured.astBuilder.element("h3", {class: "foo"}, Structured.astBuilder.text("abc"))
+                "Eliminate void attributes (static)",
+                "<span class={null} id={false} />",
+                Structured.astBuilder.element("span"),
+                true
             );
 
-            describe.skip("Void check", () => {
+            check(
+                "Eliminate void attributes",
+                "<span class={null} id={false && true} style={undefined} />",
+                Structured.astBuilder.element("span")
+            );
 
-                checkRuntimeFailure(
-                    "Void check",
-                    `(() => {
-                        const tag = "br";
-                        return <$tag>abc</$tag>
-                    })()`,
-                    /children/
-                );
+            check(
+                "Render true attributes (static)",
+                "<button disabled={ true } />",
+                Structured.astBuilder.element("button", { disabled: "disabled" }),
+                true
+            );
 
-            });
+            check(
+                "Render true attributes",
+                "<button disabled={ true || false } />",
+                Structured.astBuilder.element("button", { disabled: "disabled" })
+            );
 
-        });
+        }
 
-        describe("Kind-specific", () => {
+        else if (name === "optimizing") { // structured && optimizing
 
-            if (kind !== "structured") {
 
-                check(
-                    "Eliminate void attributes (static)",
-                    "<span class={null} id={false} />",
-                    Structured.astBuilder.element("span"),
-                    true
-                );
+            check(
+                "Eliminate void attributes (static)",
+                "<span class={null} id={false} />",
+                Structured.astBuilder.element("span"),
+                true
+            );
 
-                check(
-                    "Eliminate void attributes",
-                    "<span class={null} id={false && true} style={undefined} />",
-                    Structured.astBuilder.element("span")
-                );
+            check(
+                "Keep void attributes",
+                "<span class={null} id={false && true} style={undefined} />",
+                Structured.astBuilder.element("span", { id: false, style: undefined })
+            );
 
-                check(
-                    "Render true attributes (static)",
-                    "<button disabled={ true } />",
-                    Structured.astBuilder.element("button", { disabled: "disabled" }),
-                    true
-                );
+            check(
+                "Render true attributes (static)",
+                "<button disabled={ true } />",
+                Structured.astBuilder.element("button", { disabled: "disabled" }),
+                true
+            );
 
-                check(
-                    "Render true attributes",
-                    "<button disabled={ true || false } />",
-                    Structured.astBuilder.element("button", { disabled: "disabled" })
-                );
+            check(
+                "Keep true attributes",
+                "<button disabled={ true || false } />",
+                Structured.astBuilder.element("button", { disabled: true })
+            );
 
-            }
+        }
 
-            else {
+        else { // structured && runtime
 
-                check(
-                    "Keep void attributes (static)",
-                    "<span class={null} id={false} />",
-                    Structured.astBuilder.element("span", { class: null, id: false }),
-                    true
-                );
+            check(
+                "Keep void attributes (static)",
+                "<span class={null} id={false} />",
+                Structured.astBuilder.element("span", { class: null, id: false }),
+                true
+            );
 
-                check(
-                    "Keep void attributes",
-                    "<span class={null} id={false && true} style={undefined} />",
-                    Structured.astBuilder.element("span", { class: null, id: false, style: undefined })
-                );
+            check(
+                "Keep void attributes",
+                "<span class={null} id={false && true} style={undefined} />",
+                Structured.astBuilder.element("span", { class: null, id: false, style: undefined })
+            );
 
-                check(
-                    "Keep true attributes (static)",
-                    "<button disabled={ true } />",
-                    Structured.astBuilder.element("button", { disabled: true }),
-                    true
-                );
+            check(
+                "Keep true attributes (static)",
+                "<button disabled={ true } />",
+                Structured.astBuilder.element("button", { disabled: true }),
+                true
+            );
 
-                check(
-                    "Keep true attributes",
-                    "<button disabled={ true || false } />",
-                    Structured.astBuilder.element("button", { disabled: true })
-                );
+            check(
+                "Keep true attributes",
+                "<button disabled={ true || false } />",
+                Structured.astBuilder.element("button", { disabled: true })
+            );
 
-            }
+        }
 
-        });
+        if (kind !== "raw") {
+
+            check(
+                "Introspection with children",
+                `(() => {
+                    const Test = (props, child) => JSXRuntime.addItems(child, {}, child, "hi");
+                    return <Test><div /></Test>;
+                })()`,
+                "<div><div></div>hi</div>"
+            );
+
+            check(
+                "Introspection overrides attributes",
+                `(() => {
+                    const Test = (props, child) => JSXRuntime.addItems(child, { class: "bar" });
+                    return <Test><div class="foo" /></Test>;
+                })()`,
+                "<div class='bar'></div>"
+            );
+
+            check(
+                "Introspection discards attributes",
+                `(() => {
+                    const Test = (props, child) => JSXRuntime.addItems(child, { class: undefined });
+                    return <Test><div class="foo" /></Test>;
+                })()`,
+                "<div></div>"
+            );
+
+            check(
+                "Introspection respects true attributes",
+                `(() => {
+                    const Test = (props, child) => JSXRuntime.addItems(child, { disabled: true });
+                    return <Test><button /></Test>;
+                })()`,
+                Structured.astBuilder.element("button", { disabled: true })
+            );
+
+            check(
+                "Introspection (meta)",
+                `(() => {
+                    function Add({ attrs, chldrn }, ...children) {
+                        return children.map(child =>
+                            JSXRuntime.addItems(child, attrs, ...chldrn)
+                        );
+                    }
+                    return <div><Add attrs={ ({ class: "foo" }) } chldrn={ [<span />, "hi"] }><span /><div /></Add></div>;
+                })()`,
+                "<div><span class='foo'><span></span>hi</span><div class='foo'><span></span>hi</div></div>"
+            );
+
+        }
+
+        else {
+
+            checkRuntimeFailure(
+                "Introspection",
+                `(() => {
+                    const Test = (props, child) => JSXRuntime.addItems(child);
+                    return <Test><div /></Test>;
+                })()`,
+                /AST kind/
+            );
+
+        }
 
     });
 

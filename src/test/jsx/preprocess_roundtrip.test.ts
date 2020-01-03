@@ -36,7 +36,8 @@ describe("Preprocessing roundtrips", () => {
                 if (esBuilder.canStatic) {
                     const inner = (processed.body[0] as ESTree.ExpressionStatement).expression;
                     const extracted = extractAST(inner);
-                    expect(extracted).toEqual(ast1);
+                    // TODO more direct equality
+                    expect(extracted).toEqual(Structured.render(ast, new CompactingBuilder()));
                 }
             }));
         });

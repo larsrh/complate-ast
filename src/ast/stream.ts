@@ -1,13 +1,6 @@
 import {Builder} from "./builder";
 import * as Universal from "./universal";
-import {
-    Attributes,
-    AttributeValue,
-    escapeHTML,
-    isMacro,
-    isVoidElement,
-    normalizeAttributes
-} from "../jsx/syntax";
+import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, normalizeAttributes} from "../jsx/syntax";
 import _ from "lodash";
 
 export interface Buffer {
@@ -28,6 +21,7 @@ export class StringBuffer implements Buffer {
 
 export interface AST extends Universal.AST {
     readonly astType: "stream";
+    readonly isElement: boolean;
     readonly _extraChildren?: AST[];
     readonly _extraAttributes?: Attributes;
     render(buffer: Buffer): void;
@@ -40,6 +34,9 @@ export function _clone(
     childrenFn: Modifier<AST[]>,
     attrFn: Modifier<Attributes>
 ): AST {
+    if (!ast.isElement)
+        throw new Error("Cannot extend non-element with extra children nor extra attributes");
+
     // The original AST is cloned (using lodash to also clone the methods, Object.assign doesn't work here)
     // in  a second step, we use Object.assign to overwrite the children and attributes
     // no binding required, since the ASTs are always called on the proper `this` argument
@@ -51,32 +48,11 @@ export function _clone(
     return newAST;
 }
 
-abstract class RuntimeASTImpl implements AST {
-    readonly astType = "stream";
-    readonly _extraChildren: AST[] | undefined = undefined;
-    readonly _extraAttributes: Attributes | undefined = undefined;
-    abstract readonly isElement: boolean;
-
-    render(buffer: Buffer): void {
-        const hasExtraChildren =
-            this._extraChildren !== undefined && this._extraChildren.length > 0;
-        const hasExtraAttributes =
-            this._extraAttributes !== undefined && Object.keys(this._extraAttributes).length > 0;
-        if (!this.isElement && (hasExtraChildren || hasExtraAttributes))
-            throw new Error("Cannot extend non-element with extra children nor extra attributes");
-
-        this._render(buffer);
-    }
-
-    abstract _render(buffer: Buffer): void;
-}
-
-export function create(fn: (buffer: Buffer) => void): AST {
-    return new class extends RuntimeASTImpl {
-        readonly isElement = false;
-        _render(buffer: Buffer): void {
-            fn(buffer);
-        }
+function create(fn: (buffer: Buffer) => void): AST {
+    return {
+        astType: "stream",
+        isElement: false,
+        render: fn
     };
 }
 
@@ -93,10 +69,11 @@ export class ASTBuilder<P> implements Builder<AST, P> {
         if (isMacro(tag))
             throw new Error(`Macro tag ${tag} not allowed in an AST`);
 
-        return new class extends RuntimeASTImpl {
-            readonly isElement = true;
+        return {
+            astType: "stream",
+            isElement: true,
 
-            _render(buffer: Buffer): void {
+            render(buffer: Buffer): void {
                 buffer.write("<");
                 buffer.write(tag);
 
@@ -127,15 +104,11 @@ export class ASTBuilder<P> implements Builder<AST, P> {
     }
 
     prerendered(p: P): AST {
-        return create(buffer => {
-            this.renderP(p)(buffer);
-        });
+        return create(buffer => this.renderP(p)(buffer));
     }
 
     text(text: string): AST {
-        return create(buffer => {
-            buffer.write(escapeHTML(text))
-        });
+        return create(buffer => buffer.write(escapeHTML(text)));
     }
 
     attributeValue(key: string, value: AttributeValue): AttributeValue {

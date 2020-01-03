@@ -6,22 +6,16 @@ import {fromDOM} from "../../../ast/builder";
 import {jsdomBuilder} from "../../../ast/builders/nodejs-dom";
 import {CompactingBuilder} from "../../../ast/builders/compact";
 import * as Gen from "../../../ast/gen";
+import {parseHTML} from "../../../ast/builders/dom";
 
-function parseHTML(html: string): Node {
-    const document = new JSDOM().window.document;
-    const dummy = document.createElement("div");
-    dummy.innerHTML = html;
-    if (dummy.childNodes.length !== 1)
-        throw new Error("Expected exactly one child");
-    return dummy.childNodes[0];
-}
+const document = new JSDOM().window.document;
 
 function compareHTML(html1: string, html2: string): void {
     if (html1 === html2)
         return;
 
-    const dom1 = parseHTML(html1);
-    const dom2 = parseHTML(html2);
+    const dom1 = parseHTML(document, html1);
+    const dom2 = parseHTML(document, html2);
 
     expect(dom2).toEqual(dom1);
 }
@@ -51,7 +45,7 @@ describe("Structured AST roundtrips", () => {
                 const buffer = new Stream.StringBuffer();
                 Structured.render(ast, Stream.astBuilderNoPrerender).render(buffer);
                 const ast1 = Structured.render(ast, new CompactingBuilder());
-                const ast2 = fromDOM(builder, parseHTML(buffer.content));
+                const ast2 = fromDOM(builder, parseHTML(document, buffer.content));
                 expect(ast2).toEqual(ast1);
             }));
         });
