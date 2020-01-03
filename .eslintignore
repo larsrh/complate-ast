@@ -1,3 +1,4 @@
 dist
 node_modules
 scratch.*
+*.config.js
