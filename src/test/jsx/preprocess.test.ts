@@ -3,8 +3,9 @@ import * as ESTree from "estree";
 import * as Structured from "../../ast/structured";
 import {generate} from "escodegen";
 import {runInNewContext} from "vm";
-import {force, matrix} from "./_util/matrix";
+import {matrix} from "./_util/matrix";
 import {JSDOM} from "jsdom";
+import {force} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)

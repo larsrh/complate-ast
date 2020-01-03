@@ -6,13 +6,15 @@ import * as Stream from "./ast/stream";
 import {Builder} from "./ast/structured/builder";
 import {Attributes} from "./jsx/syntax";
 
-export const astBuilders: { [key in Base.Kind]: Builder<Base.AST> } = {
+export type AST = Structured.AST | Stream.AST | Raw.AST
+
+export const astBuilders: { [key in Base.Kind]: Builder<AST> } = {
     "structured": Structured.astBuilder,
     "raw": Raw.astBuilder,
     "stream": Stream.astBuilder
 };
 
-export function isAST(object: any): object is Base.AST {
+export function isAST(object: any): object is AST {
     return object.astType && object.astType in astBuilders;
 }
 
@@ -46,7 +48,7 @@ function streamAttributeAdder(attributes?: Attributes): Stream.Modifier<Attribut
         return oldAttributes => ({... oldAttributes, ...attributes});
 }
 
-export function normalizeChildren(kind: Base.Kind, ...children: any[]): Base.AST[] {
+export function normalizeChildren(kind: Base.Kind, ...children: any[]): AST[] {
     const builder = astBuilders[kind];
     return _.flattenDeep(children).filter(child =>
         child !== undefined && child !== false && child !== null
@@ -67,15 +69,17 @@ export function addItems<AST extends Base.AST>(ast: AST, attributes?: Attributes
     const children = normalizeChildren(ast.astType, ..._children);
 
     if (isStructured(ast)) {
-        if (Structured.isElement(ast)) {
-            const newChildren = [...ast.children, ...children as Structured.AST<any>[]];
-            const newAttributes = {...ast.attributes, ...attributes};
-            return new Structured.ElementNode(ast.tag, newAttributes, newChildren) as any as AST;
+        switch (ast.nodeType) {
+            case "element": {
+                const newChildren = [...ast.children, ...children as Structured.AST<any>[]];
+                const newAttributes = {...ast.attributes, ...attributes};
+                return new Structured.ElementNode(ast.tag, newAttributes, newChildren) as any as AST;
+            }
+            default:
+                // TODO look into prerendered?
+
+                throw new Error(`Supplied node is ${ast.nodeType} and has no children`);
         }
-
-        // TODO look into prerendered?
-
-        throw new Error(`Supplied node is ${ast.nodeType} and has no children`);
     }
     else if (isStream(ast)) {
         return Stream._clone(
@@ -86,4 +90,13 @@ export function addItems<AST extends Base.AST>(ast: AST, attributes?: Attributes
     }
 
     throw new Error(`Cannot modify children of AST kind ${ast.astType}`);
+}
+
+export function force(ast: AST): AST {
+    switch (ast.astType) {
+        case "stream":
+            return { astType: "raw", value: Stream.force(ast) };
+        default:
+            return ast;
+    }
 }

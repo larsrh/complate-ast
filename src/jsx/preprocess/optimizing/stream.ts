@@ -195,22 +195,21 @@ export class StreamFactory implements Factory {
     }
 
     reify(runtime: Runtime, ast: Structured.AST): ESTree.Expression {
-        if (Structured.isText(ast)) {
-            return this.make(
-                false,
-                (buffer) => [bufferWrite(buffer, Reify.string(escapeHTML(ast.text)))]
-            );
-        }
-        else if (Structured.isElement(ast)) {
-            return this.makeElement(
-                runtime,
-                new Tag(ast.tag),
-                ProcessedAttributes.fromAttributeValues(ast.attributes),
-                StaticProcessedChildren.fromASTs(ast.children)
-            );
-        }
-        else {
-            throw new Error("Cannot reify prerendered element");
+        switch (ast.nodeType) {
+            case "text":
+                return this.make(
+                    false,
+                    (buffer) => [bufferWrite(buffer, Reify.string(escapeHTML(ast.text)))]
+                );
+            case "element":
+                return this.makeElement(
+                    runtime,
+                    new Tag(ast.tag),
+                    ProcessedAttributes.fromAttributeValues(ast.attributes),
+                    StaticProcessedChildren.fromASTs(ast.children)
+                );
+            case "prerendered":
+                throw new Error("Cannot reify prerendered element");
         }
     }
 }

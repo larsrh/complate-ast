@@ -1,4 +1,4 @@
-import {force, matrix} from "./_util/matrix";
+import {matrix} from "./_util/matrix";
 import fc from "fast-check";
 import * as Gen from "../../ast/gen";
 import * as Structured from "../../ast/structured";
@@ -8,6 +8,7 @@ import * as ESTree from "estree";
 import {runInNewContext} from "vm";
 import {generate} from "escodegen";
 import {CompactingBuilder} from "../../ast/builders/compact";
+import {force} from "../../ast";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../../jsx/runtime";

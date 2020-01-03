@@ -5,7 +5,9 @@ import {Builder} from "./structured/builder";
 
 export type NodeType = "text" | "element" | "prerendered"
 
-export interface AST<P = never> extends Base.AST {
+export type AST<P = never> = TextNode | ElementNode<P> | PrerenderedNode<P>
+
+export interface BaseAST<P = never> extends Base.AST {
     readonly nodeType: NodeType;
     readonly astType: "structured";
 }
@@ -29,7 +31,7 @@ export function render<P, O, AV>(ast: AST<P>, builder: Builder<O, P, AV>): O {
     throw new Error("Invalid AST");
 }
 
-export class TextNode implements AST {
+export class TextNode implements BaseAST {
     public readonly nodeType = "text";
     public readonly astType = "structured";
 
@@ -38,7 +40,7 @@ export class TextNode implements AST {
     ) {}
 }
 
-export class ElementNode<P> implements AST<P> {
+export class ElementNode<P> implements BaseAST<P> {
     public readonly nodeType = "element";
     public readonly astType = "structured";
 
@@ -54,25 +56,13 @@ export class ElementNode<P> implements AST<P> {
     }
 }
 
-export class PrerenderedNode<P> implements AST<P> {
+export class PrerenderedNode<P> implements BaseAST<P> {
     public readonly nodeType = "prerendered";
     public readonly astType = "structured";
 
     constructor(
         public readonly content: P
     ) {}
-}
-
-export function isText(ast: AST<any>): ast is TextNode {
-    return ast.nodeType === "text";
-}
-
-export function isElement<P>(ast: AST<P>): ast is ElementNode<P> {
-    return ast.nodeType === "element";
-}
-
-export function isPrerendered<P>(ast: AST<P>): ast is PrerenderedNode<P> {
-    return ast.nodeType === "prerendered";
 }
 
 export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
