@@ -2,8 +2,8 @@ import * as ESTree from "estree";
 import {isDynamic} from "../syntax";
 import * as Operations from "../../estree/operations";
 import * as Reify from "../../estree/reify";
-import * as Universal from "../../ast/universal";
 import {ArrayExpr} from "../../estree/expr";
+import {Kind} from "../../ast/base";
 
 export function tagExpression(tag: string): ESTree.Expression {
     if (isDynamic(tag))
@@ -46,7 +46,7 @@ export class Gensym {
 export class Runtime {
     constructor(
         private readonly runtime: ESTree.Expression,
-        private readonly mode: Universal.Kind
+        private readonly mode: Kind
     ) {}
 
     private member(name: string): ESTree.Expression {
@@ -57,7 +57,7 @@ export class Runtime {
         return Operations.call(this.member(name), ...args);
     }
 
-    builder(mode: Universal.Kind): ESTree.Expression {
+    builder(mode: Kind): ESTree.Expression {
         return this.member(`${mode}Builder`);
     }
 

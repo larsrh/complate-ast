@@ -2,11 +2,10 @@ import fc from "fast-check";
 import * as Structured from "../../../ast/structured";
 import * as Stream from "../../../ast/stream";
 import {JSDOM} from "jsdom";
-import {fromDOM} from "../../../ast/builder";
 import {jsdomBuilder} from "../../../ast/builders/nodejs-dom";
 import {CompactingBuilder} from "../../../ast/builders/compact";
 import * as Gen from "../../../ast/gen";
-import {parseHTML} from "../../../ast/builders/dom";
+import {fromDOM, parseHTML} from "../../../ast/builders/dom";
 
 const document = new JSDOM().window.document;
 

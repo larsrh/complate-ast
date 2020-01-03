@@ -1,8 +1,8 @@
-import {Builder} from "./builder";
-import * as Universal from "./universal";
+import * as Base from "./base";
 import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, normalizeAttributes} from "../jsx/syntax";
+import {Builder} from "./structured/builder";
 
-export interface AST extends Universal.AST {
+export interface AST extends Base.AST {
     readonly astType: "raw";
     readonly value: string;
 }

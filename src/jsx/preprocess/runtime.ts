@@ -1,14 +1,14 @@
-import * as Universal from "../../ast/universal";
 import * as ESTree from "estree";
 import {Attributes, isVoidElement} from "../syntax";
 import * as Operations from "../../estree/operations";
 import * as Reify from "../../estree/reify";
 import {ESTreeBuilder} from "../preprocess";
 import {Runtime, tagExpression} from "./util";
+import {Kind} from "../../ast/base";
 
 export class RuntimeBuilder extends ESTreeBuilder {
     constructor(
-        private readonly mode: Universal.Kind,
+        private readonly mode: Kind,
         runtime: Runtime
     ) {
         super(false, runtime);

@@ -1,9 +1,9 @@
-import * as Universal from "../../../ast/universal";
 import {ESTreeBuilder} from "../../../jsx/preprocess";
-import {allBuilders} from "../../../ast/builders";
 import * as Stream from "../../../ast/stream";
-import {isAST, isStream} from "../../../ast/introspection";
 import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../../../jsx/preprocess/config";
+import {astBuilders, isAST, isStream} from "../../../ast";
+import {Builder} from "../../../ast/structured/builder";
+import {AST} from "../../../ast/base";
 
 const allConfigs: ESTreeBuilderConfig[] = [
     { mode: "runtime", target: "structured" },
@@ -15,10 +15,10 @@ const allConfigs: ESTreeBuilderConfig[] = [
 ];
 
 export function matrix(
-    action: (config: ESTreeBuilderConfig, astBuilder: Universal.Builder, esBuilder: ESTreeBuilder) => void
+    action: (config: ESTreeBuilderConfig, astBuilder: Builder<AST>, esBuilder: ESTreeBuilder) => void
 ): void {
     describe.each(allConfigs)(`%o`, config =>
-        action(config, allBuilders[config.target], esTreeBuilderFromConfig(config))
+        action(config, astBuilders[config.target], esTreeBuilderFromConfig(config))
     );
 }
 

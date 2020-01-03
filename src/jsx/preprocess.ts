@@ -5,10 +5,10 @@ import * as Reify from "../estree/reify";
 import * as Operations from "../estree/operations";
 import * as Structured from "../ast/structured";
 import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
-import {Builder} from "../ast/builder";
 import {Attributes, AttributeValue, isMacro} from "./syntax";
 import jsx from "acorn-jsx";
 import {Runtime} from "./preprocess/util";
+import {Builder} from "../ast/structured/builder";
 
 export const acorn = Parser.extend(jsx());
 

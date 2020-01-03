@@ -1,4 +1,3 @@
-import * as Universal from "../../ast/universal";
 import {ESTreeBuilder} from "../preprocess";
 import {RuntimeBuilder} from "./runtime";
 import {identifier} from "../../estree/operations";
@@ -7,14 +6,15 @@ import {Factory, OptimizingBuilder} from "./optimizing";
 import {StructuredFactory} from "./optimizing/structured";
 import {StreamFactory} from "./optimizing/stream";
 import {RawFactory} from "./optimizing/raw";
+import {Kind} from "../../ast/base";
 
 export interface ESTreeBuilderConfig {
     mode: "runtime" | "optimizing";
-    target: Universal.Kind;
+    target: Kind;
     runtime?: string;
 }
 
-function factoryFromTarget(target: Universal.Kind): Factory {
+function factoryFromTarget(target: Kind): Factory {
     switch (target) {
         case "structured": return new StructuredFactory();
         case "stream":     return new StreamFactory();

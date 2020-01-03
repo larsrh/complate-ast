@@ -1,7 +1,7 @@
-import {Builder} from "./builder";
-import * as Universal from "./universal";
+import * as Base from "./base";
 import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, normalizeAttributes} from "../jsx/syntax";
 import _ from "lodash";
+import {Builder} from "./structured/builder";
 
 export interface Buffer {
     write(content: string): void;
@@ -19,7 +19,7 @@ export class StringBuffer implements Buffer {
     }
 }
 
-export interface AST extends Universal.AST {
+export interface AST extends Base.AST {
     readonly astType: "stream";
     readonly isElement: boolean;
     readonly _extraChildren?: AST[];

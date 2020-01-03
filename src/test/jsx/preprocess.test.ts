@@ -5,8 +5,7 @@ import {generate} from "escodegen";
 import {runInNewContext} from "vm";
 import {force, matrix} from "./_util/matrix";
 import {JSDOM} from "jsdom";
-import {parseHTML} from "../../ast/builders/dom";
-import {fromDOM} from "../../ast/builder";
+import {fromDOM, parseHTML} from "../../ast/builders/dom";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../../jsx/runtime";

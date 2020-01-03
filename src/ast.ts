@@ -1,25 +1,30 @@
-import * as Universal from "./universal";
-import * as Structured from "./structured";
-import * as Raw from "./raw";
-import * as Stream from "./stream";
-import {Attributes} from "../jsx/syntax";
-import {normalizeChildren} from "./builder";
+import * as Base from "./ast/base";
+import * as _ from "lodash";
+import * as Structured from "./ast/structured";
+import * as Raw from "./ast/raw";
+import * as Stream from "./ast/stream";
+import {Builder} from "./ast/structured/builder";
+import {Attributes} from "./jsx/syntax";
 
-export const allKinds: Set<Universal.Kind> = new Set(["structured", "stream", "raw"]);
+export const astBuilders: { [key in Base.Kind]: Builder<Base.AST> } = {
+    "structured": Structured.astBuilder,
+    "raw": Raw.astBuilder,
+    "stream": Stream.astBuilder
+};
 
-export function isAST(object: any): object is Universal.AST {
-    return object.astType && allKinds.has(object.astType);
+export function isAST(object: any): object is Base.AST {
+    return object.astType && object.astType in astBuilders;
 }
 
-export function isStructured(ast: Universal.AST): ast is Structured.AST<any> {
+export function isStructured(ast: Base.AST): ast is Structured.AST<any> {
     return ast.astType === "structured";
 }
 
-export function isStream(ast: Universal.AST): ast is Stream.AST {
+export function isStream(ast: Base.AST): ast is Stream.AST {
     return ast.astType === "stream";
 }
 
-export function isRaw(ast: Universal.AST): ast is Raw.AST {
+export function isRaw(ast: Base.AST): ast is Raw.AST {
     return ast.astType === "raw";
 }
 
@@ -41,7 +46,24 @@ function streamAttributeAdder(attributes?: Attributes): Stream.Modifier<Attribut
         return oldAttributes => ({... oldAttributes, ...attributes});
 }
 
-export function addItems<AST extends Universal.AST>(ast: AST, attributes?: Attributes, ..._children: any[]): AST {
+export function normalizeChildren(kind: Base.Kind, ...children: any[]): Base.AST[] {
+    const builder = astBuilders[kind];
+    return _.flattenDeep(children).filter(child =>
+        child !== undefined && child !== false && child !== null
+    ).map(child => {
+        if (typeof child === "string")
+            return builder.text(child);
+
+        if (!isAST(child))
+            throw new Error("Invalid child: Expected AST");
+        if (child.astType !== kind)
+            throw new Error(`Cannot normalize heterogeneous children: Expected ${kind}, received ${child.astType}`);
+
+        return child;
+    });
+}
+
+export function addItems<AST extends Base.AST>(ast: AST, attributes?: Attributes, ..._children: any[]): AST {
     const children = normalizeChildren(ast.astType, ..._children);
 
     if (isStructured(ast)) {
