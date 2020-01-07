@@ -1,6 +1,6 @@
-import {force, matrix} from "./_util/matrix";
+import {matrix} from "./_util/matrix";
 import fc from "fast-check";
-import * as Gen from "../../ast/gen";
+import * as Gen from "../../testkit/gen";
 import * as Structured from "../../ast/structured";
 import * as Raw from "../../ast/raw";
 import {extractAST, parse, preprocess} from "../../jsx/preprocess";
@@ -8,6 +8,7 @@ import * as ESTree from "estree";
 import {runInNewContext} from "vm";
 import {generate} from "escodegen";
 import {CompactingBuilder} from "../../ast/builders/compact";
+import {force} from "../../ast";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../../jsx/runtime";
@@ -17,14 +18,14 @@ describe("Preprocessing roundtrips", () => {
     matrix((config, astBuilder, esBuilder) => {
 
         it("Roundtrip", () => {
-            const gen = Gen.astNoPrerendered(Structured.astBuilder).filter(ast => ast.nodeType !== "text");
+            const gen = Gen.astNoPrerendered(Structured.info.builder).filter(ast => ast.nodeType !== "text");
             fc.assert(fc.property(gen, ast => {
                 const ast1 = Structured.render(
                     Structured.render(ast, new CompactingBuilder()),
                     astBuilder
                 );
 
-                const jsx = Structured.render(ast, Raw.astBuilder).value;
+                const jsx = Structured.render(ast, Raw.info.builder).value;
                 const input = parse(jsx);
                 const processed = preprocess(input, esBuilder) as ESTree.Program;
 

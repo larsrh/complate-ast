@@ -5,10 +5,9 @@ import * as Reify from "../estree/reify";
 import * as Operations from "../estree/operations";
 import * as Structured from "../ast/structured";
 import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
-import {Builder} from "../ast/builder";
 import {Attributes, AttributeValue, isMacro} from "./syntax";
 import jsx from "acorn-jsx";
-import {Runtime} from "./preprocess/util";
+import {Builder} from "../ast/builder";
 
 export const acorn = Parser.extend(jsx());
 
@@ -34,7 +33,7 @@ export function injectAST(node: ESTree.Node, ast: Structured.AST): void {
 export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree.Expression, ESTree.Expression> {
     constructor(
         readonly canStatic: boolean,
-        readonly runtime: Runtime
+        readonly fragment: ESTree.Expression
     ) {}
 
     abstract element(
@@ -92,7 +91,7 @@ export function preprocess(ast: ESTree.Node, builder: ESTreeBuilder): ESTree.Pro
             else if (node.type === "JSXFragment") {
                 const fragment = node as any as JSXFragment;
                 const children = fragment.children as ESTree.Expression[];
-                this.replace(builder.macro(builder.runtime.fragment, {}, ...children))
+                this.replace(builder.macro(builder.fragment, {}, ...children))
             }
             // @ts-ignore
             else if (node.type === "JSXText") {

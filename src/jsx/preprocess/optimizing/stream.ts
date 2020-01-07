@@ -1,6 +1,6 @@
 import * as ESTree from "estree";
 import * as Operations from "../../../estree/operations";
-import {Gensym, Runtime} from "../util";
+import {Gensym, RuntimeModule} from "../util";
 import * as Reify from "../../../estree/reify";
 import {ProcessedAttributes, ProcessedChildren, StaticProcessedChildren, Tag} from "./util";
 import {escapeHTML} from "../../syntax";
@@ -40,7 +40,7 @@ export class StreamFactory implements Factory {
     }
 
     makeElement(
-        runtime: Runtime,
+        runtime: RuntimeModule,
         tag: Tag,
         attributes: ProcessedAttributes,
         children: ProcessedChildren
@@ -100,7 +100,7 @@ export class StreamFactory implements Factory {
                 const condition = Operations.ifthenelse(
                     Operations.notEqual(Reify.any(null), sym),
                     Operations.block(
-                        bufferWrite(buffer, Operations.binaryPlus(Reify.string(" "), key, Reify.string(`="`))),
+                        bufferWrite(buffer, Operations.plus(Reify.string(" "), key, Reify.string(`="`))),
                         bufferWrite(buffer, runtime.escapeHTML(sym)),
                         bufferWrite(buffer, Reify.string('"'))
                     )
@@ -194,23 +194,22 @@ export class StreamFactory implements Factory {
         return this.make(true, make);
     }
 
-    reify(runtime: Runtime, ast: Structured.AST): ESTree.Expression {
-        if (Structured.isText(ast)) {
-            return this.make(
-                false,
-                (buffer) => [bufferWrite(buffer, Reify.string(escapeHTML(ast.text)))]
-            );
-        }
-        else if (Structured.isElement(ast)) {
-            return this.makeElement(
-                runtime,
-                new Tag(ast.tag),
-                ProcessedAttributes.fromAttributeValues(ast.attributes),
-                StaticProcessedChildren.fromASTs(ast.children)
-            );
-        }
-        else {
-            throw new Error("Cannot reify prerendered element");
+    reify(runtime: RuntimeModule, ast: Structured.AST): ESTree.Expression {
+        switch (ast.nodeType) {
+            case "text":
+                return this.make(
+                    false,
+                    (buffer) => [bufferWrite(buffer, Reify.string(escapeHTML(ast.text)))]
+                );
+            case "element":
+                return this.makeElement(
+                    runtime,
+                    new Tag(ast.tag),
+                    ProcessedAttributes.fromAttributeValues(ast.attributes),
+                    StaticProcessedChildren.fromASTs(ast.children)
+                );
+            case "prerendered":
+                throw new Error("Cannot reify prerendered element");
         }
     }
 }

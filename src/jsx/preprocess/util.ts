@@ -2,8 +2,8 @@ import * as ESTree from "estree";
 import {isDynamic} from "../syntax";
 import * as Operations from "../../estree/operations";
 import * as Reify from "../../estree/reify";
-import * as Universal from "../../ast/universal";
 import {ArrayExpr} from "../../estree/expr";
+import {Kind} from "../../ast";
 
 export function tagExpression(tag: string): ESTree.Expression {
     if (isDynamic(tag))
@@ -43,26 +43,22 @@ export class Gensym {
     }
 }
 
-export class Runtime {
+export class RuntimeModule {
     constructor(
         private readonly runtime: ESTree.Expression,
-        private readonly mode: Universal.Kind
+        private readonly mode: Kind
     ) {}
 
-    private member(name: string): ESTree.Expression {
+    _member(name: string): ESTree.Expression {
         return Operations.member(this.runtime, Operations.identifier(name));
     }
 
-    private call(name: string, ...args: (ESTree.Expression | ESTree.SpreadElement)[]): ESTree.Expression {
-        return Operations.call(this.member(name), ...args);
-    }
-
-    builder(mode: Universal.Kind): ESTree.Expression {
-        return this.member(`${mode}Builder`);
+    _call(name: string, ...args: (ESTree.Expression | ESTree.SpreadElement)[]): ESTree.Expression {
+        return Operations.call(this._member(name), ...args);
     }
 
     normalizeChildren(children: ESTree.Expression[]): ArrayExpr {
-        return new ArrayExpr(this.call(
+        return new ArrayExpr(this._call(
             "normalizeChildren",
             Reify.string(this.mode),
             ...children
@@ -70,18 +66,14 @@ export class Runtime {
     }
 
     escapeHTML(argument: ESTree.Expression): ESTree.Expression {
-        return this.call("escapeHTML", argument);
-    }
-
-    get fragment(): ESTree.Expression {
-        return this.member("Fragment");
+        return this._call("escapeHTML", argument);
     }
 
     isVoidElement(argument: ESTree.Expression): ESTree.Expression {
-        return this.call("isVoidElement", argument);
+        return this._call("isVoidElement", argument);
     }
 
     normalizeAttribute(key: ESTree.Expression, value: ESTree.Expression): ESTree.Expression {
-        return this.call("normalizeAttribute", key, value);
+        return this._call("normalizeAttribute", key, value);
     }
 }

@@ -1,7 +1,6 @@
 import * as ESTree from "estree";
 
-// TODO rename to plus
-export function binaryPlus(left: ESTree.Expression, ...rights: ESTree.Expression[]): ESTree.Expression {
+export function plus(left: ESTree.Expression, ...rights: ESTree.Expression[]): ESTree.Expression {
     let result = left;
     for (const right of rights)
         result = {

@@ -1,6 +1,6 @@
 import fc, {Arbitrary} from "fast-check";
-import {Builder} from "./builder";
 import {Attributes, AttributeValue} from "../jsx/syntax";
+import {Builder} from "../ast/builder";
 
 const alphabetic =
     fc.array(fc.integer(0, 25).map(int => String.fromCharCode(int + 97 /* 'a' */)), 10, 20).map(array => array.join(""));

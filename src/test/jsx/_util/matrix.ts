@@ -1,9 +1,7 @@
-import * as Universal from "../../../ast/universal";
 import {ESTreeBuilder} from "../../../jsx/preprocess";
-import {allBuilders} from "../../../ast/builders";
-import * as Stream from "../../../ast/stream";
-import {isAST, isStream} from "../../../ast/introspection";
 import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../../../jsx/preprocess/config";
+import {AST, astInfos} from "../../../ast";
+import {Builder} from "../../../ast/builder";
 
 const allConfigs: ESTreeBuilderConfig[] = [
     { mode: "runtime", target: "structured" },
@@ -15,21 +13,9 @@ const allConfigs: ESTreeBuilderConfig[] = [
 ];
 
 export function matrix(
-    action: (config: ESTreeBuilderConfig, astBuilder: Universal.Builder, esBuilder: ESTreeBuilder) => void
+    action: (config: ESTreeBuilderConfig, astBuilder: Builder<AST>, esBuilder: ESTreeBuilder) => void
 ): void {
     describe.each(allConfigs)(`%o`, config =>
-        action(config, allBuilders[config.target], esTreeBuilderFromConfig(config))
+        action(config, astInfos[config.target].builder, esTreeBuilderFromConfig(config))
     );
-}
-
-export function force(ast: any): any {
-    if (isAST(ast)) {
-        // stream ASTs need to be forced because we can't compare functions
-        if (isStream(ast))
-            return Stream.force(ast);
-
-        return ast;
-    }
-
-    throw new Error("Unknown object; not an AST");
 }

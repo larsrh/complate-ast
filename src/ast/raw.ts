@@ -1,8 +1,8 @@
-import {Builder} from "./builder";
-import * as Universal from "./universal";
+import * as Base from "./base";
 import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, normalizeAttributes} from "../jsx/syntax";
+import {Builder} from "./builder";
 
-export interface AST extends Universal.AST {
+export interface AST extends Base.AST {
     readonly astType: "raw";
     readonly value: string;
 }
@@ -55,4 +55,7 @@ export class ASTBuilder implements Builder<AST, string> {
     }
 }
 
-export const astBuilder = new ASTBuilder();
+export const info: Base.ASTInfo<AST> = {
+    astType: "raw",
+    builder: new ASTBuilder()
+};

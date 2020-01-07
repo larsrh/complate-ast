@@ -3,10 +3,10 @@ import * as ESTree from "estree";
 import * as Structured from "../../ast/structured";
 import {generate} from "escodegen";
 import {runInNewContext} from "vm";
-import {force, matrix} from "./_util/matrix";
+import {matrix} from "./_util/matrix";
 import {JSDOM} from "jsdom";
-import {parseHTML} from "../../ast/builders/dom";
-import {fromDOM} from "../../ast/builder";
+import {force} from "../../ast";
+import {fromDOM, parseHTML} from "../../ast/builders/dom";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../../jsx/runtime";
@@ -68,91 +68,91 @@ describe("Preprocessing (examples)", () => {
             })
         }
 
+        const builder = Structured.info.builder;
 
         check(
             "Simple wrapped text",
             "<div class='y'>test</div>",
-            // TODO replace with object literal
-            Structured.astBuilder.element("div", {class: "y"}, Structured.astBuilder.text("test")),
+            builder.element("div", {class: "y"}, builder.text("test")),
             true
         );
 
         check(
             "Computed attribute",
             "<div id={'a' + 'b'}></div>",
-            Structured.astBuilder.element("div", {id: "ab"})
+            builder.element("div", {id: "ab"})
         );
 
         check(
             "Computed child",
             "<div>{'a' + 'b'}</div>",
-            Structured.astBuilder.element("div", {}, Structured.astBuilder.text("ab"))
+            builder.element("div", {}, builder.text("ab"))
         );
 
         check(
             "Mixed children",
             "<div>{'a'}<br />{<span />}</div>",
-            Structured.astBuilder.element(
+            builder.element(
                 "div",
                 {},
-                Structured.astBuilder.text("a"),
-                Structured.astBuilder.element("br"),
-                Structured.astBuilder.element("span")
+                builder.text("a"),
+                builder.element("br"),
+                builder.element("span")
             )
         );
 
         check(
             "Mixed children (nested arrays)",
             "<div>{['a', 'b']}<br />{[<span />, <br />]}</div>",
-            Structured.astBuilder.element(
+            builder.element(
                 "div",
                 {},
-                Structured.astBuilder.text("a"),
-                Structured.astBuilder.text("b"),
-                Structured.astBuilder.element("br"),
-                Structured.astBuilder.element("span"),
-                Structured.astBuilder.element("br")
+                builder.text("a"),
+                builder.text("b"),
+                builder.element("br"),
+                builder.element("span"),
+                builder.element("br")
             )
         );
 
         check(
             "Void element with attribute",
             "<br class='foo' />",
-            Structured.astBuilder.element( "br", {class: "foo"}),
+            builder.element( "br", {class: "foo"}),
             true
         );
 
         check(
             "Void element with computed attribute",
             "<br class={'fo' + 'o'} />",
-            Structured.astBuilder.element( "br", {class: "foo"})
+            builder.element( "br", {class: "foo"})
         );
 
         check(
             "Void element but not self-closing",
             "<br></br>",
-            Structured.astBuilder.element("br"),
+            builder.element("br"),
             true
         );
 
         check(
             "Simple IIFE",
             "(() => <div />)()",
-            Structured.astBuilder.element("div")
+            builder.element("div")
         );
 
         check(
             "Eliminate void children",
             "<div>{null}{false}{undefined}</div>",
-            Structured.astBuilder.element("div")
+            builder.element("div")
         );
 
         check(
             "Fragment (implicit)",
             "<div><><br /><span /></></div>",
-            Structured.astBuilder.element("div", {},
-                Structured.astBuilder.element("br"),
-                Structured.astBuilder.element("span"),
+            builder.element("div", {},
+                builder.element("br"),
+                builder.element("span"),
             )
         );
 
@@ -162,9 +162,9 @@ describe("Preprocessing (examples)", () => {
                 const Fragment = JSXRuntime.Fragment;
                 return <div><Fragment><br /><span /></Fragment></div>;
             })()`,
-            Structured.astBuilder.element("div", {},
-                Structured.astBuilder.element("br"),
-                Structured.astBuilder.element("span"),
+            builder.element("div", {},
+                builder.element("br"),
+                builder.element("span"),
             )
         );
 
@@ -176,7 +176,7 @@ describe("Preprocessing (examples)", () => {
                 }
                 return <Div>abc</Div>
             })()`,
-            Structured.astBuilder.element("div", {}, Structured.astBuilder.text("abc"))
+            builder.element("div", {}, builder.text("abc"))
         );
 
         check(
@@ -187,9 +187,9 @@ describe("Preprocessing (examples)", () => {
                 }
                 return <RDiv>abc<span>def</span></RDiv>
             })()`,
-            Structured.astBuilder.element("div", {},
-                Structured.astBuilder.element("span", {}, Structured.astBuilder.text("def")),
-                Structured.astBuilder.text("abc")
+            builder.element("div", {},
+                builder.element("span", {}, builder.text("def")),
+                builder.text("abc")
             )
         );
 
@@ -211,7 +211,7 @@ describe("Preprocessing (examples)", () => {
                 const tag = "h3";
                 return <$tag class="foo">abc</$tag>
             })()`,
-            Structured.astBuilder.element("h3", {class: "foo"}, Structured.astBuilder.text("abc"))
+            builder.element("h3", {class: "foo"}, builder.text("abc"))
         );
 
         if (config.target !== "structured") {
@@ -219,27 +219,27 @@ describe("Preprocessing (examples)", () => {
             check(
                 "Eliminate void attributes (static)",
                 "<span class={null} id={false} />",
-                Structured.astBuilder.element("span"),
+                builder.element("span"),
                 true
             );
 
             check(
                 "Eliminate void attributes",
                 "<span class={null} id={false && true} style={undefined} />",
-                Structured.astBuilder.element("span")
+                builder.element("span")
             );
 
             check(
                 "Render true attributes (static)",
                 "<button disabled={ true } />",
-                Structured.astBuilder.element("button", { disabled: "disabled" }),
+                builder.element("button", { disabled: "disabled" }),
                 true
             );
 
             check(
                 "Render true attributes",
                 "<button disabled={ true || false } />",
-                Structured.astBuilder.element("button", { disabled: "disabled" })
+                builder.element("button", { disabled: "disabled" })
             );
 
         }
@@ -249,27 +249,27 @@ describe("Preprocessing (examples)", () => {
             check(
                 "Eliminate void attributes (static)",
                 "<span class={null} id={false} />",
-                Structured.astBuilder.element("span"),
+                builder.element("span"),
                 true
             );
 
             check(
                 "Keep void attributes",
                 "<span class={null} id={false && true} style={undefined} />",
-                Structured.astBuilder.element("span", { id: false, style: undefined })
+                builder.element("span", { id: false, style: undefined })
             );
 
             check(
                 "Render true attributes (static)",
                 "<button disabled={ true } />",
-                Structured.astBuilder.element("button", { disabled: "disabled" }),
+                builder.element("button", { disabled: "disabled" }),
                 true
             );
 
             check(
                 "Keep true attributes",
                 "<button disabled={ true || false } />",
-                Structured.astBuilder.element("button", { disabled: true })
+                builder.element("button", { disabled: true })
             );
 
         }
@@ -279,27 +279,27 @@ describe("Preprocessing (examples)", () => {
             check(
                 "Keep void attributes (static)",
                 "<span class={null} id={false} />",
-                Structured.astBuilder.element("span", { class: null, id: false }),
+                builder.element("span", { class: null, id: false }),
                 true
             );
 
             check(
                 "Keep void attributes",
                 "<span class={null} id={false && true} style={undefined} />",
-                Structured.astBuilder.element("span", { class: null, id: false, style: undefined })
+                builder.element("span", { class: null, id: false, style: undefined })
             );
 
             check(
                 "Keep true attributes (static)",
                 "<button disabled={ true } />",
-                Structured.astBuilder.element("button", { disabled: true }),
+                builder.element("button", { disabled: true }),
                 true
             );
 
             check(
                 "Keep true attributes",
                 "<button disabled={ true || false } />",
-                Structured.astBuilder.element("button", { disabled: true })
+                builder.element("button", { disabled: true })
             );
 
         }
@@ -339,7 +339,7 @@ describe("Preprocessing (examples)", () => {
                     const Test = (props, child) => JSXRuntime.addItems(child, { disabled: true });
                     return <Test><button /></Test>;
                 })()`,
-                Structured.astBuilder.element("button", { disabled: true })
+                builder.element("button", { disabled: true })
             );
 
             check(
@@ -365,7 +365,7 @@ describe("Preprocessing (examples)", () => {
                     const Test = (props, child) => JSXRuntime.addItems(child);
                     return <Test><div /></Test>;
                 })()`,
-                /AST kind/
+                /Raw AST/
             );
 
         }

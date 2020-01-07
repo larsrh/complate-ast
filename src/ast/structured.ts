@@ -1,35 +1,37 @@
-import {Builder} from "./builder"
-import * as Universal from "./universal";
+import * as Base from "./base";
 import {mapObject} from "../util";
 import {Attributes, AttributeValue, isMacro, isVoidElement} from "../jsx/syntax";
+import {Builder} from "./builder";
 
 export type NodeType = "text" | "element" | "prerendered"
 
-export interface AST<P = never> extends Universal.AST {
+export type AST<P = never> = TextNode | ElementNode<P> | PrerenderedNode<P>
+
+export interface BaseAST<P = never> extends Base.AST {
     readonly nodeType: NodeType;
     readonly astType: "structured";
 }
 
-export function render<P, O, AV>(ast: AST<P>, renderer: Builder<O, P, AV>): O {
+export function render<P, O, AV>(ast: AST<P>, builder: Builder<O, P, AV>): O {
     if (ast.nodeType === "text") {
-        return renderer.text((ast as TextNode).text);
+        return builder.text((ast as TextNode).text);
     }
     if (ast.nodeType == "element") {
         const node = ast as ElementNode<P>;
-        const attributes = mapObject(node.attributes, (attr, key) => renderer.attributeValue(key, attr));
-        return renderer.element(
+        const attributes = mapObject(node.attributes, (attr, key) => builder.attributeValue(key, attr));
+        return builder.element(
             node.tag,
             attributes,
-            ...node.children.map(child => render(child, renderer))
+            ...node.children.map(child => render(child, builder))
         );
     }
     if (ast.nodeType == "prerendered") {
-        return renderer.prerendered((ast as PrerenderedNode<P>).content);
+        return builder.prerendered((ast as PrerenderedNode<P>).content);
     }
     throw new Error("Invalid AST");
 }
 
-export class TextNode implements AST {
+export class TextNode implements BaseAST {
     public readonly nodeType = "text";
     public readonly astType = "structured";
 
@@ -38,7 +40,7 @@ export class TextNode implements AST {
     ) {}
 }
 
-export class ElementNode<P> implements AST<P> {
+export class ElementNode<P> implements BaseAST<P> {
     public readonly nodeType = "element";
     public readonly astType = "structured";
 
@@ -54,25 +56,13 @@ export class ElementNode<P> implements AST<P> {
     }
 }
 
-export class PrerenderedNode<P> implements AST<P> {
+export class PrerenderedNode<P> implements BaseAST<P> {
     public readonly nodeType = "prerendered";
     public readonly astType = "structured";
 
     constructor(
         public readonly content: P
     ) {}
-}
-
-export function isText(ast: AST<any>): ast is TextNode {
-    return ast.nodeType === "text";
-}
-
-export function isElement<P>(ast: AST<P>): ast is ElementNode<P> {
-    return ast.nodeType === "element";
-}
-
-export function isPrerendered<P>(ast: AST<P>): ast is PrerenderedNode<P> {
-    return ast.nodeType === "prerendered";
 }
 
 export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
@@ -93,7 +83,10 @@ export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
     }
 }
 
-export const astBuilder = new ASTBuilder();
+export const info: Base.ASTInfo<AST> = {
+    astType: "structured",
+    builder: new ASTBuilder()
+};
 
 export class MappingBuilder<P, Q> implements Builder<AST<Q>, P> {
     constructor(
