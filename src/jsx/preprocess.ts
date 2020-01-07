@@ -64,17 +64,16 @@ export function parse(js: string): ESTree.BaseNode {
 }
 
 export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree.Node {
-    // <https://github.com/Rich-Harris/estree-walker/pull/17>
-    return walk(ast as ESTree.Node, {
+    return walk(ast, {
         leave(node) {
             // <https://github.com/acornjs/acorn-jsx/issues/105>
             if (node.type === "Literal") {
-                if (node.raw !== undefined)
+                const literal = node as ESTree.Literal;
+                if (literal.raw !== undefined)
                     this.replace(Object.assign({}, node, { raw: undefined }));
             }
-            // @ts-ignore
             else if (node.type === "JSXElement") {
-                const element = node as any as JSXElement;
+                const element = node as JSXElement;
                 const tag = element.openingElement.name.name;
                 const attributes = Object.fromEntries(
                     element.openingElement.attributes.map(attr => {
@@ -91,22 +90,19 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
                         builder.element(tag, attributes, ...children);
                 this.replace(replacement);
             }
-            // @ts-ignore
             else if (node.type === "JSXExpressionContainer") {
-                const container = node as any as JSXExpressionContainer;
+                const container = node as JSXExpressionContainer;
                 this.replace(container.expression as ESTree.Expression);
             }
-            // @ts-ignore
             else if (node.type === "JSXFragment") {
-                const fragment = node as any as JSXFragment;
+                const fragment = node as JSXFragment;
                 const children = fragment.children as ESTree.Expression[];
                 this.replace(builder.macro(builder.fragment, {}, ...children))
             }
-            // @ts-ignore
             else if (node.type === "JSXText") {
-                const text = node as any as JSXText;
+                const text = node as JSXText;
                 this.replace(builder.text(text.value));
             }
         }
-    });
+    }) as ESTree.Node;
 }
