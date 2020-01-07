@@ -59,12 +59,13 @@ export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree
     }
 }
 
-export function parse(js: string): ESTree.Node {
-    return acorn.parse(js) as any as ESTree.Node; // TODO dodgy: version mismatch??
+export function parse(js: string): ESTree.BaseNode {
+    return acorn.parse(js);
 }
 
-export function preprocess(ast: ESTree.Node, builder: ESTreeBuilder): ESTree.Program {
-    const compiled = walk(ast, {
+export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree.BaseNode {
+    // <https://github.com/Rich-Harris/estree-walker/pull/17>
+    return walk(ast as ESTree.Node, {
         leave(node) {
             // @ts-ignore
             if (node.type === "JSXElement") {
@@ -100,5 +101,4 @@ export function preprocess(ast: ESTree.Node, builder: ESTreeBuilder): ESTree.Pro
             }
         }
     });
-    return compiled as ESTree.Program;
 }
