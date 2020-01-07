@@ -13,22 +13,18 @@ export interface BaseAST<P = never> extends Base.AST {
 }
 
 export function render<P, O, AV>(ast: AST<P>, builder: Builder<O, P, AV>): O {
-    if (ast.nodeType === "text") {
-        return builder.text((ast as TextNode).text);
+    switch (ast.nodeType) {
+        case "text":
+            return builder.text((ast as TextNode).text);
+        case "element":
+            return builder.element(
+                ast.tag,
+                mapObject(ast.attributes, (attr, key) => builder.attributeValue(key, attr)),
+                ...ast.children.map(child => render(child, builder))
+            );
+        case "prerendered":
+            return builder.prerendered(ast.content);
     }
-    if (ast.nodeType == "element") {
-        const node = ast as ElementNode<P>;
-        const attributes = mapObject(node.attributes, (attr, key) => builder.attributeValue(key, attr));
-        return builder.element(
-            node.tag,
-            attributes,
-            ...node.children.map(child => render(child, builder))
-        );
-    }
-    if (ast.nodeType == "prerendered") {
-        return builder.prerendered((ast as PrerenderedNode<P>).content);
-    }
-    throw new Error("Invalid AST");
 }
 
 export class TextNode implements BaseAST {
