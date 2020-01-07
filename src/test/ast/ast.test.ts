@@ -2,16 +2,16 @@ import * as Base from "../../ast/base";
 import * as Structured from "../../ast/structured";
 import * as Stream from "../../ast/stream";
 import * as Raw from "../../ast/raw";
-import * as Gen from "../../ast/gen";
+import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
 import {addItems} from "../../ast";
 
-const elementGen = Gen.astNoPrerendered(Structured.astBuilder).filter(t => t.nodeType === "element");
-const childrenGen = fc.array(Gen.astNoPrerendered(Structured.astBuilder), 0, 5);
+const elementGen = Gen.astNoPrerendered(Structured.info.builder).filter(t => t.nodeType === "element");
+const childrenGen = fc.array(Gen.astNoPrerendered(Structured.info.builder), 0, 5);
 
 // TODO simplify
 function laws<AST extends Base.AST>(
-    kind: Base.Kind,
+    kind: string,
     make: (ast: Structured.AST) => AST,
     force: (ast: AST) => any
 ): void {
@@ -51,25 +51,26 @@ describe("AST", () => {
             const gen = fc.tuple(elementGen, Gen.attrs, childrenGen);
             fc.assert(fc.property(gen, params => {
                 const [baseStructured, attrs, childrenStructured] = params;
-                const baseStream = Structured.render(baseStructured, Stream.astBuilderNoPrerender);
-                const childrenStream = childrenStructured.map(ast => Structured.render(ast, Stream.astBuilderNoPrerender));
+                const baseStream = Structured.render(baseStructured, Stream.info.builder);
+                const childrenStream = childrenStructured.map(ast => Structured.render(ast, Stream.info.builder));
                 const targetStructured = addItems(baseStructured, attrs, ...childrenStructured);
                 const targetStream = addItems(baseStream, attrs, ...childrenStream);
-                expect(Stream.force(targetStream)).toEqual(Structured.render(targetStructured, Raw.astBuilder).value);
+                expect(Stream.force(targetStream)).toEqual(Structured.render(targetStructured, Raw.info.builder).value);
             }));
         });
 
         describe("Laws", () => {
 
             laws("structured", ast => ast, ast => ast);
-            laws("stream", ast => Structured.render(ast, Stream.astBuilderNoPrerender), Stream.force);
+            laws("stream", ast => Structured.render(ast, Stream.info.builder), Stream.force);
 
         });
 
         it("Accepts string children", () => {
-            const ast1 = Structured.astBuilder.element("span");
+            const builder = Structured.info.builder;
+            const ast1 = builder.element("span");
             const ast2 = addItems(ast1, {}, "hi");
-            expect(ast2).toEqual(Structured.astBuilder.element("span", {}, Structured.astBuilder.text("hi")));
+            expect(ast2).toEqual(builder.element("span", {}, builder.text("hi")));
         });
 
     });

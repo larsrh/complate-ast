@@ -1,4 +1,4 @@
-import {Attributes, AttributeValue} from "../../jsx/syntax";
+import {Attributes, AttributeValue} from "../jsx/syntax";
 
 export interface Builder<A, P = never, AV = AttributeValue> {
     text(text: string): A;

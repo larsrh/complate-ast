@@ -1,4 +1,4 @@
-import {Gensym, Runtime} from "../util";
+import {Gensym, RuntimeModule} from "../util";
 import {ProcessedAttributes, ProcessedChildren, Tag} from "./util";
 import * as ESTree from "estree";
 import * as Operations from "../../../estree/operations";
@@ -10,7 +10,7 @@ import {Factory} from "../optimizing";
 
 export class RawFactory implements Factory {
     makeElement(
-        runtime: Runtime,
+        runtime: RuntimeModule,
         tag: Tag,
         attributes: ProcessedAttributes,
         children: ProcessedChildren
@@ -86,7 +86,7 @@ export class RawFactory implements Factory {
         });
     }
 
-    reify(runtime: Runtime, ast: Structured.AST): ESTree.Expression {
-        return Reify.any(Structured.render(ast, Raw.astBuilder));
+    reify(runtime: RuntimeModule, ast: Structured.AST): ESTree.Expression {
+        return Reify.any(Structured.render(ast, Raw.info.builder));
     }
 }

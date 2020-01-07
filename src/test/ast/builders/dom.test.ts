@@ -4,7 +4,7 @@ import * as Stream from "../../../ast/stream";
 import {JSDOM} from "jsdom";
 import {jsdomBuilder} from "../../../ast/builders/nodejs-dom";
 import {CompactingBuilder} from "../../../ast/builders/compact";
-import * as Gen from "../../../ast/gen";
+import * as Gen from "../../../testkit/gen";
 import {fromDOM, parseHTML} from "../../../ast/builders/dom";
 
 const document = new JSDOM().window.document;
@@ -21,7 +21,7 @@ function compareHTML(html1: string, html2: string): void {
 
 describe("Structured AST roundtrips", () => {
 
-    const builder = Structured.astBuilder;
+    const builder = Structured.info.builder;
     const gen = Gen.astNoPrerendered(builder);
 
     describe("DOM rendering", () => {
@@ -42,7 +42,7 @@ describe("Structured AST roundtrips", () => {
         it("Roundtrip property", () => {
             fc.assert(fc.property(gen, ast => {
                 const buffer = new Stream.StringBuffer();
-                Structured.render(ast, Stream.astBuilderNoPrerender).render(buffer);
+                Structured.render(ast, Stream.info.builder).render(buffer);
                 const ast1 = Structured.render(ast, new CompactingBuilder());
                 const ast2 = fromDOM(builder, parseHTML(document, buffer.content));
                 expect(ast2).toEqual(ast1);
@@ -53,10 +53,10 @@ describe("Structured AST roundtrips", () => {
             fc.assert(fc.property(gen, ast => {
                 const buffer1 = new Stream.StringBuffer();
                 const buffer2 = new Stream.StringBuffer();
-                Structured.render(ast, Stream.astBuilderNoPrerender).render(buffer1);
+                Structured.render(ast, Stream.info.builder).render(buffer1);
                 Structured.render(
                     Structured.render(ast, new CompactingBuilder()),
-                    Stream.astBuilderNoPrerender
+                    Stream.info.builder
                 ).render(buffer2);
                 expect(buffer2.content).toEqual(buffer1.content);
             }));
@@ -69,7 +69,7 @@ describe("Structured AST roundtrips", () => {
         fc.assert(fc.property(gen.filter(ast => ast.nodeType !== "text"), ast => {
             const html2 = (Structured.render(ast, jsdomBuilder) as Element).outerHTML;
             const buffer = new Stream.StringBuffer();
-            Structured.render(ast, Stream.astBuilderNoPrerender).render(buffer);
+            Structured.render(ast, Stream.info.builder).render(buffer);
             compareHTML(buffer.content, html2);
         }));
 

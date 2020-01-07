@@ -3,21 +3,21 @@ import * as ESTree from "estree";
 import * as Reify from "../../estree/reify";
 import {Attributes} from "../syntax";
 import * as Operations from "../../estree/operations";
-import {Runtime} from "./util";
+import {RuntimeModule} from "./util";
 import {ESTreeBuilder, injectAST} from "../preprocess";
 import {processChildren, ProcessedAttributes, ProcessedChildren, Tag} from "./optimizing/util";
 
 export interface Factory {
-    makeElement(runtime: Runtime, tag: Tag, attributes: ProcessedAttributes, children: ProcessedChildren): ESTree.Expression;
-    reify(runtime: Runtime, ast: Structured.AST): ESTree.Expression;
+    makeElement(runtime: RuntimeModule, tag: Tag, attributes: ProcessedAttributes, children: ProcessedChildren): ESTree.Expression;
+    reify(runtime: RuntimeModule, ast: Structured.AST): ESTree.Expression;
 }
 
 export class OptimizingBuilder extends ESTreeBuilder {
     constructor(
         private readonly factory: Factory,
-        runtime: Runtime
+        private readonly runtime: RuntimeModule
     ) {
-        super(true, runtime);
+        super(true, runtime._member("Fragment"));
     }
 
     private reified(ast: Structured.AST): ESTree.Expression {
@@ -43,7 +43,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
         // caveat: we may do superfluous work here, but that's okay, since all of this happens at compile time
         if (children.isStatic && attributes.isStatic && !tag.isDynamic) {
             // checking void rule is done by the builder
-            const ast = Structured.astBuilder.element(
+            const ast = Structured.info.builder.element(
                 _tag,
                 attributes.statics,
                 ...children.children
@@ -77,6 +77,6 @@ export class OptimizingBuilder extends ESTreeBuilder {
     }
 
     text(text: string): ESTree.Expression {
-        return this.reified(Structured.astBuilder.text(text));
+        return this.reified(Structured.info.builder.text(text));
     }
 }

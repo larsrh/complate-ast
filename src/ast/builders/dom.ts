@@ -1,5 +1,5 @@
 import {Attributes, AttributeValue, normalizeAttributes} from "../../jsx/syntax";
-import {Builder} from "../structured/builder";
+import {Builder} from "../builder";
 
 export class DOMBuilder implements Builder<Node, Node> {
     constructor(

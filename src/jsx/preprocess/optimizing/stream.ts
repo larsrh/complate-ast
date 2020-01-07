@@ -1,6 +1,6 @@
 import * as ESTree from "estree";
 import * as Operations from "../../../estree/operations";
-import {Gensym, Runtime} from "../util";
+import {Gensym, RuntimeModule} from "../util";
 import * as Reify from "../../../estree/reify";
 import {ProcessedAttributes, ProcessedChildren, StaticProcessedChildren, Tag} from "./util";
 import {escapeHTML} from "../../syntax";
@@ -40,7 +40,7 @@ export class StreamFactory implements Factory {
     }
 
     makeElement(
-        runtime: Runtime,
+        runtime: RuntimeModule,
         tag: Tag,
         attributes: ProcessedAttributes,
         children: ProcessedChildren
@@ -194,7 +194,7 @@ export class StreamFactory implements Factory {
         return this.make(true, make);
     }
 
-    reify(runtime: Runtime, ast: Structured.AST): ESTree.Expression {
+    reify(runtime: RuntimeModule, ast: Structured.AST): ESTree.Expression {
         switch (ast.nodeType) {
             case "text":
                 return this.make(

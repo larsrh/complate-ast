@@ -1,7 +1,7 @@
 import * as Base from "./base";
 import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, normalizeAttributes} from "../jsx/syntax";
 import _ from "lodash";
-import {Builder} from "./structured/builder";
+import {Builder} from "./builder";
 
 export interface Buffer {
     write(content: string): void;
@@ -116,13 +116,13 @@ export class ASTBuilder<P> implements Builder<AST, P> {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const astBuilder = new ASTBuilder<string>(x => buffer => buffer.write(x));
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const astBuilderNoPrerender = new ASTBuilder<never>(() => () => {/* do nothing */});
-
 export function force(ast: AST): string {
     const buffer = new StringBuffer();
     ast.render(buffer);
     return buffer.content;
 }
+
+export const info: Base.ASTInfo<AST> = {
+    astType: "structured",
+    builder: new ASTBuilder<never>(() => () => {/* do nothing */})
+};

@@ -1,4 +1,4 @@
-import {Runtime} from "../util";
+import {RuntimeModule} from "../util";
 import {ProcessedAttributes, ProcessedChildren, Tag} from "./util";
 import * as ESTree from "estree";
 import * as Reify from "../../../estree/reify";
@@ -7,7 +7,7 @@ import {Factory} from "../optimizing";
 
 export class StructuredFactory implements Factory {
     makeElement(
-        runtime: Runtime,
+        runtime: RuntimeModule,
         tag: Tag,
         attributes: ProcessedAttributes,
         children: ProcessedChildren
@@ -22,7 +22,7 @@ export class StructuredFactory implements Factory {
         });
     }
 
-    reify(runtime: Runtime, ast: Structured.AST): ESTree.Expression {
+    reify(runtime: RuntimeModule, ast: Structured.AST): ESTree.Expression {
         return Reify.any(ast);
     }
 }

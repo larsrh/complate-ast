@@ -1,7 +1,7 @@
 import * as Base from "./base";
 import {mapObject} from "../util";
 import {Attributes, AttributeValue, isMacro, isVoidElement} from "../jsx/syntax";
-import {Builder} from "./structured/builder";
+import {Builder} from "./builder";
 
 export type NodeType = "text" | "element" | "prerendered"
 
@@ -83,7 +83,10 @@ export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
     }
 }
 
-export const astBuilder = new ASTBuilder();
+export const info: Base.ASTInfo<AST> = {
+    astType: "structured",
+    builder: new ASTBuilder()
+};
 
 export class MappingBuilder<P, Q> implements Builder<AST<Q>, P> {
     constructor(

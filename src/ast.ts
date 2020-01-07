@@ -3,19 +3,20 @@ import * as _ from "lodash";
 import * as Structured from "./ast/structured";
 import * as Raw from "./ast/raw";
 import * as Stream from "./ast/stream";
-import {Builder} from "./ast/structured/builder";
 import {Attributes} from "./jsx/syntax";
+
+export type Kind = "raw" | "stream" | "structured"
 
 export type AST = Structured.AST | Stream.AST | Raw.AST
 
-export const astBuilders: { [key in Base.Kind]: Builder<AST> } = {
-    "structured": Structured.astBuilder,
-    "raw": Raw.astBuilder,
-    "stream": Stream.astBuilder
+export const astInfos: { [key in Kind]: Base.ASTInfo<AST> } = {
+    "structured": Structured.info,
+    "stream": Stream.info,
+    "raw": Raw.info
 };
 
 export function isAST(object: any): object is AST {
-    return object.astType && object.astType in astBuilders;
+    return object.astType && object.astType in astInfos;
 }
 
 export function isStructured(ast: Base.AST): ast is Structured.AST<any> {
@@ -48,8 +49,8 @@ function streamAttributeAdder(attributes?: Attributes): Stream.Modifier<Attribut
         return oldAttributes => ({... oldAttributes, ...attributes});
 }
 
-export function normalizeChildren(kind: Base.Kind, ...children: any[]): AST[] {
-    const builder = astBuilders[kind];
+export function normalizeChildren(kind: Kind, ...children: any[]): AST[] {
+    const builder = astInfos[kind].builder;
     return _.flattenDeep(children).filter(child =>
         child !== undefined && child !== false && child !== null
     ).map(child => {
@@ -66,30 +67,33 @@ export function normalizeChildren(kind: Base.Kind, ...children: any[]): AST[] {
 }
 
 export function addItems<AST extends Base.AST>(ast: AST, attributes?: Attributes, ..._children: any[]): AST {
+    if (!isAST(ast))
+        throw new Error(`Unknown AST kind ${ast.astType}`);
+
     const children = normalizeChildren(ast.astType, ..._children);
 
-    if (isStructured(ast)) {
-        switch (ast.nodeType) {
-            case "element": {
-                const newChildren = [...ast.children, ...children as Structured.AST<any>[]];
-                const newAttributes = {...ast.attributes, ...attributes};
-                return new Structured.ElementNode(ast.tag, newAttributes, newChildren) as any as AST;
+    switch (ast.astType) {
+        case "structured":
+            switch (ast.nodeType) {
+                case "element": {
+                    const newChildren = [...ast.children, ...children as Structured.AST<any>[]];
+                    const newAttributes = {...ast.attributes, ...attributes};
+                    return new Structured.ElementNode(ast.tag, newAttributes, newChildren) as any as AST;
+                }
+                default:
+                    // TODO look into prerendered?
+
+                    throw new Error(`Supplied node is ${ast.nodeType} and has no children`);
             }
-            default:
-                // TODO look into prerendered?
-
-                throw new Error(`Supplied node is ${ast.nodeType} and has no children`);
-        }
+        case "stream":
+            return Stream._clone(
+                ast,
+                streamChildrenAdder(children as Stream.AST[]),
+                streamAttributeAdder(attributes)
+            ) as any as AST;
+        case "raw":
+            throw new Error("Raw AST does not support modification");
     }
-    else if (isStream(ast)) {
-        return Stream._clone(
-            ast,
-            streamChildrenAdder(children as Stream.AST[]),
-            streamAttributeAdder(attributes)
-        ) as any as AST;
-    }
-
-    throw new Error(`Cannot modify children of AST kind ${ast.astType}`);
 }
 
 export function force(ast: AST): AST {

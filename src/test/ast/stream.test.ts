@@ -1,6 +1,6 @@
 import * as Stream from "../../ast/stream";
 
-const builder = Stream.astBuilderNoPrerender;
+const builder = Stream.info.builder;
 
 describe("Stream AST", () => {
 
