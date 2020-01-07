@@ -134,6 +134,12 @@ describe("Preprocessing (examples)", () => {
         );
 
         check(
+            "Correct HTML escaping",
+            `<span data-foo={ "'<&" }>{ ['"', "'", '<', '&'].join("") }</span>`,
+            builder.element("span", { "data-foo": "'<&" }, builder.text(`"'<&`))
+        );
+
+        check(
             "Simple IIFE",
             "(() => <div />)()",
             builder.element("div")
