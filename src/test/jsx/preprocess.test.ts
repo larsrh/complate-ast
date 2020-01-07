@@ -246,6 +246,13 @@ describe("Preprocessing (examples)", () => {
                 builder.element("button", { disabled: "disabled" })
             );
 
+            check(
+                "Shorthand for true attribute",
+                "<button disabled />",
+                builder.element("button", { disabled: "disabled" }),
+                true
+            );
+
         }
 
         else if (config.mode === "optimizing") { // structured && optimizing
@@ -276,6 +283,13 @@ describe("Preprocessing (examples)", () => {
                 builder.element("button", { disabled: true })
             );
 
+            check(
+                "Shorthand for true attribute",
+                "<button disabled />",
+                builder.element("button", { disabled: "disabled" }),
+                true
+            );
+
         }
 
         else { // structured && runtime
@@ -283,8 +297,7 @@ describe("Preprocessing (examples)", () => {
             check(
                 "Keep void attributes (static)",
                 "<span class={null} id={false} />",
-                builder.element("span", { class: null, id: false }),
-                true
+                builder.element("span", { class: null, id: false })
             );
 
             check(
@@ -296,13 +309,18 @@ describe("Preprocessing (examples)", () => {
             check(
                 "Keep true attributes (static)",
                 "<button disabled={ true } />",
-                builder.element("button", { disabled: true }),
-                true
+                builder.element("button", { disabled: true })
             );
 
             check(
                 "Keep true attributes",
                 "<button disabled={ true || false } />",
+                builder.element("button", { disabled: true })
+            );
+
+            check(
+                "Shorthand for true attribute",
+                "<button disabled />",
                 builder.element("button", { disabled: true })
             );
 

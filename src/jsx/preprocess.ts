@@ -77,9 +77,12 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
                 const element = node as any as JSXElement;
                 const tag = element.openingElement.name.name;
                 const attributes = Object.fromEntries(
-                    element.openingElement.attributes.map(attr =>
-                        [attr.name.name, attr.value as ESTree.Expression]
-                    )
+                    element.openingElement.attributes.map(attr => {
+                        // replacing the shorthand notation (`<button disabled />`) logically belongs into the builders
+                        // but the process is the same everywhere, so why not put the expansion here?
+                        const value = attr.value as ESTree.Expression || Reify.boolean(true);
+                        return [attr.name.name, value]
+                    })
                 );
                 const children = element.children as ESTree.Expression[];
                 const replacement =

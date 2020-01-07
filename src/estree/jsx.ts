@@ -18,13 +18,13 @@ export interface JSXExpressionContainer extends ESTree.BaseNode {
 export interface JSXAttribute extends ESTree.BaseNode {
     readonly type: "JSXAttribute";
     readonly name: JSXIdentifier;
-    readonly value: ESTree.BaseExpression;
+    readonly value: ESTree.BaseExpression | null; // null if true shorthand (<button disabled />)
 }
 
 export interface JSXOpeningElement extends ESTree.BaseNode {
     readonly type: "JSXOpeningElement";
     readonly name: JSXIdentifier;
-    readonly attributes: JSXAttribute[];
+    readonly attributes: JSXAttribute[]; // TODO needs to include spread attributes
     readonly selfClosing: boolean;
 }
 
