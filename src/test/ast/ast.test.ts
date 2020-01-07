@@ -1,26 +1,25 @@
-import * as Base from "../../ast/base";
 import * as Structured from "../../ast/structured";
 import * as Stream from "../../ast/stream";
 import * as Raw from "../../ast/raw";
 import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
 import {addItems} from "../../ast";
+import {AST, ASTInfo} from "../../ast/base";
 
 const elementGen = Gen.astNoPrerendered(Structured.info.builder).filter(t => t.nodeType === "element");
 const childrenGen = fc.array(Gen.astNoPrerendered(Structured.info.builder), 0, 5);
 
-// TODO simplify
-function laws<AST extends Base.AST>(
-    kind: string,
-    make: (ast: Structured.AST) => AST,
-    force: (ast: AST) => any
-): void {
-    describe(`Kind: ${kind}`, () => {
+function laws<T extends AST>(info: ASTInfo<T>): void {
+    function make(ast: Structured.AST): T {
+        return Structured.render(ast, info.builder);
+    }
+
+    describe(`Kind: ${info.astType}`, () => {
 
         it("Identity", () => {
             fc.assert(fc.property(elementGen.map(make), ast => {
-                expect(force(addItems(ast))).toEqual(force(ast));
-                expect(force(addItems(ast, {}))).toEqual(force(ast));
+                expect(info.force(addItems(ast))).toEqual(info.force(ast));
+                expect(info.force(addItems(ast, {}))).toEqual(info.force(ast));
             }));
         });
 
@@ -36,7 +35,7 @@ function laws<AST extends Base.AST>(
                 const [base, attrs1, children1, attrs2, children2] = params;
                 const ast1 = addItems(addItems(base, attrs1, ...children1), attrs2, ...children2);
                 const ast2 = addItems(base, {...attrs1, ...attrs2}, ...children1, ...children2);
-                expect(force(ast2)).toEqual(force(ast1));
+                expect(info.force(ast2)).toEqual(info.force(ast1));
             }));
         });
 
@@ -61,8 +60,8 @@ describe("AST", () => {
 
         describe("Laws", () => {
 
-            laws("structured", ast => ast, ast => ast);
-            laws("stream", ast => Structured.render(ast, Stream.info.builder), Stream.force);
+            laws(Structured.info);
+            laws(Stream.info);
 
         });
 

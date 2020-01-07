@@ -57,5 +57,6 @@ export class ASTBuilder implements Builder<AST, string> {
 
 export const info: Base.ASTInfo<AST> = {
     astType: "raw",
-    builder: new ASTBuilder()
+    builder: new ASTBuilder(),
+    force: ast => ast
 };

@@ -124,5 +124,6 @@ export function force(ast: AST): string {
 
 export const info: Base.ASTInfo<AST> = {
     astType: "structured",
-    builder: new ASTBuilder<never>(() => () => {/* do nothing */})
+    builder: new ASTBuilder<never>(() => () => {/* do nothing */}),
+    force: force
 };

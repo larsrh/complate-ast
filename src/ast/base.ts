@@ -7,4 +7,5 @@ export interface AST {
 export interface ASTInfo<T extends AST> {
     readonly astType: string;
     readonly builder: Builder<T>;
+    force(t: T): any;
 }

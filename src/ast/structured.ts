@@ -85,7 +85,8 @@ export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
 
 export const info: Base.ASTInfo<AST> = {
     astType: "structured",
-    builder: new ASTBuilder()
+    builder: new ASTBuilder(),
+    force: t => t
 };
 
 export class MappingBuilder<P, Q> implements Builder<AST<Q>, P> {

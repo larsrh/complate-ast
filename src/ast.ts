@@ -81,8 +81,6 @@ export function addItems<AST extends Base.AST>(ast: AST, attributes?: Attributes
                     return new Structured.ElementNode(ast.tag, newAttributes, newChildren) as any as AST;
                 }
                 default:
-                    // TODO look into prerendered?
-
                     throw new Error(`Supplied node is ${ast.nodeType} and has no children`);
             }
         case "stream":
