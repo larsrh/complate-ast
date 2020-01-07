@@ -1,13 +1,9 @@
 import fc from "fast-check";
 import * as Structured from "../../../ast/structured";
 import * as Stream from "../../../ast/stream";
-import {JSDOM} from "jsdom";
-import {jsdomBuilder} from "../../../ast/builders/nodejs-dom";
 import {CompactingBuilder} from "../../../ast/builders/compact";
 import * as Gen from "../../../testkit/gen";
-import {fromDOM, parseHTML} from "../../../ast/builders/dom";
-
-const document = new JSDOM().window.document;
+import {DOMBuilder, fromDOM, parseHTML} from "../../../ast/builders/dom";
 
 function compareHTML(html1: string, html2: string): void {
     if (html1 === html2)
@@ -28,7 +24,7 @@ describe("Structured AST roundtrips", () => {
 
         it("Roundtrip property", () => {
             fc.assert(fc.property(gen, ast => {
-                const dom = Structured.render(ast, jsdomBuilder);
+                const dom = Structured.render(ast, new DOMBuilder(window.document));
                 const ast2 = fromDOM(builder, dom);
                 const ast1 = Structured.render(ast, new CompactingBuilder({ children: false, attributes: true }));
                 expect(ast2).toEqual(ast1);
@@ -67,7 +63,7 @@ describe("Structured AST roundtrips", () => {
     it("DOM/HTML rendering equivalence", () => {
 
         fc.assert(fc.property(gen.filter(ast => ast.nodeType !== "text"), ast => {
-            const html2 = (Structured.render(ast, jsdomBuilder) as Element).outerHTML;
+            const html2 = (Structured.render(ast, new DOMBuilder(window.document)) as Element).outerHTML;
             const buffer = new Stream.StringBuffer();
             Structured.render(ast, Stream.info.builder).render(buffer);
             compareHTML(buffer.content, html2);

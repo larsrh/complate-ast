@@ -4,7 +4,6 @@ import * as Structured from "../../ast/structured";
 import {generate} from "escodegen";
 import {runInNewContext} from "vm";
 import {matrix} from "./_util/matrix";
-import {JSDOM} from "jsdom";
 import {force} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
 
@@ -19,8 +18,7 @@ describe("Preprocessing (examples)", () => {
             const doStatic = expectStatic && esBuilder.canStatic;
             let expected;
             if (typeof _expected === "string") {
-                const document = new JSDOM().window.document;
-                const node = parseHTML(document, _expected);
+                const node = parseHTML(window.document, _expected);
                 expected = fromDOM(astBuilder, node);
             }
             else {
