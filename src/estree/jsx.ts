@@ -1,54 +1,46 @@
 import * as ESTree from "estree";
 
-export interface JSXNode extends ESTree.BaseNode {
-    readonly type: string;
-}
-
-export interface JSXExpression extends ESTree.BaseExpression, JSXNode {
-    readonly type: string;
-}
-
-export interface JSXText extends JSXExpression {
+export interface JSXText extends ESTree.BaseNode {
     readonly type: "JSXText";
     readonly value: string;
 }
 
-export interface JSXIdentifier extends JSXNode {
+export interface JSXIdentifier extends ESTree.BaseNode {
     readonly type: "JSXIdentifier";
     readonly name: string;
 }
 
-export interface JSXExpressionContainer extends JSXNode {
+export interface JSXExpressionContainer extends ESTree.BaseNode {
     readonly type: "JSXExpressionContainer";
-    readonly expression: ESTree.Expression;
+    readonly expression: ESTree.BaseExpression;
 }
 
-export interface JSXAttribute extends JSXNode {
+export interface JSXAttribute extends ESTree.BaseNode {
     readonly type: "JSXAttribute";
     readonly name: JSXIdentifier;
     readonly value: ESTree.BaseExpression;
 }
 
-export interface JSXOpeningElement extends JSXNode {
+export interface JSXOpeningElement extends ESTree.BaseNode {
     readonly type: "JSXOpeningElement";
     readonly name: JSXIdentifier;
     readonly attributes: JSXAttribute[];
     readonly selfClosing: boolean;
 }
 
-export interface JSXClosingElement extends JSXNode {
+export interface JSXClosingElement extends ESTree.BaseNode {
     readonly type: "JSXClosingElement";
     readonly name: JSXIdentifier;
 }
 
-export interface JSXElement extends JSXExpression {
+export interface JSXElement extends ESTree.BaseNode {
     readonly type: "JSXElement";
     readonly openingElement: JSXOpeningElement;
     readonly closingElement: JSXClosingElement | null; // null if openingElement.selfClosing
     readonly children: ESTree.BaseExpression[];
 }
 
-export interface JSXFragment extends JSXExpression {
+export interface JSXFragment extends ESTree.BaseNode {
     readonly type: "JSXFragment";
     readonly children: ESTree.BaseExpression[];
 }

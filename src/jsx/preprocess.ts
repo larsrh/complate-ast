@@ -91,7 +91,7 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
             // @ts-ignore
             else if (node.type === "JSXExpressionContainer") {
                 const container = node as any as JSXExpressionContainer;
-                this.replace(container.expression);
+                this.replace(container.expression as ESTree.Expression);
             }
             // @ts-ignore
             else if (node.type === "JSXFragment") {
