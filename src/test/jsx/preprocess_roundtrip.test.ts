@@ -6,7 +6,7 @@ import * as Raw from "../../ast/raw";
 import {extractAST, parse, preprocess} from "../../jsx/preprocess";
 import * as ESTree from "estree";
 import {runInNewContext} from "vm";
-import {generate} from "escodegen";
+import {generate} from "astring";
 import {CompactingBuilder} from "../../ast/builders/compact";
 import {force} from "../../ast";
 

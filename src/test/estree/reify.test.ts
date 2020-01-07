@@ -1,7 +1,7 @@
 import * as Structured from "../../ast/structured";
 import * as Raw from "../../ast/raw";
 import * as ESTree from "estree";
-import {generate} from "escodegen";
+import {generate} from "astring";
 import fc, {Arbitrary} from "fast-check";
 import * as Reify from "../../estree/reify";
 import * as Gen from "../../testkit/gen";

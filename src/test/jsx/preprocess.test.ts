@@ -1,7 +1,7 @@
 import {extractAST, parse, preprocess} from "../../jsx/preprocess";
 import * as ESTree from "estree";
 import * as Structured from "../../ast/structured";
-import {generate} from "escodegen";
+import {generate} from "astring";
 import {runInNewContext} from "vm";
 import {matrix} from "./_util/matrix";
 import {force} from "../../ast";

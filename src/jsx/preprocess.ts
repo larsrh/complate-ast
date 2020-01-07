@@ -63,12 +63,17 @@ export function parse(js: string): ESTree.BaseNode {
     return acorn.parse(js);
 }
 
-export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree.BaseNode {
+export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree.Node {
     // <https://github.com/Rich-Harris/estree-walker/pull/17>
     return walk(ast as ESTree.Node, {
         leave(node) {
+            // <https://github.com/acornjs/acorn-jsx/issues/105>
+            if (node.type === "Literal") {
+                if (node.raw !== undefined)
+                    this.replace(Object.assign({}, node, { raw: undefined }));
+            }
             // @ts-ignore
-            if (node.type === "JSXElement") {
+            else if (node.type === "JSXElement") {
                 const element = node as any as JSXElement;
                 const tag = element.openingElement.name.name;
                 const attributes = Object.fromEntries(
