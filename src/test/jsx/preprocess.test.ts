@@ -88,6 +88,65 @@ describe("Preprocessing (examples)", () => {
         );
 
         check(
+            "Overriding attributes (static)",
+            "<span class='a' class='b' />",
+            builder.element("span", { class: "b" }),
+            true
+        );
+
+        check(
+            "Overriding attributes (mixed static/dynamic)",
+            "<span class='a' class={ 'b' + '' } />",
+            builder.element("span", { class: "b" })
+        );
+
+        check(
+            "Overriding attributes (mixed dynamic/static)",
+            "<span  class={ 'b' + '' } class='a' />",
+            builder.element("span", { class: "a" }),
+            true
+        );
+
+        check(
+            "Overriding attributes",
+            "<span  class={ 'b' + '' } class={ 'a' + '' } />",
+            builder.element("span", { class: "a" })
+        );
+
+        check(
+            "Overriding attributes with cancellation (static)",
+            "<button disabled disabled={ null } />",
+            builder.element("button"),
+            true
+        );
+
+        check(
+            "Overriding attributes with cancellation",
+            "<button disabled disabled={ undefined } />",
+            builder.element("button")
+        );
+
+        check(
+            "Attributes with dashes (static)",
+            "<span data-foo='bar' />",
+            builder.element("span", { "data-foo": "bar" }),
+            true
+        );
+
+        check(
+            "Attributes with dashes",
+            "<span data-foo={ 'ba' + 'r' } />",
+            builder.element("span", { "data-foo": "bar" })
+        );
+
+        check(
+            "True attributes with dashes",
+            "<span data-foo />",
+            builder.element("span", { "data-foo": "data-foo" }),
+            true
+        );
+
+        check(
             "Mixed children",
             "<div>{'a'}<br />{<span />}</div>",
             builder.element(
@@ -137,6 +196,68 @@ describe("Preprocessing (examples)", () => {
             "Correct HTML escaping",
             `<span data-foo={ "'<&" }>{ ['"', "'", '<', '&'].join("") }</span>`,
             builder.element("span", { "data-foo": "'<&" }, builder.text(`"'<&`))
+        );
+
+        check(
+            "Spread attributes",
+            "<span {...{ class: 'foo', id: 'bar' }} />",
+            builder.element("span", { class: "foo", id: "bar" })
+        );
+
+        check(
+            "Overriding spread attributes (static)",
+            "<span class='foo1' {...{ class: 'foo2', id: 'bar' }} />",
+            builder.element("span", { class: "foo2", id: "bar" })
+        );
+
+        check(
+            "Overriding spread attributes",
+            "<span class={ 'foo' + '1' } {...{ class: 'foo2', id: 'bar' }} />",
+            builder.element("span", { class: "foo2", id: "bar" })
+        );
+
+        check(
+            "Overriden spread attributes (static)",
+            "<span class='foo1' {...{ class: 'foo2', id: 'bar1' }} id='bar2' />",
+            builder.element("span", { class: "foo2", id: "bar2" })
+        );
+
+        if (config.target === "structured") {
+
+            check(
+                "Overriden spread attributes with cancellation (static)",
+                "<span {...{ class: 'foo', id: 'bar' }} class={ null } />",
+                builder.element("span", { id: "bar", class: null })
+            );
+
+        }
+
+        else {
+
+            check(
+                "Overriden spread attributes with cancellation (static)",
+                "<span {...{ class: 'foo', id: 'bar' }} class={ null } />",
+                builder.element("span", { id: "bar" })
+            );
+
+        }
+
+        check(
+            "Overriden spread attributes with cancellation",
+            "<span {...{ class: 'foo', id: 'bar' }} class={ undefined } />",
+            builder.element("span", { id: "bar" })
+        );
+
+        check(
+            "Overriding spread attributes",
+            "<span class={ 'foo' + '1' } {...{ class: 'foo2', id: 'bar1' }} id={ 'bar' + '2' } />",
+            builder.element("span", { class: "foo2", id: "bar2" })
+        );
+
+        check(
+            "Multiple spread attributes",
+            "<span {...{ class: 'foo1', id: 'bar' }} {...{ class: 'foo2', 'data-foo': 'test' }} />",
+            builder.element("span", { class: "foo2", id: "bar", "data-foo": "test" })
         );
 
         check(
@@ -218,14 +339,29 @@ describe("Preprocessing (examples)", () => {
             builder.element("h3", {class: "foo"}, builder.text("abc"))
         );
 
-        if (config.target !== "structured") {
+        check(
+            "Shorthand for true attribute",
+            "<button disabled />",
+            builder.element("button", { disabled: "disabled" }),
+            true
+        );
 
-            check(
-                "Eliminate void attributes (static)",
-                "<span class={null} id={false} />",
-                builder.element("span"),
-                true
-            );
+        check(
+            "Eliminate void attributes (static)",
+            "<span class={null} id={false} />",
+            builder.element("span"),
+            true
+        );
+
+        check(
+            "Render true attributes (static)",
+            "<button disabled={ true } />",
+            builder.element("button", { disabled: "disabled" }),
+            true
+        );
+
+
+        if (config.target !== "structured") {
 
             check(
                 "Eliminate void attributes",
@@ -234,35 +370,14 @@ describe("Preprocessing (examples)", () => {
             );
 
             check(
-                "Render true attributes (static)",
-                "<button disabled={ true } />",
-                builder.element("button", { disabled: "disabled" }),
-                true
-            );
-
-            check(
                 "Render true attributes",
                 "<button disabled={ true || false } />",
                 builder.element("button", { disabled: "disabled" })
             );
 
-            check(
-                "Shorthand for true attribute",
-                "<button disabled />",
-                builder.element("button", { disabled: "disabled" }),
-                true
-            );
-
         }
 
-        else if (config.mode === "optimizing") { // structured && optimizing
-
-            check(
-                "Eliminate void attributes (static)",
-                "<span class={null} id={false} />",
-                builder.element("span"),
-                true
-            );
+        else { // structured
 
             check(
                 "Keep void attributes",
@@ -271,56 +386,8 @@ describe("Preprocessing (examples)", () => {
             );
 
             check(
-                "Render true attributes (static)",
-                "<button disabled={ true } />",
-                builder.element("button", { disabled: "disabled" }),
-                true
-            );
-
-            check(
                 "Keep true attributes",
                 "<button disabled={ true || false } />",
-                builder.element("button", { disabled: true })
-            );
-
-            check(
-                "Shorthand for true attribute",
-                "<button disabled />",
-                builder.element("button", { disabled: "disabled" }),
-                true
-            );
-
-        }
-
-        else { // structured && runtime
-
-            check(
-                "Keep void attributes (static)",
-                "<span class={null} id={false} />",
-                builder.element("span", { class: null, id: false })
-            );
-
-            check(
-                "Keep void attributes",
-                "<span class={null} id={false && true} style={undefined} />",
-                builder.element("span", { class: null, id: false, style: undefined })
-            );
-
-            check(
-                "Keep true attributes (static)",
-                "<button disabled={ true } />",
-                builder.element("button", { disabled: true })
-            );
-
-            check(
-                "Keep true attributes",
-                "<button disabled={ true || false } />",
-                builder.element("button", { disabled: true })
-            );
-
-            check(
-                "Shorthand for true attribute",
-                "<button disabled />",
                 builder.element("button", { disabled: true })
             );
 
@@ -334,7 +401,12 @@ describe("Preprocessing (examples)", () => {
                     const Test = (props, child) => JSXRuntime.addItems(child, {}, child, "hi");
                     return <Test><div /></Test>;
                 })()`,
-                "<div><div></div>hi</div>"
+                builder.element(
+                    "div",
+                    {},
+                    builder.element("div"),
+                    builder.text("hi")
+                )
             );
 
             check(
@@ -343,7 +415,7 @@ describe("Preprocessing (examples)", () => {
                     const Test = (props, child) => JSXRuntime.addItems(child, { class: "bar" });
                     return <Test><div class="foo" /></Test>;
                 })()`,
-                "<div class='bar'></div>"
+                builder.element("div", { class: "bar" })
             );
 
             check(
@@ -352,7 +424,7 @@ describe("Preprocessing (examples)", () => {
                     const Test = (props, child) => JSXRuntime.addItems(child, { class: undefined });
                     return <Test><div class="foo" /></Test>;
                 })()`,
-                "<div></div>"
+                builder.element("div")
             );
 
             check(
@@ -360,6 +432,33 @@ describe("Preprocessing (examples)", () => {
                 `(() => {
                     const Test = (props, child) => JSXRuntime.addItems(child, { disabled: true });
                     return <Test><button /></Test>;
+                })()`,
+                builder.element("button", { disabled: true })
+            );
+
+            check(
+                "Introspection with spread attributes",
+                `(() => {
+                    const Test = (props, child) => JSXRuntime.addItems(child, { class: "bar" });
+                    return <Test><div {...{ class: "foo" }} /></Test>;
+                })()`,
+                builder.element("div", { class: "bar" })
+            );
+
+            check(
+                "Introspection with spread attributes discards",
+                `(() => {
+                    const Test = (props, child) => JSXRuntime.addItems(child, { class: undefined });
+                    return <Test><div {...{ class: "foo" }} /></Test>;
+                })()`,
+                builder.element("div")
+            );
+
+            check(
+                "Introspection with spread attributes respects true attrributes",
+                `(() => {
+                    const Test = (props, child) => JSXRuntime.addItems(child, { disabled: true });
+                    return <Test><button {...{ disabled: false }} /></Test>;
                 })()`,
                 builder.element("button", { disabled: true })
             );

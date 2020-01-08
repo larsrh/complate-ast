@@ -1,5 +1,5 @@
 import * as Base from "./base";
-import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, normalizeAttributes} from "../jsx/syntax";
+import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, renderAttributes} from "../jsx/syntax";
 import {Builder} from "./builder";
 
 export interface AST extends Base.AST {
@@ -21,13 +21,7 @@ export class ASTBuilder implements Builder<AST, string> {
         let raw = "";
         raw += "<";
         raw += tag;
-        for (const [key, value] of Object.entries(normalizeAttributes(true, attributes))) {
-            raw += " ";
-            raw += key;
-            raw += "=\"";
-            raw += value;
-            raw += "\"";
-        }
+        raw += renderAttributes(attributes);
         raw += ">";
         if (isVoidElement(tag)) {
             if (children.length > 0)

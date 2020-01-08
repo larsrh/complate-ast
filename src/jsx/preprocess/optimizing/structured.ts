@@ -1,5 +1,5 @@
-import {RuntimeModule} from "../util";
-import {ProcessedAttributes, ProcessedChildren, Tag} from "./util";
+import {ProcessedAttributes, RuntimeModule} from "../util";
+import {ProcessedChildren, Tag} from "./util";
 import * as ESTree from "estree";
 import * as Reify from "../../../estree/reify";
 import * as Structured from "../../../ast/structured";
@@ -17,7 +17,7 @@ export class StructuredFactory implements Factory {
             nodeType: Reify.string("element"),
             tag: tag.expr,
             // structured mode doesn't care about falsy attributes; renderers will take care of it
-            attributes: attributes.reified,
+            attributes: attributes.merged,
             children: children.normalized(runtime).raw
         });
     }

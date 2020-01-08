@@ -1,5 +1,5 @@
-import {Gensym, RuntimeModule} from "../util";
-import {ProcessedAttributes, ProcessedChildren, Tag} from "./util";
+import {Gensym, ProcessedAttributes, RuntimeModule} from "../util";
+import {ProcessedChildren, Tag} from "./util";
 import * as ESTree from "estree";
 import * as Operations from "../../../estree/operations";
 import * as Reify from "../../../estree/reify";
@@ -24,8 +24,6 @@ export class RawFactory implements Factory {
             body: Operations.member(Operations.identifier("x"), Operations.identifier("value"))
         };
 
-        const staticAttributeString = attributes.staticString;
-
         function mkDynamicAttr(key: string, value: ESTree.Expression): ESTree.Expression {
             function defaultString(value: ESTree.Expression): ESTree.Expression {
                 return Operations.plus(Reify.string(` ${key}="`), value, Reify.string('"'));
@@ -49,9 +47,15 @@ export class RawFactory implements Factory {
             return Operations.iife(decl, condition);
         }
 
-        const partsAttrs: ESTree.Expression[] = [Reify.string(staticAttributeString)];
-        for (const [key, value] of Object.entries(attributes.dynamics))
-            partsAttrs.push(mkDynamicAttr(key, value));
+        const partsAttrs: ESTree.Expression[] = [];
+        if (attributes.containsSpread) {
+            partsAttrs.push(runtime.renderAttributes(attributes.merged));
+        }
+        else {
+            partsAttrs.push(Reify.string(attributes.staticString));
+            for (const [key, value] of Object.entries(attributes.dynamics))
+                partsAttrs.push(mkDynamicAttr(key, value));
+        }
 
         const partsOpen = [
             tag.open,
