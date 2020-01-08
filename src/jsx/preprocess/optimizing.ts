@@ -1,10 +1,9 @@
 import * as Structured from "../../ast/structured";
 import * as ESTree from "estree";
 import * as Operations from "../../estree/operations";
-import {processAttributes, ProcessedAttributes, RuntimeModule} from "./util";
+import {ProcessedAttributes, RuntimeModule} from "./util";
 import {ESTreeBuilder, injectAST} from "../preprocess";
 import {processChildren, ProcessedChildren, Tag} from "./optimizing/util";
-import {JSXAttribute} from "../../estree/jsx";
 
 export interface Factory {
     makeElement(runtime: RuntimeModule, tag: Tag, attributes: ProcessedAttributes, children: ProcessedChildren): ESTree.Expression;
@@ -27,11 +26,9 @@ export class OptimizingBuilder extends ESTreeBuilder {
 
     elementOrMacro(
         _tag: string | ESTree.Expression,
-        _attributes: JSXAttribute[],
+        attributes: ProcessedAttributes,
         _children: ESTree.Expression[]
     ): ESTree.Expression {
-        const attributes = processAttributes(_attributes);
-
         if (typeof _tag === "string") {
             const children = processChildren(_children);
             const tag = new Tag(_tag);

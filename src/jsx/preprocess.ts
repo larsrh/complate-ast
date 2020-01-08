@@ -4,10 +4,11 @@ import * as ESTree from "estree";
 import * as Reify from "../estree/reify";
 import * as Operations from "../estree/operations";
 import * as Structured from "../ast/structured";
-import {JSXAttribute, JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
+import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
 import {Attributes, AttributeValue, isMacro} from "./syntax";
 import jsx from "acorn-jsx";
 import {Builder} from "../ast/builder";
+import {NoSpreadProcessedAttributes, processAttributes, ProcessedAttributes} from "./preprocess/util";
 
 export const acorn = Parser.extend(jsx());
 
@@ -38,7 +39,7 @@ export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree
 
     abstract elementOrMacro(
         tag: string | ESTree.Expression,
-        attributes: JSXAttribute[],
+        attributes: ProcessedAttributes,
         children: ESTree.Expression[]
     ): ESTree.Expression;
 
@@ -57,8 +58,11 @@ export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree
         attributes?: Attributes<ESTree.Expression>,
         ...children: ESTree.Expression[]
     ): ESTree.Expression {
-        // TODO untested??
-        throw 0;
+        return this.elementOrMacro(
+            tag,
+            NoSpreadProcessedAttributes.fromExpressions(attributes || {}),
+            children
+        );
     }
 
 }
@@ -81,7 +85,11 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
                 const tag = element.openingElement.name.name;
                 const attributes = element.openingElement.attributes;
                 const children = element.children as ESTree.Expression[];
-                const replacement = builder.elementOrMacro(isMacro(tag) ? Operations.identifier(tag) : tag, attributes, children);
+                const replacement = builder.elementOrMacro(
+                    isMacro(tag) ? Operations.identifier(tag) : tag,
+                    processAttributes(attributes),
+                    children
+                );
                 this.replace(replacement);
             }
             else if (node.type === "JSXExpressionContainer") {
@@ -91,7 +99,11 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
             else if (node.type === "JSXFragment") {
                 const fragment = node as JSXFragment;
                 const children = fragment.children as ESTree.Expression[];
-                this.replace(builder.elementOrMacro(builder.fragment, [], children))
+                this.replace(builder.elementOrMacro(
+                    builder.fragment,
+                    processAttributes([]),
+                    children
+                ));
             }
             else if (node.type === "JSXText") {
                 const text = node as JSXText;

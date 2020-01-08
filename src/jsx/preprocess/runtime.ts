@@ -2,9 +2,8 @@ import * as ESTree from "estree";
 import * as Operations from "../../estree/operations";
 import * as Reify from "../../estree/reify";
 import {ESTreeBuilder} from "../preprocess";
-import {processAttributes, RuntimeModule, tagExpression} from "./util";
+import {ProcessedAttributes, RuntimeModule, tagExpression} from "./util";
 import {AST, ASTInfo} from "../../ast/base";
-import {JSXAttribute} from "../../estree/jsx";
 import {isVoidElement} from "../syntax";
 
 export interface MetaASTInfo<A extends AST> extends ASTInfo<A> {
@@ -25,7 +24,7 @@ export class RuntimeBuilder extends ESTreeBuilder {
 
     elementOrMacro(
         tag: string | ESTree.Expression,
-        attributes: JSXAttribute[],
+        attributes: ProcessedAttributes,
         children: ESTree.Expression[]
     ): ESTree.Expression {
         let callee: ESTree.Expression;
@@ -45,7 +44,7 @@ export class RuntimeBuilder extends ESTreeBuilder {
         return Operations.call(
             callee,
             ...args,
-            processAttributes(attributes).merged,
+            attributes.merged,
             this.runtime.normalizeChildren(children)
         )
     }
