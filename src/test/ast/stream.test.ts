@@ -1,8 +1,11 @@
 import * as Stream from "../../ast/stream";
+import {spec} from "../../testkit/spec";
 
 const builder = Stream.info.builder;
 
 describe("Stream AST", () => {
+
+    spec(Stream.info);
 
     describe("Cloning", () => {
 
@@ -42,7 +45,6 @@ describe("Stream AST", () => {
             const ast = builder.text("hi");
             expect(() => Stream._clone(ast, children => children, attr => attr)).toThrow(/non-element/);
         });
-
 
         it("Cloning creates independent objects", () => {
             const ast = builder.element("div");

@@ -9,7 +9,7 @@ export type Kind = "raw" | "stream" | "structured"
 
 export type AST = Structured.AST | Stream.AST | Raw.AST
 
-export const astInfos: { [key in Kind]: Base.ASTInfo<AST> } = {
+export const astInfos: { [key in Kind]: Base.ASTInfo<AST, any> } = {
     "structured": Structured.info,
     "stream": Stream.info,
     "raw": Raw.info

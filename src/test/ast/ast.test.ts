@@ -9,7 +9,7 @@ import {AST, ASTInfo} from "../../ast/base";
 const elementGen = Gen.astNoPrerendered(Structured.info.builder).filter(t => t.nodeType === "element");
 const childrenGen = fc.array(Gen.astNoPrerendered(Structured.info.builder), 0, 5);
 
-function laws<T extends AST>(info: ASTInfo<T>): void {
+function laws<T extends AST, F>(info: ASTInfo<T, F>): void {
     function make(ast: Structured.AST): T {
         return Structured.render(ast, info.builder);
     }

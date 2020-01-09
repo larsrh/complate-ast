@@ -1,8 +1,8 @@
 import * as Base from "./base";
 import * as Raw from "./raw";
 import {mapObject} from "../util";
-import {Attributes, AttributeValue, isMacro, isVoidElement, normalizeAttributes} from "../jsx/syntax";
-import {Builder} from "./builder";
+import {Attributes, AttributeValue, normalizeAttributes} from "../jsx/syntax";
+import {Builder, defaultTagCheck} from "./builder";
 
 export type NodeType = "text" | "element" | "prerendered"
 
@@ -46,10 +46,7 @@ export class ElementNode<P> implements BaseAST<P> {
         public readonly attributes: Attributes,
         public readonly children: AST<P>[]
     ) {
-        if (this.children.length > 0 && isVoidElement(this.tag))
-            throw new Error(`Void element ${tag} must not have children`);
-        if (isMacro(tag))
-            throw new Error(`Macro tag ${tag} not allowed in an AST`);
+        defaultTagCheck(tag, children);
     }
 }
 
@@ -90,7 +87,8 @@ export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
 export const info: Base.ASTInfo<AST> = {
     astType: "structured",
     builder: new ASTBuilder(),
-    force: t => t
+    force: t => t,
+    asString: ast => render(ast, Raw.info.builder).value
 };
 
 export class MappingBuilder<P, Q> implements Builder<AST<Q>, P> {
