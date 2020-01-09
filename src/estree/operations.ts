@@ -30,15 +30,6 @@ export function notEqual(left: ESTree.Expression, right: ESTree.Expression): EST
     };
 }
 
-export function not(expr: ESTree.Expression): ESTree.UnaryExpression {
-    return {
-        type: "UnaryExpression",
-        prefix: true,
-        operator: "!",
-        argument: expr
-    };
-}
-
 export function call(callee: ESTree.Expression, ...args: (ESTree.Expression | ESTree.SpreadElement)[]): ESTree.CallExpression {
     return {
         type: "CallExpression",

@@ -19,18 +19,6 @@ export function isAST(object: any): object is AST {
     return object.astType && object.astType in astInfos;
 }
 
-export function isStructured(ast: Base.AST): ast is Structured.AST<any> {
-    return ast.astType === "structured";
-}
-
-export function isStream(ast: Base.AST): ast is Stream.AST {
-    return ast.astType === "stream";
-}
-
-export function isRaw(ast: Base.AST): ast is Raw.AST {
-    return ast.astType === "raw";
-}
-
 function streamChildrenAdder(children: Stream.AST[]): Stream.Modifier<Stream.AST[]> {
     if (children.length === 0)
         return children => children;
