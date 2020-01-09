@@ -87,6 +87,19 @@ export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
 export const info: Base.ASTInfo<AST> = {
     astType: "structured",
     builder: new ASTBuilder(),
+    introspection: {
+        addItems(ast: AST, attributes: Attributes, children: AST[]): AST {
+            switch (ast.nodeType) {
+                case "element": {
+                    const newChildren = [...ast.children, ...children];
+                    const newAttributes = {...ast.attributes, ...attributes};
+                    return new ElementNode(ast.tag, newAttributes, newChildren);
+                }
+                default:
+                    throw new Error(`Supplied node is ${ast.nodeType} and has no children`);
+            }
+        }
+    },
     force: t => t,
     asString: ast => render(ast, Raw.info.builder).value
 };

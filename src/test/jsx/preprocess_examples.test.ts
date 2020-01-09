@@ -464,7 +464,7 @@ describe("Preprocessing (examples)", () => {
                     const Test = (props, child) => JSXRuntime.addItems(child);
                     return <Test><div /></Test>;
                 })()`,
-                /Raw AST/
+                /does not support/
             );
 
         }

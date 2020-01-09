@@ -29,6 +29,21 @@ export interface AST extends Base.AST {
 
 export type Modifier<T> = (t?: T) => T | undefined
 
+function childrenAdder(children: AST[]): Modifier<AST[]> {
+    if (children.length === 0)
+        return children => children;
+    else
+        return oldChildren => {
+            if (oldChildren === undefined)
+                oldChildren = [];
+            return [...oldChildren, ...children];
+        };
+}
+
+function attributeAdder(attributes: Attributes): Modifier<Attributes> {
+    return oldAttributes => ({... oldAttributes, ...attributes});
+}
+
 export function _clone(
     ast: AST,
     childrenFn: Modifier<AST[]>,
@@ -115,6 +130,15 @@ export function force(ast: AST): string {
 export const info: Base.ASTInfo<AST, string> = {
     astType: "stream",
     builder: new ASTBuilder<never>(() => () => {/* do nothing */}),
+    introspection: {
+        addItems(ast: AST, attributes: Attributes, children: AST[]): AST {
+            return _clone(
+                ast,
+                childrenAdder(children),
+                attributeAdder(attributes)
+            );
+        }
+    },
     force: force,
     asString: string => string
 };
