@@ -8,6 +8,7 @@ import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estre
 import {Attributes, AttributeValue, isMacro} from "./syntax";
 import jsx from "acorn-jsx";
 import {Builder} from "../ast/builder";
+import {NoSpreadProcessedAttributes, processAttributes, ProcessedAttributes} from "./preprocess/util";
 
 export const acorn = Parser.extend(jsx());
 
@@ -36,16 +37,10 @@ export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree
         readonly fragment: ESTree.Expression
     ) {}
 
-    abstract element(
-        tag: string,
-        attributes?: Attributes<ESTree.Expression>,
-        ...children: ESTree.Expression[]
-    ): ESTree.Expression;
-
-    abstract macro(
-        macro: ESTree.Expression,
-        attributes: Attributes<ESTree.Expression>,
-        ...children: ESTree.Expression[]
+    abstract elementOrMacro(
+        tag: string | ESTree.Expression,
+        attributes: ProcessedAttributes,
+        children: ESTree.Expression[]
     ): ESTree.Expression;
 
     abstract text(text: string): ESTree.Expression;
@@ -57,6 +52,19 @@ export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree
     attributeValue(key: string, value: AttributeValue): ESTree.Expression {
         return Reify.any(value);
     }
+
+    element(
+        tag: string,
+        attributes?: Attributes<ESTree.Expression>,
+        ...children: ESTree.Expression[]
+    ): ESTree.Expression {
+        return this.elementOrMacro(
+            tag,
+            NoSpreadProcessedAttributes.fromExpressions(attributes || {}),
+            children
+        );
+    }
+
 }
 
 export function parse(js: string): ESTree.BaseNode {
@@ -75,19 +83,13 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
             else if (node.type === "JSXElement") {
                 const element = node as JSXElement;
                 const tag = element.openingElement.name.name;
-                const attributes = Object.fromEntries(
-                    element.openingElement.attributes.map(attr => {
-                        // replacing the shorthand notation (`<button disabled />`) logically belongs into the builders
-                        // but the process is the same everywhere, so why not put the expansion here?
-                        const value = attr.value as ESTree.Expression || Reify.boolean(true);
-                        return [attr.name.name, value]
-                    })
-                );
+                const attributes = element.openingElement.attributes;
                 const children = element.children as ESTree.Expression[];
-                const replacement =
-                    isMacro(tag) ?
-                        builder.macro(Operations.identifier(tag), attributes, ...children) :
-                        builder.element(tag, attributes, ...children);
+                const replacement = builder.elementOrMacro(
+                    isMacro(tag) ? Operations.identifier(tag) : tag,
+                    processAttributes(attributes),
+                    children
+                );
                 this.replace(replacement);
             }
             else if (node.type === "JSXExpressionContainer") {
@@ -97,7 +99,11 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
             else if (node.type === "JSXFragment") {
                 const fragment = node as JSXFragment;
                 const children = fragment.children as ESTree.Expression[];
-                this.replace(builder.macro(builder.fragment, {}, ...children))
+                this.replace(builder.elementOrMacro(
+                    builder.fragment,
+                    processAttributes([]),
+                    children
+                ));
             }
             else if (node.type === "JSXText") {
                 const text = node as JSXText;

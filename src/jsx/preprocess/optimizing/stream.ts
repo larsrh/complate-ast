@@ -1,9 +1,9 @@
 import * as ESTree from "estree";
 import * as Operations from "../../../estree/operations";
-import {Gensym, RuntimeModule} from "../util";
+import {Gensym, NoSpreadProcessedAttributes, ProcessedAttributes, RuntimeModule} from "../util";
 import * as Reify from "../../../estree/reify";
-import {ProcessedAttributes, ProcessedChildren, StaticProcessedChildren, Tag} from "./util";
-import {escapeHTML} from "../../syntax";
+import {ProcessedChildren, StaticProcessedChildren, Tag} from "./util";
+import {Attributes, escapeHTML, renderAttributes} from "../../syntax";
 import {ArrayExpr} from "../../../estree/expr";
 import * as Structured from "../../../ast/structured";
 import {Factory} from "../optimizing";
@@ -60,33 +60,7 @@ export class StreamFactory implements Factory {
                 )
             };
 
-            function onlyIfNotExtra(doCheck: boolean, key: ESTree.Expression, ...statements: ESTree.Statement[]): ESTree.Statement[] {
-                if (doCheck)
-                    return [Operations.ifthenelse(
-                        Operations.not(Operations.isin(key, extraAttributes)),
-                        Operations.block(...statements)
-                    )];
-                else
-                    return statements;
-            }
-
-            function mkStaticAttrs(doCheck: boolean): ESTree.Statement[] {
-                if (doCheck) {
-                    const statements: ESTree.Statement[] = [];
-                    for (const [key, value] of Object.entries(attributes.statics))
-                        statements.push(...onlyIfNotExtra(
-                            true,
-                            Reify.string(key),
-                            bufferWrite(buffer, Reify.string(` ${key}="${escapeHTML(value)}"`))
-                        ));
-                    return statements;
-                }
-                else {
-                    return [bufferWrite(buffer, Reify.string(attributes.staticString))]
-                }
-            }
-
-            function mkDynamicAttr(doCheck: boolean, key: ESTree.Expression, value: ESTree.Expression): ESTree.Statement[] {
+            function mkDynamicAttr(key: ESTree.Expression, value: ESTree.Expression): ESTree.Statement[] {
                 const sym = genNorm.sym();
                 const decl: ESTree.Statement = {
                     type: "VariableDeclaration",
@@ -106,51 +80,37 @@ export class StreamFactory implements Factory {
                     )
                 );
 
-                return onlyIfNotExtra(
-                    doCheck,
-                    key,
-                    decl,
-                    condition
-                );
+                return [decl, condition];
             }
 
-            function mkDynamicAttrs(doCheck: boolean): ESTree.Statement[] {
+            function mkDynamicAttrs(dynamics: Attributes<ESTree.Expression>): ESTree.Statement[] {
                 const statements: ESTree.Statement[] = [];
-                for (const [key, value] of Object.entries(attributes.dynamics))
-                    statements.push(...mkDynamicAttr(doCheck, Reify.string(key), value));
+                for (const [key, value] of Object.entries(dynamics))
+                    statements.push(...mkDynamicAttr(Reify.string(key), value));
                 return statements;
             }
 
-            const extraKey = new Gensym("__key__").sym();
-
-            const bodyExtraAttrs: ESTree.Statement = {
-                type: "ForInStatement",
-                left: {
-                    type: "VariableDeclaration",
-                    kind: "const",
-                    declarations: [{
-                        type: "VariableDeclarator",
-                        id: extraKey
-                    }]
-                },
-                right: extraAttributes,
-                body: Operations.block(
-                    ...mkDynamicAttr(false, extraKey, Operations.member(extraAttributes, extraKey, true))
+            const fallbackBodyAttrs = bufferWrite(
+                buffer,
+                runtime.renderAttributes(
+                    Operations.object(
+                        { type: "SpreadElement", argument: attributes.merged },
+                        { type: "SpreadElement", argument: extraAttributes }
+                    )
                 )
-            };
+            );
 
-            const bodyAttrs =
-                Operations.ifthenelse(
+            let bodyAttrs: ESTree.Statement;
+            if (attributes.containsSpread)
+                bodyAttrs = fallbackBodyAttrs;
+            else
+                bodyAttrs = Operations.ifthenelse(
                     Operations.equal(extraAttributes, Reify.any(undefined)),
                     Operations.block(
-                        ...mkStaticAttrs(false),
-                        ...mkDynamicAttrs(false)
+                        bufferWrite(buffer, Reify.string(renderAttributes(attributes.statics))),
+                        ...mkDynamicAttrs(attributes.dynamics)
                     ),
-                    Operations.block(
-                        ...mkStaticAttrs(true),
-                        ...mkDynamicAttrs(true),
-                        bodyExtraAttrs
-                    )
+                    Operations.block(fallbackBodyAttrs)
                 );
 
             const bodyOpen = [
@@ -205,7 +165,7 @@ export class StreamFactory implements Factory {
                 return this.makeElement(
                     runtime,
                     new Tag(ast.tag),
-                    ProcessedAttributes.fromAttributeValues(ast.attributes),
+                    NoSpreadProcessedAttributes.fromAttributeValues(ast.attributes),
                     StaticProcessedChildren.fromASTs(ast.children)
                 );
             case "prerendered":

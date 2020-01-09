@@ -1,9 +1,8 @@
 import * as ESTree from "estree";
-import {processStaticAttribute, RuntimeModule, tagExpression} from "../util";
-import {Attributes, escapeHTML, isVoidElement, normalizeAttribute, normalizeAttributes, isDynamic} from "../../syntax";
+import {RuntimeModule, tagExpression} from "../util";
+import {isVoidElement, isDynamic, isMacro} from "../../syntax";
 import * as Operations from "../../../estree/operations";
 import * as Reify from "../../../estree/reify";
-import {mapObject} from "../../../util";
 import {ArrayExpr} from "../../../estree/expr";
 import * as Structured from "../../../ast/structured";
 import * as Raw from "../../../ast/raw";
@@ -20,6 +19,9 @@ export class Tag {
     constructor(
         private readonly tag: string
     ) {
+        if (isMacro(tag))
+            throw new Error(`Macro tag ${tag} not allowed here`);
+
         this.isDynamic = isDynamic(tag);
         this.expr = tagExpression(tag);
         this.isVoid = isVoidElement(tag);
@@ -34,54 +36,6 @@ export class Tag {
         else
             this.close = Reify.string(`</${tag}>`);
     }
-}
-
-export class ProcessedAttributes {
-    private constructor(
-        readonly statics: Attributes<string> = {},
-        readonly dynamics: Attributes<ESTree.Expression> = {}
-    ) {}
-
-    get isStatic(): boolean {
-        return Object.keys(this.dynamics).length === 0;
-    }
-
-    get reified(): ESTree.Expression {
-        return Reify.object(Object.assign({}, this.dynamics, mapObject(this.statics, Reify.string)));
-    }
-
-    get staticString(): string {
-        let result = "";
-        for (const [key, value] of Object.entries(this.statics))
-            result += ` ${key}="${escapeHTML(value)}"`;
-        return result;
-    }
-
-    static fromAttributeValues(attributes: Attributes): ProcessedAttributes {
-        return new ProcessedAttributes(normalizeAttributes(false, attributes));
-    }
-
-    static fromExpressions(attrs: Attributes<ESTree.Expression>): ProcessedAttributes {
-        // for each attribute, there are two possible buckets:
-        // 1a) truthy literal --> static: string (already normalized, needs to be escaped later)
-        // 1b) falsy literal --> nothing
-        // 2) non-literal --> dynamic: expr (needs to be normalized, checked for null-ness and rendered later)
-
-        const processed = new ProcessedAttributes();
-        for (const [key, expr] of Object.entries(attrs))
-            if (expr.type === "Literal") {
-                const staticAttribute = processStaticAttribute(expr as ESTree.Literal);
-                const normalized = normalizeAttribute(key, staticAttribute);
-                if (normalized != null)
-                    processed.statics[key] = normalized;
-            }
-            else {
-                processed.dynamics[key] = expr;
-            }
-
-        return processed;
-    }
-
 }
 
 export interface BaseProcessedChildren {

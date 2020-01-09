@@ -54,3 +54,18 @@ export function normalizeAttributes(escape: boolean, attrs?: Attributes): Attrib
 
     return normalized;
 }
+
+export function renderAttributes(attrs?: Attributes): string {
+    const normalized = normalizeAttributes(true, attrs);
+
+    let result = "";
+    for (const [key, value] of Object.entries(normalized)) {
+        result += " ";
+        result += key;
+        result += "=\"";
+        result += value;
+        result += "\"";
+    }
+
+    return result;
+}

@@ -1,5 +1,5 @@
 export {addItems, normalizeChildren} from "../ast";
-export {escapeHTML, normalizeAttribute, isVoidElement} from "./syntax";
+export {escapeHTML, normalizeAttribute, renderAttributes, isVoidElement} from "./syntax";
 
 import * as Structured from "../ast/structured";
 import * as Stream from "../ast/stream";
