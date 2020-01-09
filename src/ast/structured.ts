@@ -1,6 +1,7 @@
 import * as Base from "./base";
+import * as Raw from "./raw";
 import {mapObject} from "../util";
-import {Attributes, AttributeValue, isMacro, isVoidElement} from "../jsx/syntax";
+import {Attributes, AttributeValue, isMacro, isVoidElement, normalizeAttributes} from "../jsx/syntax";
 import {Builder} from "./builder";
 
 export type NodeType = "text" | "element" | "prerendered"
@@ -62,8 +63,15 @@ export class PrerenderedNode<P> implements BaseAST<P> {
 }
 
 export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
+    constructor(
+        // false only for testing
+        public readonly _normalize: boolean = true
+    ) {}
+
     element(tag: string, attributes?: Attributes, ...children: AST<P>[]): AST<P> {
-        return new ElementNode<P>(tag, attributes ? attributes : {}, children);
+        if (this._normalize)
+            attributes = normalizeAttributes(false, attributes);
+        return new ElementNode<P>(tag, attributes || {}, children);
     }
 
     prerendered(p: P): AST<P> {

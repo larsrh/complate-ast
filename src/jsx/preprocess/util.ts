@@ -1,5 +1,5 @@
 import * as ESTree from "estree";
-import {Attributes, escapeHTML, isDynamic, normalizeAttribute, normalizeAttributes} from "../syntax";
+import {Attributes, isDynamic, normalizeAttribute, normalizeAttributes, renderAttributes} from "../syntax";
 import * as Operations from "../../estree/operations";
 import * as Reify from "../../estree/reify";
 import {ArrayExpr} from "../../estree/expr";
@@ -61,8 +61,12 @@ export class RuntimeModule {
         return this._call("isVoidElement", argument);
     }
 
-    normalizeAttribute(key: ESTree.Expression, value: ESTree.Expression): ESTree.Expression {
-        return this._call("normalizeAttribute", key, value);
+    normalizeAttribute(value: ESTree.Expression): ESTree.Expression {
+        return this._call("normalizeAttribute", value);
+    }
+
+    normalizeAttributes(escape: boolean, attributes: ESTree.Expression): ESTree.Expression {
+        return this._call("normalizeAttributes", Reify.boolean(escape), attributes);
     }
 
     renderAttributes(attributes: ESTree.Expression): ESTree.Expression {
@@ -85,10 +89,10 @@ function processStaticAttribute(literal: ESTree.Literal): string | boolean | nul
         throw new Error(`Unknown literal type ${literal}`);
 }
 
-function processAttribute(key: string, value: ESTree.Expression): string | null | ESTree.Expression {
+function processAttribute(value: ESTree.Expression): string | true | null | ESTree.Expression {
     if (value.type === "Literal") {
         const staticAttribute = processStaticAttribute(value);
-        return normalizeAttribute(key, staticAttribute);
+        return normalizeAttribute(staticAttribute);
     }
     else {
         return value;
@@ -104,7 +108,7 @@ export class NoSpreadProcessedAttributes implements BaseProcessedAttributes {
     readonly containsSpread: false = false;
 
     private constructor(
-        readonly statics: Attributes<string> = {},
+        readonly statics: Attributes<true | string> = {},
         readonly dynamics: Attributes<ESTree.Expression> = {}
     ) {}
 
@@ -114,7 +118,7 @@ export class NoSpreadProcessedAttributes implements BaseProcessedAttributes {
     }
 
     get merged(): ESTree.Expression {
-        return Reify.object(Object.assign({}, this.dynamics, mapObject(this.statics, Reify.string)));
+        return Reify.object(Object.assign({}, this.dynamics, mapObject(this.statics, Reify.any)));
     }
 
     get isStatic(): boolean {
@@ -122,10 +126,7 @@ export class NoSpreadProcessedAttributes implements BaseProcessedAttributes {
     }
 
     get staticString(): string {
-        let result = "";
-        for (const [key, value] of Object.entries(this.statics))
-            result += ` ${key}="${escapeHTML(value)}"`;
-        return result;
+        return renderAttributes(this.statics);
     }
 
     static fromAttributeValues(attributes: Attributes): ProcessedAttributes {
@@ -141,8 +142,8 @@ export class NoSpreadProcessedAttributes implements BaseProcessedAttributes {
         const processed = new NoSpreadProcessedAttributes();
         for (const [key, expr] of Object.entries(attrs)) {
             processed.clear(key);
-            const attr = processAttribute(key, expr);
-            if (typeof attr === "string")
+            const attr = processAttribute(expr);
+            if (typeof attr === "string" || attr === true)
                 processed.statics[key] = attr;
             else if (attr !== null)
                 processed.dynamics[key] = attr;
@@ -176,11 +177,11 @@ export function processAttributes(attributes: JSXAttribute[]): ProcessedAttribut
             switch (attribute.type) {
                 case "JSXAttribute": {
                     const key = Operations.identifier(attribute.name.name);
-                    const attr = processAttribute(attribute.name.name, attribute.value as ESTree.Expression || Reify.boolean(true));
+                    const attr = processAttribute(attribute.value as ESTree.Expression || Reify.boolean(true));
                     let value: ESTree.Expression;
                     // a later x={null} or x={false} attribute may override a previous attribute from a spread,
                     // so those need to be preserved here
-                    if (typeof attr === "string" || attr === null)
+                    if (typeof attr === "string" || attr === null || attr === true)
                         value = Reify.any(attr);
                     else
                         value = attr;

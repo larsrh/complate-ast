@@ -26,7 +26,7 @@ describe("Structured AST roundtrips", () => {
             fc.assert(fc.property(gen, ast => {
                 const dom = Structured.render(ast, new DOMBuilder(window.document));
                 const ast2 = fromDOM(builder, dom);
-                const ast1 = Structured.render(ast, new CompactingBuilder({ children: false, attributes: true }));
+                const ast1 = Structured.render(ast, new CompactingBuilder({ children: false, attributes: true, trueAttributes: true }));
                 expect(ast2).toEqual(ast1);
             }));
         });
@@ -37,10 +37,8 @@ describe("Structured AST roundtrips", () => {
 
         it("Roundtrip property", () => {
             fc.assert(fc.property(gen, ast => {
-                const buffer = new Stream.StringBuffer();
-                Structured.render(ast, Stream.info.builder).render(buffer);
-                const ast1 = Structured.render(ast, new CompactingBuilder());
-                const ast2 = fromDOM(builder, parseHTML(document, buffer.content));
+                const ast1 = Structured.render(ast, new CompactingBuilder({ children: true, attributes: true, trueAttributes: true }));
+                const ast2 = fromDOM(builder, parseHTML(document, Stream.force(Structured.render(ast, Stream.info.builder))));
                 expect(ast2).toEqual(ast1);
             }));
         });

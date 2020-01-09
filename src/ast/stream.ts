@@ -81,9 +81,11 @@ export class ASTBuilder<P> implements Builder<AST, P> {
                 for (const [key, value] of Object.entries(normalizeAttributes(true, allAttributes))) {
                     buffer.write(" ");
                     buffer.write(key);
-                    buffer.write("=\"");
-                    buffer.write(value);
-                    buffer.write("\"");
+                    if (value !== true) {
+                        buffer.write("=\"");
+                        buffer.write(value);
+                        buffer.write("\"");
+                    }
                 }
                 buffer.write(">");
 

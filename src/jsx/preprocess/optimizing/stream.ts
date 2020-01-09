@@ -68,15 +68,21 @@ export class StreamFactory implements Factory {
                     declarations: [{
                         type: "VariableDeclarator",
                         id: sym,
-                        init: runtime.normalizeAttribute(key, value)
+                        init: runtime.normalizeAttribute(value)
                     }]
                 };
                 const condition = Operations.ifthenelse(
-                    Operations.notEqual(Reify.any(null), sym),
+                    Operations.equal(Reify.boolean(true), sym),
                     Operations.block(
-                        bufferWrite(buffer, Operations.plus(Reify.string(" "), key, Reify.string(`="`))),
-                        bufferWrite(buffer, runtime.escapeHTML(sym)),
-                        bufferWrite(buffer, Reify.string('"'))
+                        bufferWrite(buffer, Operations.plus(Reify.string(" "), key))
+                    ),
+                    Operations.ifthenelse(
+                        Operations.notEqual(Reify.any(null), sym),
+                        Operations.block(
+                            bufferWrite(buffer, Operations.plus(Reify.string(" "), key, Reify.string(`="`))),
+                            bufferWrite(buffer, runtime.escapeHTML(sym)),
+                            bufferWrite(buffer, Reify.string('"'))
+                        )
                     )
                 );
 

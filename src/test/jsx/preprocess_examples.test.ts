@@ -42,8 +42,7 @@ describe("Preprocessing (examples)", () => {
                     const inner = (processed.body[0] as ESTree.ExpressionStatement).expression;
                     const extracted = extractAST(inner);
                     if (doStatic)
-                        // TODO more direct equality
-                        expect(force(Structured.render(extracted!, astBuilder))).toEqual(force(expected));
+                        expect(extracted).toEqual(_expected);
                     else
                         expect(extracted).toBeNull();
                 });
@@ -143,8 +142,21 @@ describe("Preprocessing (examples)", () => {
         check(
             "True attributes with dashes",
             "<span data-foo />",
-            builder.element("span", { "data-foo": "data-foo" }),
+            builder.element("span", { "data-foo": true }),
             true
+        );
+
+        check(
+            "Number-valued attributes (static)",
+            "<span data-foo={ 10 } />",
+            builder.element("span", { "data-foo": "10" }),
+            true
+        );
+
+        check(
+            "Number-valued attributes",
+            "<span data-foo={ 5 + 5 } />",
+            builder.element("span", { "data-foo": "10" })
         );
 
         check(
@@ -176,14 +188,14 @@ describe("Preprocessing (examples)", () => {
         check(
             "Void element with attribute",
             "<br class='foo' />",
-            builder.element( "br", {class: "foo"}),
+            builder.element( "br", { class: "foo" }),
             true
         );
 
         check(
             "Void element with computed attribute",
             "<br class={'fo' + 'o'} />",
-            builder.element( "br", {class: "foo"})
+            builder.element( "br", { class: "foo" })
         );
 
         check(
@@ -223,25 +235,11 @@ describe("Preprocessing (examples)", () => {
             builder.element("span", { class: "foo2", id: "bar2" })
         );
 
-        if (config.target === "structured") {
-
-            check(
-                "Overriden spread attributes with cancellation (static)",
-                "<span {...{ class: 'foo', id: 'bar' }} class={ null } />",
-                builder.element("span", { id: "bar", class: null })
-            );
-
-        }
-
-        else {
-
-            check(
-                "Overriden spread attributes with cancellation (static)",
-                "<span {...{ class: 'foo', id: 'bar' }} class={ null } />",
-                builder.element("span", { id: "bar" })
-            );
-
-        }
+        check(
+            "Overriden spread attributes with cancellation (static)",
+            "<span {...{ class: 'foo', id: 'bar' }} class={ null } />",
+            builder.element("span", { id: "bar" })
+        );
 
         check(
             "Overriden spread attributes with cancellation",
@@ -343,7 +341,7 @@ describe("Preprocessing (examples)", () => {
         check(
             "Shorthand for true attribute",
             "<button disabled />",
-            builder.element("button", { disabled: "disabled" }),
+            builder.element("button", { disabled: true }),
             true
         );
 
@@ -357,42 +355,21 @@ describe("Preprocessing (examples)", () => {
         check(
             "Render true attributes (static)",
             "<button disabled={ true } />",
-            builder.element("button", { disabled: "disabled" }),
+            builder.element("button", { disabled: true }),
             true
         );
 
+        check(
+            "Keep true attributes",
+            "<button disabled={ true || false } />",
+            builder.element("button", { disabled: true })
+        );
 
-        if (config.target !== "structured") {
-
-            check(
-                "Eliminate void attributes",
-                "<span class={null} id={false && true} style={undefined} />",
-                builder.element("span")
-            );
-
-            check(
-                "Render true attributes",
-                "<button disabled={ true || false } />",
-                builder.element("button", { disabled: "disabled" })
-            );
-
-        }
-
-        else { // structured
-
-            check(
-                "Keep void attributes",
-                "<span class={null} id={false && true} style={undefined} />",
-                builder.element("span", { id: false, style: undefined })
-            );
-
-            check(
-                "Keep true attributes",
-                "<button disabled={ true || false } />",
-                builder.element("button", { disabled: true })
-            );
-
-        }
+        check(
+            "Eliminate void attributes",
+            "<span class={null} id={false && true} style={undefined} />",
+            builder.element("span")
+        );
 
         if (config.target !== "raw") {
 
