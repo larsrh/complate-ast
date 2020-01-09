@@ -1,4 +1,5 @@
 import * as ESTree from "estree";
+import * as Operations from "./operations";
 import {ArrayExpr} from "./expr";
 
 export function string(s: string): ESTree.SimpleLiteral {
@@ -43,10 +44,7 @@ export function object(fields: Record<string, ESTree.Expression>): ESTree.Object
         };
         return prop;
     });
-    return {
-        type: "ObjectExpression",
-        properties: props
-    };
+    return Operations.object(...props);
 }
 
 export function any(x: any): ESTree.Expression {

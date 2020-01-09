@@ -10,6 +10,7 @@ import {fromDOM, parseHTML} from "../../ast/builders/dom";
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../../jsx/runtime";
 
+// TODO golden tests
 describe("Preprocessing (examples)", () => {
 
     matrix((config, astBuilder, esBuilder) => {

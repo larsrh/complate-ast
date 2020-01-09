@@ -21,15 +21,6 @@ export function equal(left: ESTree.Expression, right: ESTree.Expression): ESTree
     };
 }
 
-export function isin(key: ESTree.Expression, object: ESTree.Expression): ESTree.BinaryExpression {
-    return {
-        type: "BinaryExpression",
-        operator: "in",
-        left: key,
-        right: object
-    };
-}
-
 export function notEqual(left: ESTree.Expression, right: ESTree.Expression): ESTree.BinaryExpression {
     return {
         type: "BinaryExpression",
