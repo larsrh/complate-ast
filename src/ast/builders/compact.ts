@@ -41,7 +41,7 @@ export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
 
         let newAttributes: Attributes = attributes ? attributes : {};
         if (this.doAttributes)
-            newAttributes = normalizeAttributes(false, newAttributes);
+            newAttributes = normalizeAttributes(newAttributes);
         if (this.doTrueAttributes)
             newAttributes = mapObject(newAttributes, value => value === true ? "" : value);
 

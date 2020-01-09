@@ -1,5 +1,5 @@
 import * as Base from "./base";
-import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, normalizeAttributes} from "../jsx/syntax";
+import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, renderAttributes} from "../jsx/syntax";
 import _ from "lodash";
 import {Builder} from "./builder";
 
@@ -78,15 +78,7 @@ export class ASTBuilder<P> implements Builder<AST, P> {
                 buffer.write(tag);
 
                 const allAttributes = {...attributes, ...this._extraAttributes};
-                for (const [key, value] of Object.entries(normalizeAttributes(true, allAttributes))) {
-                    buffer.write(" ");
-                    buffer.write(key);
-                    if (value !== true) {
-                        buffer.write("=\"");
-                        buffer.write(value);
-                        buffer.write("\"");
-                    }
-                }
+                buffer.write(renderAttributes(allAttributes));
                 buffer.write(">");
 
                 const extraChildren: AST[] = this._extraChildren ? this._extraChildren : [];

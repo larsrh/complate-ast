@@ -40,19 +40,12 @@ export function normalizeAttribute(value: AttributeValue): string | true | null 
         return `${value}`;
 }
 
-export function normalizeAttributes(escape: boolean, attrs?: Attributes): Attributes<string | true> {
-    if (attrs === undefined)
-        return {};
-
-    const normalized = filterObject(mapObject(attrs, value => normalizeAttribute(value)));
-    if (escape)
-        return mapObject(normalized, value => value === true || escapeHTML(value));
-
-    return normalized;
+export function normalizeAttributes(attrs?: Attributes): Attributes<string | true> {
+    return attrs ? filterObject(mapObject(attrs, value => normalizeAttribute(value))) : {};
 }
 
 export function renderAttributes(attrs?: Attributes): string {
-    const normalized = normalizeAttributes(true, attrs);
+    const normalized = normalizeAttributes(attrs);
 
     let result = "";
     for (const [key, value] of Object.entries(normalized)) {
@@ -60,7 +53,7 @@ export function renderAttributes(attrs?: Attributes): string {
         result += key;
         if (value !== true) {
             result += "=\"";
-            result += value;
+            result += escapeHTML(value);
             result += "\"";
         }
     }

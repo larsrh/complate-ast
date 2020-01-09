@@ -8,7 +8,7 @@ export class DOMBuilder implements Builder<Node, Node> {
 
     element(tag: string, attributes?: Attributes, ...children: Node[]): Element {
         const node = this.document.createElement(tag);
-        for (const [key, value] of Object.entries(normalizeAttributes(false, attributes)))
+        for (const [key, value] of Object.entries(normalizeAttributes(attributes)))
             node.setAttribute(key, value === true ? "" : value);
         for (const child of children)
             node.appendChild(child);

@@ -65,8 +65,8 @@ export class RuntimeModule {
         return this._call("normalizeAttribute", value);
     }
 
-    normalizeAttributes(escape: boolean, attributes: ESTree.Expression): ESTree.Expression {
-        return this._call("normalizeAttributes", Reify.boolean(escape), attributes);
+    normalizeAttributes(attributes: ESTree.Expression): ESTree.Expression {
+        return this._call("normalizeAttributes", attributes);
     }
 
     renderAttributes(attributes: ESTree.Expression): ESTree.Expression {
@@ -130,7 +130,7 @@ export class NoSpreadProcessedAttributes implements BaseProcessedAttributes {
     }
 
     static fromAttributeValues(attributes: Attributes): ProcessedAttributes {
-        return new NoSpreadProcessedAttributes(normalizeAttributes(false, attributes));
+        return new NoSpreadProcessedAttributes(normalizeAttributes(attributes));
     }
 
     static fromExpressions(attrs: Attributes<ESTree.Expression>): ProcessedAttributes {

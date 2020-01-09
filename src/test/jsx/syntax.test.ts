@@ -1,4 +1,6 @@
-import {isMacro} from "../../jsx/syntax";
+import * as Gen from "../../testkit/gen";
+import fc from "fast-check";
+import {isMacro, normalizeAttribute, normalizeAttributes, renderAttributes} from "../../jsx/syntax";
 
 describe("JSX/HTML syntax", () => {
 
@@ -8,6 +10,48 @@ describe("JSX/HTML syntax", () => {
        it("Lower-case is not macro", () => expect(isMacro("hello")).toBe(false));
        it("$ is not macro", () => expect(isMacro("$Test")).toBe(false));
 
+   });
+
+   describe("Attribute normalization", () => {
+
+       it("Idempotence", () => {
+           fc.assert(fc.property(Gen.attr, attr => {
+               const normalized = normalizeAttribute(attr);
+               expect(normalizeAttribute(normalized)).toEqual(normalized);
+           }));
+       });
+
+       it("Idempotence (object)", () => {
+           fc.assert(fc.property(Gen.attrs, attrs => {
+               const normalized = normalizeAttributes(attrs);
+               expect(normalizeAttributes(normalized)).toEqual(normalized);
+           }));
+       });
+
+       it("Rendering equivalence", () => {
+           fc.assert(fc.property(Gen.attrs, attrs => {
+               const normalized = normalizeAttributes(attrs);
+               expect(renderAttributes(normalized)).toEqual(renderAttributes(attrs));
+           }));
+       });
+
+       it("Leniency", () => {
+           expect(normalizeAttribute(10 as any)).toEqual("10");
+       });
+
+   });
+
+   it("Attribute rendering", () => {
+       const attrs = {
+           disabled: true,
+           class: null,
+           id: undefined,
+           "data-foo": false,
+           "data-bar": "<>\"",
+           "data-test": "test"
+       };
+       const expected = ` disabled data-bar="&lt;&gt;&quot;" data-test="test"`;
+       expect(renderAttributes(attrs)).toEqual(expected);
    });
 
 });

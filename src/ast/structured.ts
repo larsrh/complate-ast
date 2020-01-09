@@ -70,7 +70,7 @@ export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
 
     element(tag: string, attributes?: Attributes, ...children: AST<P>[]): AST<P> {
         if (this._normalize)
-            attributes = normalizeAttributes(false, attributes);
+            attributes = normalizeAttributes(attributes);
         return new ElementNode<P>(tag, attributes || {}, children);
     }
 
