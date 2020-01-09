@@ -25,10 +25,6 @@ export class RawFactory implements Factory {
         };
 
         function mkDynamicAttr(key: string, value: ESTree.Expression): ESTree.Expression {
-            function defaultString(value: ESTree.Expression): ESTree.Expression {
-                return Operations.plus(Reify.string(` ${key}="`), value, Reify.string('"'));
-            }
-
             const sym = gen.sym();
             const decl: ESTree.Statement = {
                 type: "VariableDeclaration",
@@ -36,13 +32,18 @@ export class RawFactory implements Factory {
                 declarations: [{
                     type: "VariableDeclarator",
                     id: sym,
-                    init: runtime.normalizeAttribute(Reify.string(key), value)
+                    init: runtime.normalizeAttribute(value)
                 }]
             };
-            const condition = Operations.ifthenelse(
-                Operations.notEqual(Reify.any(null), sym),
-                Operations.ret(defaultString(runtime.escapeHTML(sym))),
-                Operations.ret(Reify.string(""))
+            const condition =
+                Operations.ifthenelse(
+                    Operations.equal(Reify.boolean(true), sym),
+                    Operations.ret(Reify.string(` ${key}`)),
+                    Operations.ifthenelse(
+                        Operations.notEqual(Reify.any(null), sym),
+                        Operations.ret(Operations.plus(Reify.string(` ${key}="`), runtime.escapeHTML(sym), Reify.string('"'))),
+                        Operations.ret(Reify.string(""))
+                    )
             );
             return Operations.iife(decl, condition);
         }

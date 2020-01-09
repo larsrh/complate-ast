@@ -9,7 +9,7 @@ export type Kind = "raw" | "stream" | "structured"
 
 export type AST = Structured.AST | Stream.AST | Raw.AST
 
-export const astInfos: { [key in Kind]: Base.ASTInfo<AST> } = {
+export const astInfos: { [key in Kind]: Base.ASTInfo<AST, any> } = {
     "structured": Structured.info,
     "stream": Stream.info,
     "raw": Raw.info
@@ -17,24 +17,6 @@ export const astInfos: { [key in Kind]: Base.ASTInfo<AST> } = {
 
 export function isAST(object: any): object is AST {
     return object.astType && object.astType in astInfos;
-}
-
-function streamChildrenAdder(children: Stream.AST[]): Stream.Modifier<Stream.AST[]> {
-    if (children.length === 0)
-        return children => children;
-    else
-        return oldChildren => {
-            if (oldChildren === undefined)
-                oldChildren = [];
-            return [...oldChildren, ...children as Stream.AST[]];
-        };
-}
-
-function streamAttributeAdder(attributes?: Attributes): Stream.Modifier<Attributes> {
-    if (attributes === undefined)
-        return attrs => attrs;
-    else
-        return oldAttributes => ({... oldAttributes, ...attributes});
 }
 
 export function normalizeChildren(kind: Kind, ...children: any[]): AST[] {
@@ -59,29 +41,15 @@ export function addItems<AST extends Base.AST>(ast: AST, attributes?: Attributes
         throw new Error(`Unknown AST kind ${ast.astType}`);
 
     const children = normalizeChildren(ast.astType, ..._children);
+    const info = astInfos[ast.astType];
 
-    switch (ast.astType) {
-        case "structured":
-            switch (ast.nodeType) {
-                case "element": {
-                    const newChildren = [...ast.children, ...children as Structured.AST<any>[]];
-                    const newAttributes = {...ast.attributes, ...attributes};
-                    return new Structured.ElementNode(ast.tag, newAttributes, newChildren) as any as AST;
-                }
-                default:
-                    throw new Error(`Supplied node is ${ast.nodeType} and has no children`);
-            }
-        case "stream":
-            return Stream._clone(
-                ast,
-                streamChildrenAdder(children as Stream.AST[]),
-                streamAttributeAdder(attributes)
-            ) as any as AST;
-        case "raw":
-            throw new Error("Raw AST does not support modification");
-    }
+    if (info.introspection)
+        return info.introspection.addItems(ast, attributes || {}, children) as any;
+    else
+        throw new Error(`AST kind ${ast.astType} does not support introspection`);
 }
 
+// TODO replace
 export function force(ast: AST): AST {
     switch (ast.astType) {
         case "stream":

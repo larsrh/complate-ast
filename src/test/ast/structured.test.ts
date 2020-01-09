@@ -3,8 +3,12 @@ import * as Stream from "../../ast/stream";
 import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
 import {CompactingBuilder} from "../../ast/builders/compact";
+import {spec} from "../../testkit/spec";
 
 describe("Structured AST", () => {
+
+    spec(Structured.info);
+    spec({ ...Structured.info, builder: new Structured.ASTBuilder(false) }, "Spec (exact builder)");
 
     const builder = Structured.info.builder;
     const gen = Gen.astWithPrerendered(builder, fc.integer());
@@ -40,13 +44,10 @@ describe("Structured AST", () => {
             const ast1 = Structured.flatten(ast);
             const ast2 = Structured.map(ast, inner => Structured.render(inner, Stream.info.builder));
 
-            const buffer1 = new Stream.StringBuffer();
-            const buffer2 = new Stream.StringBuffer();
+            const result1 = Stream.force(Structured.render(ast1, Stream.info.builder));
+            const result2 = Stream.force(Structured.render(ast2, new Stream.ASTBuilder(x => buffer => x.render(buffer))));
 
-            Structured.render(ast1, Stream.info.builder).render(buffer1);
-            Structured.render(ast2, new Stream.ASTBuilder(x => buffer => x.render(buffer))).render(buffer2);
-
-            expect(buffer2.content).toEqual(buffer1.content);
+            expect(result2).toEqual(result1);
         }));
     });
 

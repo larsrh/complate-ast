@@ -28,43 +28,34 @@ export const voidElements = new Set([
 export const isVoidElement: (s: string) => boolean =
     voidElements.has.bind(voidElements);
 
-export function isFalsy(x: any): boolean {
-    return x === null || x === undefined || x === false;
-}
-
-export function normalizeAttribute(key: string, value: AttributeValue): string | null {
+export function normalizeAttribute(value: AttributeValue): string | true | null {
     if (value === true)
-        return key;
-    else if (isFalsy(value))
+        return value;
+    else if (value === null || value === undefined || value === false)
         return null;
     else if (typeof value === "string")
         return value;
     else
         // in TypeScript-typed calls this can't happen
-        throw new Error(`Unknown value type for attribute ${value}`);
+        return `${value}`;
 }
 
-export function normalizeAttributes(escape: boolean, attrs?: Attributes): Attributes<string> {
-    if (attrs === undefined)
-        return {};
-
-    const normalized = filterObject(mapObject(attrs, (value, key) => normalizeAttribute(key, value)));
-    if (escape)
-        return mapObject(normalized, value => escapeHTML(value));
-
-    return normalized;
+export function normalizeAttributes(attrs?: Attributes): Attributes<string | true> {
+    return attrs ? filterObject(mapObject(attrs, value => normalizeAttribute(value))) : {};
 }
 
 export function renderAttributes(attrs?: Attributes): string {
-    const normalized = normalizeAttributes(true, attrs);
+    const normalized = normalizeAttributes(attrs);
 
     let result = "";
     for (const [key, value] of Object.entries(normalized)) {
         result += " ";
         result += key;
-        result += "=\"";
-        result += value;
-        result += "\"";
+        if (value !== true) {
+            result += "=\"";
+            result += escapeHTML(value);
+            result += "\"";
+        }
     }
 
     return result;

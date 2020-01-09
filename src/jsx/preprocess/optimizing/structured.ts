@@ -16,8 +16,7 @@ export class StructuredFactory implements Factory {
             astType: Reify.string("structured"),
             nodeType: Reify.string("element"),
             tag: tag.expr,
-            // structured mode doesn't care about falsy attributes; renderers will take care of it
-            attributes: attributes.merged,
+            attributes: runtime.normalizeAttributes(attributes.merged),
             children: children.normalized(runtime).raw
         });
     }

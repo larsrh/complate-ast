@@ -1,7 +1,8 @@
 import * as Base from "./base";
+import * as Raw from "./raw";
 import {mapObject} from "../util";
-import {Attributes, AttributeValue, isMacro, isVoidElement} from "../jsx/syntax";
-import {Builder} from "./builder";
+import {Attributes, AttributeValue, normalizeAttributes} from "../jsx/syntax";
+import {Builder, defaultTagCheck} from "./builder";
 
 export type NodeType = "text" | "element" | "prerendered"
 
@@ -45,10 +46,7 @@ export class ElementNode<P> implements BaseAST<P> {
         public readonly attributes: Attributes,
         public readonly children: AST<P>[]
     ) {
-        if (this.children.length > 0 && isVoidElement(this.tag))
-            throw new Error(`Void element ${tag} must not have children`);
-        if (isMacro(tag))
-            throw new Error(`Macro tag ${tag} not allowed in an AST`);
+        defaultTagCheck(tag, children);
     }
 }
 
@@ -62,8 +60,15 @@ export class PrerenderedNode<P> implements BaseAST<P> {
 }
 
 export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
+    constructor(
+        // false only for testing
+        public readonly _normalize: boolean = true
+    ) {}
+
     element(tag: string, attributes?: Attributes, ...children: AST<P>[]): AST<P> {
-        return new ElementNode<P>(tag, attributes ? attributes : {}, children);
+        if (this._normalize)
+            attributes = normalizeAttributes(attributes);
+        return new ElementNode<P>(tag, attributes || {}, children);
     }
 
     prerendered(p: P): AST<P> {
@@ -82,7 +87,21 @@ export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
 export const info: Base.ASTInfo<AST> = {
     astType: "structured",
     builder: new ASTBuilder(),
-    force: t => t
+    introspection: {
+        addItems(ast: AST, attributes: Attributes, children: AST[]): AST {
+            switch (ast.nodeType) {
+                case "element": {
+                    const newChildren = [...ast.children, ...children];
+                    const newAttributes = {...ast.attributes, ...attributes};
+                    return new ElementNode(ast.tag, newAttributes, newChildren);
+                }
+                default:
+                    throw new Error(`Supplied node is ${ast.nodeType} and has no children`);
+            }
+        }
+    },
+    force: t => t,
+    asString: ast => render(ast, Raw.info.builder).value
 };
 
 export class MappingBuilder<P, Q> implements Builder<AST<Q>, P> {

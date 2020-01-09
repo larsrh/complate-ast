@@ -1,7 +1,7 @@
 import * as Base from "./base";
-import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, normalizeAttributes} from "../jsx/syntax";
+import {Attributes, AttributeValue, escapeHTML, isVoidElement, renderAttributes} from "../jsx/syntax";
 import _ from "lodash";
-import {Builder} from "./builder";
+import {Builder, defaultTagCheck} from "./builder";
 
 export interface Buffer {
     write(content: string): void;
@@ -28,6 +28,21 @@ export interface AST extends Base.AST {
 }
 
 export type Modifier<T> = (t?: T) => T | undefined
+
+function childrenAdder(children: AST[]): Modifier<AST[]> {
+    if (children.length === 0)
+        return children => children;
+    else
+        return oldChildren => {
+            if (oldChildren === undefined)
+                oldChildren = [];
+            return [...oldChildren, ...children];
+        };
+}
+
+function attributeAdder(attributes: Attributes): Modifier<Attributes> {
+    return oldAttributes => ({... oldAttributes, ...attributes});
+}
 
 export function _clone(
     ast: AST,
@@ -63,11 +78,7 @@ export class ASTBuilder<P> implements Builder<AST, P> {
     }
 
     element(tag: string, attributes?: Attributes, ...children: AST[]): AST {
-        const isVoid = isVoidElement(tag);
-        if (isVoid && children.length > 0)
-            throw new Error(`Void element ${tag} must not have children`);
-        if (isMacro(tag))
-            throw new Error(`Macro tag ${tag} not allowed in an AST`);
+        defaultTagCheck(tag, children);
 
         return {
             astType: "stream",
@@ -78,17 +89,11 @@ export class ASTBuilder<P> implements Builder<AST, P> {
                 buffer.write(tag);
 
                 const allAttributes = {...attributes, ...this._extraAttributes};
-                for (const [key, value] of Object.entries(normalizeAttributes(true, allAttributes))) {
-                    buffer.write(" ");
-                    buffer.write(key);
-                    buffer.write("=\"");
-                    buffer.write(value);
-                    buffer.write("\"");
-                }
+                buffer.write(renderAttributes(allAttributes));
                 buffer.write(">");
 
                 const extraChildren: AST[] = this._extraChildren ? this._extraChildren : [];
-                if (isVoid) {
+                if (isVoidElement(tag)) {
                     if (extraChildren.length > 0)
                         throw new Error(`Void element ${tag} must not have extra children`);
                 }
@@ -122,8 +127,18 @@ export function force(ast: AST): string {
     return buffer.content;
 }
 
-export const info: Base.ASTInfo<AST> = {
-    astType: "structured",
+export const info: Base.ASTInfo<AST, string> = {
+    astType: "stream",
     builder: new ASTBuilder<never>(() => () => {/* do nothing */}),
-    force: force
+    introspection: {
+        addItems(ast: AST, attributes: Attributes, children: AST[]): AST {
+            return _clone(
+                ast,
+                childrenAdder(children),
+                attributeAdder(attributes)
+            );
+        }
+    },
+    force: force,
+    asString: string => string
 };

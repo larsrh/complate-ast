@@ -1,6 +1,6 @@
 import * as Base from "./base";
-import {Attributes, AttributeValue, escapeHTML, isMacro, isVoidElement, renderAttributes} from "../jsx/syntax";
-import {Builder} from "./builder";
+import {Attributes, AttributeValue, escapeHTML, isVoidElement, renderAttributes} from "../jsx/syntax";
+import {Builder, defaultTagCheck} from "./builder";
 
 export interface AST extends Base.AST {
     readonly astType: "raw";
@@ -16,18 +16,14 @@ export function create(value: string): AST {
 
 export class ASTBuilder implements Builder<AST, string> {
     element(tag: string, attributes?: Attributes, ...children: AST[]): AST {
-        if (isMacro(tag))
-            throw new Error(`Macro tag ${tag} not allowed in an AST`);
+        defaultTagCheck(tag, children);
+
         let raw = "";
         raw += "<";
         raw += tag;
         raw += renderAttributes(attributes);
         raw += ">";
-        if (isVoidElement(tag)) {
-            if (children.length > 0)
-                throw new Error(`Void element ${tag} must not have children`);
-        }
-        else {
+        if (!isVoidElement(tag)) {
             children.forEach(child => raw += child.value);
             raw += "</";
             raw += tag;
@@ -52,5 +48,6 @@ export class ASTBuilder implements Builder<AST, string> {
 export const info: Base.ASTInfo<AST> = {
     astType: "raw",
     builder: new ASTBuilder(),
-    force: ast => ast
+    force: ast => ast,
+    asString: ast => ast.value
 };
