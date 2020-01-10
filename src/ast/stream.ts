@@ -116,7 +116,7 @@ export class ASTBuilder<P> implements Builder<AST, P> {
         return create(buffer => buffer.write(escapeHTML(text)));
     }
 
-    attributeValue(key: string, value: AttributeValue): AttributeValue {
+    attributeValue(value: AttributeValue): AttributeValue {
         return value;
     }
 }

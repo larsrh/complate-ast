@@ -20,7 +20,7 @@ export function render<P, O, AV>(ast: AST<P>, builder: Builder<O, P, AV>): O {
         case "element":
             return builder.element(
                 ast.tag,
-                mapObject(ast.attributes, (attr, key) => builder.attributeValue(key, attr)),
+                mapObject(ast.attributes, attr => builder.attributeValue(attr)),
                 ...ast.children.map(child => render(child, builder))
             );
         case "prerendered":
@@ -79,7 +79,7 @@ export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
         return new TextNode(text);
     }
 
-    attributeValue(key: string, value: AttributeValue): AttributeValue {
+    attributeValue(value: AttributeValue): AttributeValue {
         return value;
     }
 }
@@ -121,7 +121,7 @@ export class MappingBuilder<P, Q> implements Builder<AST<Q>, P> {
         return new TextNode(text);
     }
 
-    attributeValue(key: string, value: AttributeValue): AttributeValue {
+    attributeValue(value: AttributeValue): AttributeValue {
         return value;
     }
 }
@@ -143,7 +143,7 @@ export class FlatteningBuilder<P> implements Builder<AST<P>, AST<P>> {
         return new TextNode(text);
     }
 
-    attributeValue(key: string, value: AttributeValue): AttributeValue {
+    attributeValue(value: AttributeValue): AttributeValue {
         return value;
     }
 }

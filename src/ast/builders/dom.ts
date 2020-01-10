@@ -23,7 +23,7 @@ export class DOMBuilder implements Builder<Node, Node> {
         return this.document.createTextNode(text);
     }
 
-    attributeValue(key: string, value: AttributeValue): AttributeValue {
+    attributeValue(value: AttributeValue): AttributeValue {
         return value;
     }
 }

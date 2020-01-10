@@ -40,7 +40,7 @@ export class ASTBuilder implements Builder<AST, string> {
         return create(escapeHTML(text));
     }
 
-    attributeValue(key: string, value: AttributeValue): AttributeValue {
+    attributeValue(value: AttributeValue): AttributeValue {
         return value;
     }
 }

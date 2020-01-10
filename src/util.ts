@@ -1,7 +1,7 @@
-export function mapObject<V, W>(object: Record<string, V>, fn: (v: V, key: string) => W): Record<string, W> {
+export function mapObject<V, W>(object: Record<string, V>, fn: (v: V) => W): Record<string, W> {
     return Object.fromEntries(Object.entries(object).map(entry => {
         const [key, value] = entry;
-        return [key, fn(value, key)]
+        return [key, fn(value)]
     }));
 }
 

@@ -2,8 +2,13 @@ import fc, {Arbitrary} from "fast-check";
 import {Attributes, AttributeValue} from "../jsx/syntax";
 import {Builder} from "../ast/builder";
 
+// TODO dashes
 const alphabetic =
-    fc.array(fc.integer(0, 25).map(int => String.fromCharCode(int + 97 /* 'a' */)), 10, 20).map(array => array.join(""));
+    fc.array(
+        fc.integer(0, 25).map(int => String.fromCharCode(int + 97 /* 'a' */)),
+        10,
+        20
+    ).map(array => array.join(""));
 
 export const attr: Arbitrary<AttributeValue> = fc.oneof<AttributeValue>(
     fc.fullUnicodeString(),
@@ -12,10 +17,21 @@ export const attr: Arbitrary<AttributeValue> = fc.oneof<AttributeValue>(
     fc.constant(undefined)
 );
 
-export const attrs: Arbitrary<Attributes> =
-    fc.array(fc.tuple(alphabetic, attr)).map(attrs => Object.fromEntries(attrs));
+export function attrs<AV>(attr: Arbitrary<AV>): Arbitrary<Attributes<AV>> {
+    return fc.array(fc.tuple(alphabetic, attr)).map(attrs => Object.fromEntries(attrs));
+}
 
-function ast<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbitrary<A> {
+export const defaultAttrs: Arbitrary<Attributes> = attrs(attr);
+
+export function ast<A, P, AV>(
+    builder: Builder<A, P, AV>,
+    attrGen: Arbitrary<AV>,
+    prerenderedGen?: Arbitrary<P>
+): Arbitrary<A> {
+    const fullAttrGen: Arbitrary<AV> = fc.oneof(
+        attrGen,
+        attr.map(value => builder.attributeValue(value))
+    );
     const { ast } = fc.letrec(tie => ({
         ast:
             fc.frequency(
@@ -50,7 +66,7 @@ function ast<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbit
         element:
             fc.tuple(
                 alphabetic,
-                attrs,
+                attrs(fullAttrGen),
                 fc.array(tie("ast"), 5)
             ).map(args => {
                 const [tag, attrs, children] = args;
@@ -61,11 +77,6 @@ function ast<A, P>(builder: Builder<A, P>, prerenderedGen?: Arbitrary<P>): Arbit
     return ast as Arbitrary<A>;
 }
 
-export function astNoPrerendered<A>(builder: Builder<A, never>): Arbitrary<A> {
-    return ast(builder);
-}
-
-export function astWithPrerendered<A, P>(builder: Builder<A, P>, genP: Arbitrary<P>): Arbitrary<A> {
-    // TODO test this
-    return ast(builder, genP);
+export function defaultAST<A>(builder: Builder<A>): Arbitrary<A> {
+    return ast(builder, attr);
 }

@@ -11,7 +11,7 @@ describe("Structured AST", () => {
     spec({ ...Structured.info, builder: new Structured.ASTBuilder(false) }, "Spec (exact builder)");
 
     const builder = Structured.info.builder;
-    const gen = Gen.astWithPrerendered(builder, fc.integer());
+    const gen = Gen.ast(builder, Gen.attr, fc.integer());
 
     it("map(identity)", () => {
         fc.assert(fc.property(gen, ast => {
@@ -36,9 +36,10 @@ describe("Structured AST", () => {
     });
 
     it("structured collapse", () => {
-        const gen = Gen.astWithPrerendered(
+        const gen = Gen.ast(
             new Structured.ASTBuilder<Structured.AST>(),
-            Gen.astNoPrerendered(builder)
+            Gen.attr,
+            Gen.defaultAST(builder)
         );
         fc.assert(fc.property(gen, ast => {
             const ast1 = Structured.flatten(ast);

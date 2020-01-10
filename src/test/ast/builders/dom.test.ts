@@ -4,21 +4,12 @@ import * as Stream from "../../../ast/stream";
 import {CompactingBuilder} from "../../../ast/builders/compact";
 import * as Gen from "../../../testkit/gen";
 import {DOMBuilder, fromDOM, parseHTML} from "../../../ast/builders/dom";
-
-function compareHTML(html1: string, html2: string): void {
-    if (html1 === html2)
-        return;
-
-    const dom1 = parseHTML(document, html1);
-    const dom2 = parseHTML(document, html2);
-
-    expect(dom2).toEqual(dom1);
-}
+import {compareHTML} from "../../../testkit/dom";
 
 describe("Structured AST roundtrips", () => {
 
     const builder = Structured.info.builder;
-    const gen = Gen.astNoPrerendered(builder);
+    const gen = Gen.defaultAST(builder);
 
     describe("DOM rendering", () => {
 

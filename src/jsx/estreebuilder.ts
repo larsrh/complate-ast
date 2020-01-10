@@ -23,7 +23,7 @@ export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree
         return p;
     }
 
-    attributeValue(key: string, value: AttributeValue): ESTree.Expression {
+    attributeValue(value: AttributeValue): ESTree.Expression {
         return Reify.any(value);
     }
 

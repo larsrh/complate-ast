@@ -19,7 +19,7 @@ describe("Preprocessing (roundtrips)", () => {
 
     matrix((config, astBuilder, esBuilder) => {
 
-        const gen = Gen.astNoPrerendered(Structured.info.builder).filter(ast => ast.nodeType !== "text");
+        const gen = Gen.defaultAST(Structured.info.builder).filter(ast => ast.nodeType !== "text");
         const sandbox = esBuilder.canStatic ? {} : {JSXRuntime: _JSXRuntime};
 
         /*

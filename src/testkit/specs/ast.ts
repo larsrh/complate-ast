@@ -34,7 +34,7 @@ export class Spec<AST extends Base.AST, Forced> {
     ) {}
 
     get gen(): Arbitrary<AST> {
-        return Gen.astNoPrerendered(this.info.builder);
+        return Gen.defaultAST(this.info.builder);
     }
 
     private asString(ast: AST): string {
@@ -43,8 +43,8 @@ export class Spec<AST extends Base.AST, Forced> {
 
     private introspection(): void {
         const _addItems = this.info.introspection!.addItems;
-        const elementGen = Gen.astNoPrerendered(exactBuilder).filter(ast => ast.nodeType === "element");
-        const childrenGen = fc.array(Gen.astNoPrerendered(exactBuilder), 0, 5);
+        const elementGen = Gen.defaultAST(exactBuilder).filter(ast => ast.nodeType === "element");
+        const childrenGen = fc.array(Gen.defaultAST(exactBuilder), 0, 5);
         const make: (ast: Structured.AST) => AST = ast => Structured.render(ast, this.info.builder);
 
         describe("Introspection", () => {
@@ -58,9 +58,9 @@ export class Spec<AST extends Base.AST, Forced> {
             it("Composition", () => {
                 const gen = fc.tuple(
                     elementGen.map(make),
-                    Gen.attrs,
+                    Gen.defaultAttrs,
                     childrenGen.map(children => children.map(make)),
-                    Gen.attrs,
+                    Gen.defaultAttrs,
                     childrenGen.map(children => children.map(make))
                 );
                 fc.assert(fc.property(gen, params => {
@@ -81,7 +81,7 @@ export class Spec<AST extends Base.AST, Forced> {
             it("Reference", () => {
                 const gen = fc.tuple(
                     elementGen,
-                    Gen.attrs,
+                    Gen.defaultAttrs,
                     childrenGen,
                 );
                 fc.assert(fc.property(gen, params => {
@@ -107,7 +107,7 @@ export class Spec<AST extends Base.AST, Forced> {
             });
 
             it("Reference rendering", () => {
-                const gen = Gen.astNoPrerendered(exactBuilder).filter(ast => ast.nodeType === "element");
+                const gen = Gen.defaultAST(exactBuilder).filter(ast => ast.nodeType === "element");
                 fc.assert(fc.property(gen, ast => {
                     const target = Structured.render(ast, this.info.builder);
                     const reference = Structured.render(ast, Raw.info.builder);

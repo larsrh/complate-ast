@@ -4,7 +4,7 @@ export interface Builder<A, P = never, AV = AttributeValue> {
     text(text: string): A;
     prerendered(p: P): A;
     element(tag: string, attributes?: Attributes<AV>, ...children: A[]): A;
-    attributeValue(key: string, value: AttributeValue): AV;
+    attributeValue(value: AttributeValue): AV;
 }
 
 export function defaultTagCheck(tag: string, children: any[]): void {

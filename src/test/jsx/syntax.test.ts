@@ -22,14 +22,14 @@ describe("JSX/HTML syntax", () => {
        });
 
        it("Idempotence (object)", () => {
-           fc.assert(fc.property(Gen.attrs, attrs => {
+           fc.assert(fc.property(Gen.defaultAttrs, attrs => {
                const normalized = normalizeAttributes(attrs);
                expect(normalizeAttributes(normalized)).toEqual(normalized);
            }));
        });
 
        it("Rendering equivalence", () => {
-           fc.assert(fc.property(Gen.attrs, attrs => {
+           fc.assert(fc.property(Gen.defaultAttrs, attrs => {
                const normalized = normalizeAttributes(attrs);
                expect(renderAttributes(normalized)).toEqual(renderAttributes(attrs));
            }));
