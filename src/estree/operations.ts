@@ -38,12 +38,12 @@ export function call(callee: ESTree.Expression, ...args: (ESTree.Expression | ES
     };
 }
 
-export function member(object: ESTree.Expression, property: ESTree.Expression, computed?: boolean): ESTree.MemberExpression {
+export function member(object: ESTree.Expression, property: ESTree.Expression, computed = false): ESTree.MemberExpression {
     return {
         type: "MemberExpression",
         object: object,
         property: property,
-        computed: computed === undefined ? false : computed
+        computed: computed
     };
 }
 

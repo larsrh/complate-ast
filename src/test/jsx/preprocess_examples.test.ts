@@ -15,7 +15,7 @@ describe("Preprocessing (examples)", () => {
 
     matrix((config, astBuilder, esBuilder) => {
 
-        function check(name: string, jsx: string, _expected: Structured.AST | string, expectStatic?: boolean): void {
+        function check(name: string, jsx: string, _expected: Structured.AST | string, expectStatic = false): void {
             const doStatic = expectStatic && esBuilder.canStatic;
             let expected;
             if (typeof _expected === "string") {

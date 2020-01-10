@@ -45,14 +45,12 @@ describe("Structured AST roundtrips", () => {
 
         it("Equal after normalization", () => {
             fc.assert(fc.property(gen, ast => {
-                const buffer1 = new Stream.StringBuffer();
-                const buffer2 = new Stream.StringBuffer();
-                Structured.render(ast, Stream.info.builder).render(buffer1);
-                Structured.render(
+                const html1 = Stream.force(Structured.render(ast, Stream.info.builder));
+                const html2 = Stream.force(Structured.render(
                     Structured.render(ast, new CompactingBuilder()),
                     Stream.info.builder
-                ).render(buffer2);
-                expect(buffer2.content).toEqual(buffer1.content);
+                ));
+                expect(html2).toEqual(html1);
             }));
         });
 
@@ -62,9 +60,8 @@ describe("Structured AST roundtrips", () => {
 
         fc.assert(fc.property(gen.filter(ast => ast.nodeType !== "text"), ast => {
             const html2 = (Structured.render(ast, new DOMBuilder(window.document)) as Element).outerHTML;
-            const buffer = new Stream.StringBuffer();
-            Structured.render(ast, Stream.info.builder).render(buffer);
-            compareHTML(buffer.content, html2);
+            const html1 = Stream.force(Structured.render(ast, Stream.info.builder));
+            compareHTML(html1, html2);
         }));
 
     })
