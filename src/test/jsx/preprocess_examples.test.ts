@@ -3,7 +3,7 @@ import * as ESTree from "estree";
 import * as Structured from "../../ast/structured";
 import {generate} from "astring";
 import {runInNewContext} from "vm";
-import {matrix} from "./_util/matrix";
+import {matrix} from "./_util";
 import {force} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
 

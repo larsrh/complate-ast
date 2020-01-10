@@ -1,4 +1,4 @@
-import {matrix} from "./_util/matrix";
+import {matrix} from "./_util";
 import fc from "fast-check";
 import * as Gen from "../../testkit/gen";
 import * as Structured from "../../ast/structured";

@@ -1,7 +1,7 @@
-import {ESTreeBuilder} from "../../../jsx/preprocess";
-import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../../../jsx/preprocess/config";
-import {AST, astInfos} from "../../../ast";
-import {Builder} from "../../../ast/builder";
+import {ESTreeBuilder} from "../../jsx/preprocess";
+import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../../jsx/preprocess/config";
+import {AST, astInfos} from "../../ast";
+import {Builder} from "../../ast/builder";
 
 const allConfigs: ESTreeBuilderConfig[] = [
     { mode: "runtime", target: "structured" },
