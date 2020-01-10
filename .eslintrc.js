@@ -21,6 +21,16 @@ module.exports = {
           allowExpressions: true
       }],
       "no-inner-declarations": "off",
+      "class-methods-use-this": ["error", {
+          exceptMethods: [
+              "prerendered",
+              "attributeValue",
+              "element",
+              "text",
+              "makeElement",
+              "reify"
+          ]
+      }],
       "import/no-unresolved": "off", // fails for 'estree' (types-only module)
       "import/no-self-import": "error",
       "import/no-cycle": "error"
