@@ -3,7 +3,7 @@ import * as Stream from "../../ast/stream";
 import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
 import {CompactingBuilder} from "../../ast/builders/compact";
-import {spec} from "../../testkit/spec";
+import {spec} from "../../testkit/specs/ast";
 
 describe("Structured AST", () => {
 

@@ -1,9 +1,9 @@
 import * as Structured from "../../ast/structured";
 import * as ESTree from "estree";
 import * as Operations from "../../estree/operations";
-import {ProcessedAttributes, RuntimeModule} from "./util";
-import {ESTreeBuilder, injectAST} from "../preprocess";
+import {injectAST, ProcessedAttributes, RuntimeModule} from "./util";
 import {processChildren, ProcessedChildren, Tag} from "./optimizing/util";
+import {ESTreeBuilder} from "../estreebuilder";
 
 export interface Factory {
     makeElement(runtime: RuntimeModule, tag: Tag, attributes: ProcessedAttributes, children: ProcessedChildren): ESTree.Expression;

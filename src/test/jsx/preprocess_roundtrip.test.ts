@@ -3,16 +3,17 @@ import fc from "fast-check";
 import * as Gen from "../../testkit/gen";
 import * as Structured from "../../ast/structured";
 import * as Raw from "../../ast/raw";
-import {extractAST, parse, preprocess} from "../../jsx/preprocess";
+import {parse, preprocess} from "../../jsx/preprocess";
 import * as ESTree from "estree";
 import {runInNewContext} from "vm";
 import {generate} from "astring";
 import {CompactingBuilder} from "../../ast/builders/compact";
 import {force} from "../../ast";
+import {expressionStatement} from "../../estree/operations";
+import {extractAST} from "../../jsx/estreebuilders/util";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../../jsx/runtime";
-import {expressionStatement} from "../../estree/operations";
 
 describe("Preprocessing (roundtrips)", () => {
 

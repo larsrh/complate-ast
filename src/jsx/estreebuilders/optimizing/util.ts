@@ -1,12 +1,11 @@
 import * as ESTree from "estree";
-import {RuntimeModule, tagExpression} from "../util";
+import {extractAST, RuntimeModule, tagExpression} from "../util";
 import {isVoidElement, isDynamic, isMacro} from "../../syntax";
 import * as Operations from "../../../estree/operations";
 import * as Reify from "../../../estree/reify";
 import {ArrayExpr} from "../../../estree/expr";
 import * as Structured from "../../../ast/structured";
 import * as Raw from "../../../ast/raw";
-import {extractAST} from "../../preprocess";
 import _ from "lodash";
 
 export class Tag {

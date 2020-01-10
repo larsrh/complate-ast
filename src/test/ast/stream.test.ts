@@ -1,5 +1,5 @@
 import * as Stream from "../../ast/stream";
-import {spec} from "../../testkit/spec";
+import {spec} from "../../testkit/specs/ast";
 
 const builder = Stream.info.builder;
 

@@ -1,4 +1,3 @@
-import {ESTreeBuilder} from "../preprocess";
 import {MetaASTInfo, RuntimeBuilder} from "./runtime";
 import {identifier} from "../../estree/operations";
 import {RuntimeModule} from "./util";
@@ -7,6 +6,7 @@ import {StructuredFactory} from "./optimizing/structured";
 import {StreamFactory} from "./optimizing/stream";
 import {RawFactory} from "./optimizing/raw";
 import {astInfos, Kind} from "../../ast";
+import {ESTreeBuilder} from "../estreebuilder";
 
 export interface ESTreeBuilderConfig {
     mode: "runtime" | "optimizing";

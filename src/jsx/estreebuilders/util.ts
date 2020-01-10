@@ -7,6 +7,7 @@ import {Kind} from "../../ast";
 import {mapObject} from "../../util";
 import {JSXAttribute, JSXSimpleAttribute} from "../../estree/jsx";
 import _ from "lodash";
+import * as Structured from "../../ast/structured";
 
 export function tagExpression(tag: string): ESTree.Expression {
     if (isDynamic(tag))
@@ -206,4 +207,23 @@ export function processAttributes(attributes: JSXAttribute[]): ProcessedAttribut
             }
         return new SpreadProcessedAttributes(Operations.object(...processed));
     }
+}
+
+export interface RichNode extends ESTree.BaseNode {
+    _staticAST: Structured.AST;
+}
+
+export function hasAST(node: ESTree.BaseNode): node is RichNode {
+    return (node as any)._staticAST;
+}
+
+export function extractAST(node: ESTree.BaseNode): Structured.AST | null {
+    if (hasAST(node))
+        return node._staticAST;
+    else
+        return null;
+}
+
+export function injectAST(node: ESTree.Node, ast: Structured.AST): void {
+    (node as RichNode)._staticAST = ast;
 }

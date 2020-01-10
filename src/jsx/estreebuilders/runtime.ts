@@ -1,10 +1,10 @@
 import * as ESTree from "estree";
 import * as Operations from "../../estree/operations";
 import * as Reify from "../../estree/reify";
-import {ESTreeBuilder} from "../preprocess";
 import {ProcessedAttributes, RuntimeModule, tagExpression} from "./util";
 import {AST, ASTInfo} from "../../ast/base";
 import {isVoidElement} from "../syntax";
+import {ESTreeBuilder} from "../estreebuilder";
 
 export interface MetaASTInfo<A extends AST> extends ASTInfo<A> {
     fragmentMacro(runtime: RuntimeModule): ESTree.Expression;

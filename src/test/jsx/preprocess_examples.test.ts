@@ -1,4 +1,4 @@
-import {extractAST, parse, preprocess} from "../../jsx/preprocess";
+import {parse, preprocess} from "../../jsx/preprocess";
 import * as ESTree from "estree";
 import * as Structured from "../../ast/structured";
 import {generate} from "astring";
@@ -6,6 +6,7 @@ import {runInNewContext} from "vm";
 import {matrix} from "./_util";
 import {force} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
+import {extractAST} from "../../jsx/estreebuilders/util";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../../jsx/runtime";

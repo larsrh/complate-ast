@@ -1,5 +1,5 @@
 import * as Raw from "../../ast/raw";
-import {spec} from "../../testkit/spec";
+import {spec} from "../../testkit/specs/ast";
 
 describe("Raw AST", () => {
 

@@ -1,71 +1,14 @@
 import {Parser} from "acorn";
 import {walk} from "estree-walker";
 import * as ESTree from "estree";
-import * as Reify from "../estree/reify";
 import * as Operations from "../estree/operations";
-import * as Structured from "../ast/structured";
 import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
-import {Attributes, AttributeValue, isMacro} from "./syntax";
+import {isMacro} from "./syntax";
 import jsx from "acorn-jsx";
-import {Builder} from "../ast/builder";
-import {NoSpreadProcessedAttributes, processAttributes, ProcessedAttributes} from "./preprocess/util";
+import {processAttributes} from "./estreebuilders/util";
+import {ESTreeBuilder} from "./estreebuilder";
 
 export const acorn = Parser.extend(jsx());
-
-export interface RichNode extends ESTree.BaseNode {
-    _staticAST: Structured.AST;
-}
-
-export function hasAST(node: ESTree.BaseNode): node is RichNode {
-    return (node as any)._staticAST;
-}
-
-export function extractAST(node: ESTree.BaseNode): Structured.AST | null {
-    if (hasAST(node))
-        return node._staticAST;
-    else
-        return null;
-}
-
-export function injectAST(node: ESTree.Node, ast: Structured.AST): void {
-    (node as RichNode)._staticAST = ast;
-}
-
-export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree.Expression, ESTree.Expression> {
-    constructor(
-        readonly canStatic: boolean,
-        readonly fragment: ESTree.Expression
-    ) {}
-
-    abstract elementOrMacro(
-        tag: string | ESTree.Expression,
-        attributes: ProcessedAttributes,
-        children: ESTree.Expression[]
-    ): ESTree.Expression;
-
-    abstract text(text: string): ESTree.Expression;
-
-    prerendered(p: ESTree.Expression): ESTree.Expression {
-        return p;
-    }
-
-    attributeValue(key: string, value: AttributeValue): ESTree.Expression {
-        return Reify.any(value);
-    }
-
-    element(
-        tag: string,
-        attributes?: Attributes<ESTree.Expression>,
-        ...children: ESTree.Expression[]
-    ): ESTree.Expression {
-        return this.elementOrMacro(
-            tag,
-            NoSpreadProcessedAttributes.fromExpressions(attributes || {}),
-            children
-        );
-    }
-
-}
 
 export function parse(js: string): ESTree.BaseNode {
     return acorn.parse(js);

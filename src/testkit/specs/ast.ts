@@ -1,9 +1,9 @@
-import * as Base from "../ast/base";
-import * as Structured from "../ast/structured";
-import * as Raw from "../ast/raw";
+import * as Base from "../../ast/base";
+import * as Structured from "../../ast/structured";
+import * as Raw from "../../ast/raw";
 import fc, {Arbitrary} from "fast-check";
-import * as Gen from "./gen";
-import {addItems} from "../ast";
+import * as Gen from "../gen";
+import {addItems} from "../../ast";
 
 const exactBuilder = new Structured.ASTBuilder(false);
 
