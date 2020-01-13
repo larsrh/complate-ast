@@ -28,3 +28,10 @@ export class ZipBuilder<A1, A2, P1, P2, AV1, AV2> implements Builder<[A1, A2], [
         return [this.builder1.text(text), this.builder2.text(text)];
     }
 }
+
+export function zipBuilders<A1, A2, P1, P2, AV1, AV2>(
+    builder1: Builder<A1, P1, AV1>,
+    builder2: Builder<A2, P2, AV2>
+): Builder<[A1, A2], [P1, P2], [AV1, AV2]> {
+    return new ZipBuilder(builder1, builder2);
+}

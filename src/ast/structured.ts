@@ -8,7 +8,7 @@ export type NodeType = "text" | "element" | "prerendered"
 
 export type AST<P = never> = TextNode | ElementNode<P> | PrerenderedNode<P>
 
-export interface BaseAST<P = never> extends Base.AST {
+export interface BaseAST extends Base.AST {
     readonly nodeType: NodeType;
     readonly astType: "structured";
 }
@@ -37,7 +37,7 @@ export class TextNode implements BaseAST {
     ) {}
 }
 
-export class ElementNode<P> implements BaseAST<P> {
+export class ElementNode<P> implements BaseAST {
     public readonly nodeType = "element";
     public readonly astType = "structured";
 
@@ -50,7 +50,7 @@ export class ElementNode<P> implements BaseAST<P> {
     }
 }
 
-export class PrerenderedNode<P> implements BaseAST<P> {
+export class PrerenderedNode<P> implements BaseAST {
     public readonly nodeType = "prerendered";
     public readonly astType = "structured";
 

@@ -9,7 +9,6 @@ import {runInNewContext} from "vm";
 import {generate} from "astring";
 import {CompactingBuilder} from "../../ast/builders/compact";
 import {force} from "../../ast";
-import {expressionStatement} from "../../estree/operations";
 import {extractAST} from "../../jsx/estreebuilders/util";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
@@ -21,34 +20,6 @@ describe("Preprocessing (roundtrips)", () => {
 
         const gen = Gen.defaultAST(Structured.info.builder).filter(ast => ast.nodeType !== "text");
         const sandbox = esBuilder.canStatic ? {} : {JSXRuntime: _JSXRuntime};
-
-        /*
-         * structured AST (gen) -[compact]-> structured AST † -[render]-> target AST
-         *       |
-         *       | [render/esbuilder]                                        ===
-         *       v
-         *    ESTree ‡    -------------[eval]-------------------------->  target AST
-         *
-         *
-         * Additional property if esBuilder.canStatic:
-         *   static(‡) === †
-         */
-        it("Structured → ESTree → Preprocess → AST", () => {
-            fc.assert(fc.property(gen, ast => {
-                const ast1 = Structured.render(ast, new CompactingBuilder());
-
-                const processed = Structured.render(ast1, esBuilder);
-
-                const ast2 = runInNewContext(generate(expressionStatement(processed)), sandbox);
-                expect(force(ast2)).toEqual(force(Structured.render(ast1, astBuilder)));
-
-                if (esBuilder.canStatic) {
-                    const extracted = extractAST(processed);
-                    expect(extracted).toEqual(ast1);
-                }
-            }));
-
-        });
 
         /*
          * structured AST (gen) -[compact]-> structured AST † -[render]-> target AST
