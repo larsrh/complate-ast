@@ -20,13 +20,6 @@ describe("Structured AST", () => {
         }));
     });
 
-    it("render-then-build", () => {
-        fc.assert(fc.property(gen, ast => {
-            const ast2 = Structured.render(ast, builder);
-            expect(ast2).toEqual(ast);
-        }));
-    });
-
     it("normalize idempotence", () => {
         fc.assert(fc.property(gen, ast => {
             const ast2 = Structured.render(ast, new CompactingBuilder());
