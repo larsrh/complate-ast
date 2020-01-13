@@ -9,10 +9,8 @@ import {expressionStatement} from "../../estree/operations";
 import {ESTreeBuilder} from "../../jsx/estreebuilder";
 import * as Structured from "../../ast/structured";
 import * as Raw from "../../ast/raw";
-import {Builder} from "../../ast/builder";
-import {Attributes, AttributeValue} from "../../jsx/syntax";
-import {mapObject} from "../../util";
 import {compareHTML} from "../dom";
+import {ZipBuilder} from "../../ast/builders/zip";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../../jsx/runtime";
@@ -26,33 +24,6 @@ function evaluate(expr: ESTree.Expression): any {
     const statement = expressionStatement(expr);
     const js = generate(statement);
     return runInNewContext(js, sandbox);
-}
-
-class ParallelBuilder<A1, A2, P1, P2, AV1, AV2> implements Builder<[A1, A2], [P1, P2], [AV1, AV2]> {
-    constructor(
-        private readonly builder1: Builder<A1, P1, AV1>,
-        private readonly builder2: Builder<A2, P2, AV2>
-    ) {}
-
-    attributeValue(value: AttributeValue): [AV1, AV2] {
-        return [this.builder1.attributeValue(value), this.builder2.attributeValue(value)];
-    }
-
-    element(tag: string, _attributes?: Attributes<[AV1, AV2]>, ...children: [A1, A2][]): [A1, A2] {
-        const attributes = _attributes ? _attributes : {};
-        return [
-            this.builder1.element(tag, mapObject(attributes, tuple => tuple[0]), ...children.map(tuple => tuple[0])),
-            this.builder2.element(tag, mapObject(attributes, tuple => tuple[1]), ...children.map(tuple => tuple[1]))
-        ];
-    }
-
-    prerendered(p: [P1, P2]): [A1, A2] {
-        return [this.builder1.prerendered(p[0]), this.builder2.prerendered(p[1])];
-    }
-
-    text(text: string): [A1, A2] {
-        return [this.builder1.text(text), this.builder2.text(text)];
-    }
 }
 
 export class Spec<AST extends Base.AST, Forced> {
@@ -90,7 +61,7 @@ export class Spec<AST extends Base.AST, Forced> {
             });
 
             it("Evaluate to correct ASTs (simple attribute expressions)", () => {
-                const builder = new ParallelBuilder(exactBuilder, this.treeBuilder);
+                const builder = new ZipBuilder(exactBuilder, this.treeBuilder);
                 const gen = Gen.ast(
                     builder,
                     ESGen.attributeValue(ESGen.exprs).map(expr => [expr.value, expr.raw])
