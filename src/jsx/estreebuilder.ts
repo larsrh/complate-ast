@@ -1,7 +1,7 @@
 import {Builder} from "../ast/builder";
 import * as ESTree from "estree";
 import {NoSpreadProcessedAttributes, ProcessedAttributes} from "./estreebuilders/util";
-import {Attributes, AttributeValue} from "./syntax";
+import {Attributes, AttributeValue, normalizeAttribute} from "./syntax";
 import * as Reify from "../estree/reify";
 
 export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree.Expression, ESTree.Expression> {
@@ -24,7 +24,7 @@ export abstract class ESTreeBuilder implements Builder<ESTree.Expression, ESTree
     }
 
     attributeValue(value: AttributeValue): ESTree.Expression {
-        return Reify.any(value);
+        return Reify.any(normalizeAttribute(value));
     }
 
     element(
