@@ -1,10 +1,10 @@
-import {Attributes, AttributeValue, normalizeAttributes} from "../../jsx/syntax";
+import {Attributes, normalizeAttributes} from "../../jsx/syntax";
 import {Builder} from "../builder";
 
-export class DOMBuilder implements Builder<Node, Node> {
+export class DOMBuilder extends Builder<Node, Node> {
     constructor(
         private readonly document: Document
-    ) {}
+    ) { super(); }
 
     element(tag: string, attributes?: Attributes, ...children: Node[]): Element {
         const node = this.document.createElement(tag);
@@ -21,10 +21,6 @@ export class DOMBuilder implements Builder<Node, Node> {
 
     text(text: string): Text {
         return this.document.createTextNode(text);
-    }
-
-    attributeValue(value: AttributeValue): AttributeValue {
-        return value;
     }
 }
 

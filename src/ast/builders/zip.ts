@@ -1,11 +1,11 @@
-import {Builder} from "../builder";
+import {BaseBuilder} from "../builder";
 import {Attributes, AttributeValue} from "../../jsx/syntax";
 import {mapObject} from "../../util";
 
-export class ZipBuilder<A1, A2, P1, P2, AV1, AV2> implements Builder<[A1, A2], [P1, P2], [AV1, AV2]> {
+export class ZipBuilder<A1, A2, P1, P2, AV1, AV2> implements BaseBuilder<[A1, A2], [P1, P2], [AV1, AV2]> {
     constructor(
-        private readonly builder1: Builder<A1, P1, AV1>,
-        private readonly builder2: Builder<A2, P2, AV2>
+        private readonly builder1: BaseBuilder<A1, P1, AV1>,
+        private readonly builder2: BaseBuilder<A2, P2, AV2>
     ) {}
 
     attributeValue(value: AttributeValue): [AV1, AV2] {
@@ -30,8 +30,8 @@ export class ZipBuilder<A1, A2, P1, P2, AV1, AV2> implements Builder<[A1, A2], [
 }
 
 export function zipBuilders<A1, A2, P1, P2, AV1, AV2>(
-    builder1: Builder<A1, P1, AV1>,
-    builder2: Builder<A2, P2, AV2>
-): Builder<[A1, A2], [P1, P2], [AV1, AV2]> {
+    builder1: BaseBuilder<A1, P1, AV1>,
+    builder2: BaseBuilder<A2, P2, AV2>
+): BaseBuilder<[A1, A2], [P1, P2], [AV1, AV2]> {
     return new ZipBuilder(builder1, builder2);
 }

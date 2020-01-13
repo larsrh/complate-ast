@@ -1,5 +1,5 @@
 import * as Base from "./base";
-import {Attributes, AttributeValue, escapeHTML, isVoidElement, renderAttributes} from "../jsx/syntax";
+import {Attributes, escapeHTML, isVoidElement, renderAttributes} from "../jsx/syntax";
 import _ from "lodash";
 import {Builder, defaultTagCheck} from "./builder";
 
@@ -71,11 +71,10 @@ function create(fn: (buffer: Buffer) => void): AST {
     };
 }
 
-export class ASTBuilder<P> implements Builder<AST, P> {
+export class ASTBuilder<P> extends Builder<AST, P> {
     constructor(
         private readonly renderP: (p: P) => ((buffer: Buffer) => void)
-    ) {
-    }
+    ) { super(); }
 
     element(tag: string, attributes?: Attributes, ...children: AST[]): AST {
         defaultTagCheck(tag, children);
@@ -114,10 +113,6 @@ export class ASTBuilder<P> implements Builder<AST, P> {
 
     text(text: string): AST {
         return create(buffer => buffer.write(escapeHTML(text)));
-    }
-
-    attributeValue(value: AttributeValue): AttributeValue {
-        return value;
     }
 }
 

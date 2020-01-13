@@ -1,5 +1,5 @@
 import * as Base from "./base";
-import {Attributes, AttributeValue, escapeHTML, isVoidElement, renderAttributes} from "../jsx/syntax";
+import {Attributes, escapeHTML, isVoidElement, renderAttributes} from "../jsx/syntax";
 import {Builder, defaultTagCheck} from "./builder";
 
 export interface AST extends Base.AST {
@@ -14,7 +14,7 @@ export function create(value: string): AST {
     };
 }
 
-export class ASTBuilder implements Builder<AST, string> {
+export class ASTBuilder extends Builder<AST, string> {
     element(tag: string, attributes?: Attributes, ...children: AST[]): AST {
         defaultTagCheck(tag, children);
 
@@ -38,10 +38,6 @@ export class ASTBuilder implements Builder<AST, string> {
 
     text(text: string): AST {
         return create(escapeHTML(text));
-    }
-
-    attributeValue(value: AttributeValue): AttributeValue {
-        return value;
     }
 }
 

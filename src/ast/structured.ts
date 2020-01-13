@@ -1,8 +1,8 @@
 import * as Base from "./base";
 import * as Raw from "./raw";
 import {mapObject} from "../util";
-import {Attributes, AttributeValue, normalizeAttributes} from "../jsx/syntax";
-import {Builder, defaultTagCheck} from "./builder";
+import {Attributes, normalizeAttributes} from "../jsx/syntax";
+import {BaseBuilder, Builder, defaultTagCheck} from "./builder";
 
 export type NodeType = "text" | "element" | "prerendered"
 
@@ -13,7 +13,7 @@ export interface BaseAST extends Base.AST {
     readonly astType: "structured";
 }
 
-export function render<P, O, AV>(ast: AST<P>, builder: Builder<O, P, AV>): O {
+export function render<P, O, AV>(ast: AST<P>, builder: BaseBuilder<O, P, AV>): O {
     switch (ast.nodeType) {
         case "text":
             return builder.text((ast as TextNode).text);
@@ -59,11 +59,11 @@ export class PrerenderedNode<P> implements BaseAST {
     ) {}
 }
 
-export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
+export class ASTBuilder<P = never> extends Builder<AST<P>, P> {
     constructor(
         // false only for testing
         public readonly _normalize: boolean = true
-    ) {}
+    ) { super(); }
 
     element(tag: string, attributes?: Attributes, ...children: AST<P>[]): AST<P> {
         if (this._normalize)
@@ -77,10 +77,6 @@ export class ASTBuilder<P = never> implements Builder<AST<P>, P> {
 
     text(text: string): AST<P> {
         return new TextNode(text);
-    }
-
-    attributeValue(value: AttributeValue): AttributeValue {
-        return value;
     }
 }
 
@@ -104,10 +100,10 @@ export const info: Base.ASTInfo<AST> = {
     asString: ast => render(ast, Raw.info.builder).value
 };
 
-export class MappingBuilder<P, Q> implements Builder<AST<Q>, P> {
+export class MappingBuilder<P, Q> extends Builder<AST<Q>, P> {
     constructor(
         private readonly fn: (p: P) => Q
-    ) {}
+    ) { super(); }
 
     element(tag: string, attributes?: Attributes, ...children: AST<Q>[]): AST<Q> {
         return new ElementNode(tag, attributes ? attributes : {}, children);
@@ -120,17 +116,13 @@ export class MappingBuilder<P, Q> implements Builder<AST<Q>, P> {
     text(text: string): AST<Q> {
         return new TextNode(text);
     }
-
-    attributeValue(value: AttributeValue): AttributeValue {
-        return value;
-    }
 }
 
 export function map<P, Q>(ast: AST<P>, fn: (p: P) => Q): AST<Q> {
     return render(ast, new MappingBuilder(fn));
 }
 
-export class FlatteningBuilder<P> implements Builder<AST<P>, AST<P>> {
+export class FlatteningBuilder<P> extends Builder<AST<P>, AST<P>> {
     element(tag: string, attributes?: Attributes, ...children: AST<P>[]): AST<P> {
         return new ElementNode(tag, attributes ? attributes : {}, children);
     }
@@ -141,10 +133,6 @@ export class FlatteningBuilder<P> implements Builder<AST<P>, AST<P>> {
 
     text(text: string): AST<P> {
         return new TextNode(text);
-    }
-
-    attributeValue(value: AttributeValue): AttributeValue {
-        return value;
     }
 }
 

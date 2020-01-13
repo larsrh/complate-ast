@@ -1,6 +1,6 @@
 import fc, {Arbitrary} from "fast-check";
 import {Attributes, AttributeValue} from "../jsx/syntax";
-import {Builder} from "../ast/builder";
+import {BaseBuilder} from "../ast/builder";
 
 // TODO dashes
 const alphabetic =
@@ -24,7 +24,7 @@ export function attrs<AV>(attr: Arbitrary<AV>): Arbitrary<Attributes<AV>> {
 export const defaultAttrs: Arbitrary<Attributes> = attrs(attr);
 
 export function ast<A, P, AV>(
-    builder: Builder<A, P, AV>,
+    builder: BaseBuilder<A, P, AV>,
     attrGen: Arbitrary<AV>,
     prerenderedGen?: Arbitrary<P>
 ): Arbitrary<A> {
@@ -77,6 +77,6 @@ export function ast<A, P, AV>(
     return ast as Arbitrary<A>;
 }
 
-export function defaultAST<A>(builder: Builder<A>): Arbitrary<A> {
+export function defaultAST<A>(builder: BaseBuilder<A>): Arbitrary<A> {
     return ast(builder, attr);
 }
