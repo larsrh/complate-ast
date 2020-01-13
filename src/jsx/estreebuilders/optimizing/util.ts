@@ -1,5 +1,5 @@
 import * as ESTree from "estree";
-import {extractAST, RuntimeModule, tagExpression} from "../util";
+import {extractAST, tagExpression} from "../util";
 import {isVoidElement, isDynamic, isMacro} from "../../syntax";
 import * as Operations from "../../../estree/operations";
 import * as Reify from "../../../estree/reify";
@@ -7,6 +7,7 @@ import {ArrayExpr} from "../../../estree/expr";
 import * as Structured from "../../../ast/structured";
 import * as Raw from "../../../ast/raw";
 import _ from "lodash";
+import {RuntimeModule} from "../../runtime";
 
 export class Tag {
     readonly expr: ESTree.Expression;
@@ -40,7 +41,7 @@ export class Tag {
 export interface BaseProcessedChildren {
     isStatic: boolean;
     isEmpty: boolean;
-    normalized(runtime: RuntimeModule): ArrayExpr;
+    normalized(kind: string, runtime: RuntimeModule): ArrayExpr;
 }
 
 export class StaticProcessedChildren implements BaseProcessedChildren {
@@ -79,8 +80,8 @@ export class DynamicProcessedChildren implements BaseProcessedChildren {
         this.isEmpty = this.raw.length === 0;
     }
 
-    normalized(runtime: RuntimeModule): ArrayExpr {
-        return runtime.normalizeChildren(this.raw);
+    normalized(kind: string, runtime: RuntimeModule): ArrayExpr {
+        return runtime.normalizeChildren(kind, this.raw);
     }
 }
 

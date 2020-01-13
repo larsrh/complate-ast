@@ -15,7 +15,7 @@ import {extractAST} from "../../jsx/estreebuilders/util";
 import {CompactingBuilder} from "../../ast/builders/compact";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
-import * as _JSXRuntime from "../../jsx/runtime";
+import * as _JSXRuntime from "../../runtime";
 
 const exactBuilder = new Structured.ASTBuilder(false);
 const exactGen = Gen.defaultAST(exactBuilder);

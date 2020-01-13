@@ -43,7 +43,7 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
                 const fragment = node as JSXFragment;
                 const children = fragment.children as ESTree.Expression[];
                 this.replace(builder.elementOrMacro(
-                    builder.fragment,
+                    builder.runtime.fragmentMacro,
                     processAttributes([]),
                     children
                 ));

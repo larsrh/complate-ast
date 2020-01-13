@@ -13,7 +13,7 @@ import {CompactingBuilder} from "../../ast/builders/compact";
 import * as Raw from "../../ast/raw";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
-import * as _JSXRuntime from "../../jsx/runtime";
+import * as _JSXRuntime from "../../runtime";
 
 // TODO golden tests
 describe("Preprocessing", () => {

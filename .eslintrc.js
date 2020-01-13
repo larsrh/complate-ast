@@ -20,6 +20,7 @@ module.exports = {
       "@typescript-eslint/explicit-function-return-type": ["error", {
           allowExpressions: true
       }],
+      "@typescript-eslint/no-this-alias": "off",
       "no-inner-declarations": "off",
       "class-methods-use-this": ["error", {
           exceptMethods: [

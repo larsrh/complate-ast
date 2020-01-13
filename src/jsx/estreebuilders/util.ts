@@ -2,8 +2,6 @@ import * as ESTree from "estree";
 import {Attributes, isDynamic, normalizeAttribute, normalizeAttributes, renderAttributes} from "../syntax";
 import * as Operations from "../../estree/operations";
 import * as Reify from "../../estree/reify";
-import {ArrayExpr} from "../../estree/expr";
-import {Kind} from "../../ast";
 import {mapObject} from "../../util";
 import {JSXAttribute, JSXSimpleAttribute} from "../../estree/jsx";
 import _ from "lodash";
@@ -29,49 +27,6 @@ export class Gensym {
     sym(): ESTree.Identifier {
         this.counter += BigInt(1);
         return Operations.identifier(this.prefix + this.counter);
-    }
-}
-
-export class RuntimeModule {
-    constructor(
-        private readonly runtime: ESTree.Expression,
-        private readonly mode: Kind
-    ) {}
-
-    _member(name: string): ESTree.Expression {
-        return Operations.member(this.runtime, Operations.identifier(name));
-    }
-
-    _call(name: string, ...args: (ESTree.Expression | ESTree.SpreadElement)[]): ESTree.Expression {
-        return Operations.call(this._member(name), ...args);
-    }
-
-    normalizeChildren(children: ESTree.Expression[]): ArrayExpr {
-        return new ArrayExpr(this._call(
-            "normalizeChildren",
-            Reify.string(this.mode),
-            ...children
-        ));
-    }
-
-    escapeHTML(argument: ESTree.Expression): ESTree.Expression {
-        return this._call("escapeHTML", argument);
-    }
-
-    isVoidElement(argument: ESTree.Expression): ESTree.Expression {
-        return this._call("isVoidElement", argument);
-    }
-
-    normalizeAttribute(value: ESTree.Expression): ESTree.Expression {
-        return this._call("normalizeAttribute", value);
-    }
-
-    normalizeAttributes(attributes: ESTree.Expression): ESTree.Expression {
-        return this._call("normalizeAttributes", attributes);
-    }
-
-    renderAttributes(attributes: ESTree.Expression): ESTree.Expression {
-        return this._call("renderAttributes", attributes);
     }
 }
 

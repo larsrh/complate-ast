@@ -1,11 +1,14 @@
-import {ProcessedAttributes, RuntimeModule} from "../util";
+import {ProcessedAttributes} from "../util";
 import {ProcessedChildren, Tag} from "./util";
 import * as ESTree from "estree";
 import * as Reify from "../../../estree/reify";
 import * as Structured from "../../../ast/structured";
 import {Factory} from "../optimizing";
+import {RuntimeModule} from "../../runtime";
 
 export class StructuredFactory implements Factory {
+    readonly kind = "structured";
+
     makeElement(
         runtime: RuntimeModule,
         tag: Tag,
@@ -17,7 +20,7 @@ export class StructuredFactory implements Factory {
             nodeType: Reify.string("element"),
             tag: tag.expr,
             attributes: runtime.normalizeAttributes(attributes.merged),
-            children: children.normalized(runtime).raw
+            children: children.normalized(this.kind, runtime).raw
         });
     }
 

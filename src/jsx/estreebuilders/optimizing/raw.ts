@@ -1,4 +1,4 @@
-import {Gensym, ProcessedAttributes, RuntimeModule} from "../util";
+import {Gensym, ProcessedAttributes} from "../util";
 import {ProcessedChildren, Tag} from "./util";
 import * as ESTree from "estree";
 import * as Operations from "../../../estree/operations";
@@ -7,8 +7,11 @@ import {ArrayExpr} from "../../../estree/expr";
 import * as Structured from "../../../ast/structured";
 import * as Raw from "../../../ast/raw";
 import {Factory} from "../optimizing";
+import {RuntimeModule} from "../../runtime";
 
 export class RawFactory implements Factory {
+    readonly kind = "raw";
+
     makeElement(
         runtime: RuntimeModule,
         tag: Tag,
@@ -68,7 +71,7 @@ export class RawFactory implements Factory {
         if (children.isStatic)
             partsChildren = Reify.array([Reify.string(children.staticString)]);
         else
-            partsChildren = children.normalized(runtime).map(selector);
+            partsChildren = children.normalized(this.kind, runtime).map(selector);
 
         let partsClosed: (ESTree.Expression | ESTree.SpreadElement)[];
         if (tag.isVoid)
