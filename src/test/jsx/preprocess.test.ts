@@ -7,12 +7,16 @@ import {matrix} from "./_util";
 import {force} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
 import {extractAST} from "../../jsx/estreebuilders/util";
+import * as Gen from "../../testkit/gen";
+import fc from "fast-check";
+import {CompactingBuilder} from "../../ast/builders/compact";
+import * as Raw from "../../ast/raw";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../../jsx/runtime";
 
 // TODO golden tests
-describe("Preprocessing (examples)", () => {
+describe("Preprocessing", () => {
 
     matrix((config, astBuilder, esBuilder) => {
 
@@ -469,6 +473,50 @@ describe("Preprocessing (examples)", () => {
             );
 
         }
+
+        /*
+         * structured AST (gen) -[compact]-> structured AST † -[render]-> target AST
+         *       |
+         *       | [render]
+         *       v
+         *    raw AST
+         *       |
+         *       | [parse]                                                   ===
+         *       v
+         *    ESTree
+         *       |
+         *       | [preprocess]
+         *       v
+         *    ESTree ‡    -------------[eval]-------------------------->  target AST
+         *
+         *
+         * Additional property if esBuilder.canStatic:
+         *   static(‡) === †
+         */
+        it("Roundtrip (Structured → JSX → ESTree → Preprocess → AST)", () => {
+            const gen = Gen.defaultAST(Structured.info.builder).filter(ast => ast.nodeType !== "text");
+            const sandbox = esBuilder.canStatic ? {} : {JSXRuntime: _JSXRuntime};
+
+            fc.assert(fc.property(gen, ast => {
+                const ast1 = Structured.render(
+                    Structured.render(ast, new CompactingBuilder()),
+                    astBuilder
+                );
+
+                const jsx = Structured.render(ast, Raw.info.builder).value;
+                const input = parse(jsx);
+                const processed = preprocess(input, esBuilder) as ESTree.Program;
+
+                const ast2 = runInNewContext(generate(processed), sandbox);
+                expect(force(ast2)).toEqual(force(ast1));
+
+                if (esBuilder.canStatic) {
+                    const inner = (processed.body[0] as ESTree.ExpressionStatement).expression;
+                    const extracted = extractAST(inner);
+                    expect(extracted).toEqual(Structured.render(ast, new CompactingBuilder()));
+                }
+            }));
+        });
 
     });
 
