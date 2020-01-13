@@ -11,6 +11,8 @@ import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
 import {CompactingBuilder} from "../../ast/builders/compact";
 import * as Raw from "../../ast/raw";
+import {runtimeModuleFromConfig} from "../../jsx/runtime";
+import {esTreeBuilderFromConfig} from "../../jsx/estreebuilders/config";
 
 // underscored to test correct scoping (generated code references `JSXRuntime`)
 import * as _JSXRuntime from "../../runtime";
@@ -520,5 +522,26 @@ describe("Preprocessing", () => {
 
     });
 
+    it("Automatic import", () => {
+        const source = `<span />`;
+        const importPath = "__MOCKED__";
+        const runtime = runtimeModuleFromConfig({
+            importPath: importPath,
+            prefix: "__TEST_RUNTIME__"
+        });
+        const builder = esTreeBuilderFromConfig(runtime, {
+            target: "raw",
+            mode: "simple"
+        });
+        const require = jest.fn(() => _JSXRuntime);
+        const generated = generate(preprocess(parse(source), builder));
+
+        const result = runInNewContext(generated, { require: require });
+
+        expect(result).toEqual({ astType: "raw", value: "<span></span>" });
+
+        expect(require).toHaveBeenCalledTimes(1);
+        expect(require).toHaveBeenCalledWith(importPath);
+    });
 
 });
