@@ -3,7 +3,7 @@ import * as ESTree from "estree";
 import * as Structured from "../../ast/structured";
 import {generate} from "astring";
 import {runInNewContext} from "vm";
-import {matrix} from "./_util";
+import {matrix, requireMock} from "../_util";
 import {force} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
 import {extractAST} from "../../jsx/estreebuilders/util";
@@ -523,25 +523,19 @@ describe("Preprocessing", () => {
     });
 
     it("Automatic import", () => {
-        const source = `<span />`;
-        const importPath = "__MOCKED__";
-        const runtime = runtimeModuleFromConfig({
-            importPath: importPath,
-            prefix: "__TEST_RUNTIME__"
-        });
+        const mock = requireMock();
+        const runtime = runtimeModuleFromConfig(mock.runtime);
         const builder = esTreeBuilderFromConfig(runtime, {
             target: "raw",
             mode: "simple"
         });
-        const require = jest.fn(() => _JSXRuntime);
-        const generated = generate(preprocess(parse(source), builder));
+        const generated = generate(preprocess(parse(`<span />`), builder));
 
-        const result = runInNewContext(generated, { require: require });
+        const result = runInNewContext(generated, mock.sandbox);
 
         expect(result).toEqual({ astType: "raw", value: "<span></span>" });
 
-        expect(require).toHaveBeenCalledTimes(1);
-        expect(require).toHaveBeenCalledWith(importPath);
+        mock.assertMock();
     });
 
 });
