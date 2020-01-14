@@ -1,12 +1,13 @@
 import * as ESTree from "estree";
 import * as Operations from "../../../estree/operations";
-import {Gensym, NoSpreadProcessedAttributes, ProcessedAttributes, RuntimeModule} from "../util";
+import {Gensym, NoSpreadProcessedAttributes, ProcessedAttributes} from "../util";
 import * as Reify from "../../../estree/reify";
 import {ProcessedChildren, StaticProcessedChildren, Tag} from "./util";
 import {Attributes, escapeHTML, renderAttributes} from "../../syntax";
 import {ArrayExpr} from "../../../estree/expr";
 import * as Structured from "../../../ast/structured";
 import {Factory} from "../optimizing";
+import {RuntimeModule} from "../../runtime";
 
 function bufferWrite(buffer: ESTree.Expression, expr: ESTree.Expression): ESTree.ExpressionStatement {
     return Operations.expressionStatement(Operations.call(
@@ -16,6 +17,7 @@ function bufferWrite(buffer: ESTree.Expression, expr: ESTree.Expression): ESTree
 }
 
 export class StreamFactory implements Factory {
+    readonly kind = "stream";
     private readonly gen: Gensym;
 
     constructor() {
@@ -45,6 +47,7 @@ export class StreamFactory implements Factory {
         attributes: ProcessedAttributes,
         children: ProcessedChildren
     ): ESTree.Expression {
+        const thisFactory = this;
         const genNorm = new Gensym("__normalized__");
         const extraChildren = Operations.member({ type: "ThisExpression" }, Operations.identifier("_extraChildren"));
         const extraAttributes = Operations.member({ type: "ThisExpression" }, Operations.identifier("_extraAttributes"));
@@ -129,7 +132,7 @@ export class StreamFactory implements Factory {
             if (children.isStatic)
                 bodyChildren = bufferWrite(buffer, Reify.string(children.staticString));
             else
-                bodyChildren = Operations.expressionStatement(children.normalized(runtime).forEach(render));
+                bodyChildren = Operations.expressionStatement(children.normalized(thisFactory.kind, runtime).forEach(render));
 
             const bodyExtraChildren = Operations.ifthenelse(
                 extraChildren,

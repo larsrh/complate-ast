@@ -1,6 +1,7 @@
-import {Parser} from "acorn";
+import {Options, Parser} from "acorn";
 import {walk} from "estree-walker";
 import * as ESTree from "estree";
+import * as Reify from "../estree/reify";
 import * as Operations from "../estree/operations";
 import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
 import {isMacro} from "./syntax";
@@ -10,8 +11,8 @@ import {ESTreeBuilder} from "./estreebuilder";
 
 export const acorn = Parser.extend(jsx());
 
-export function parse(js: string): ESTree.BaseNode {
-    return acorn.parse(js);
+export function parse(js: string, options?: Options): ESTree.BaseNode {
+    return acorn.parse(js, options);
 }
 
 export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree.Node {
@@ -20,8 +21,24 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
             // <https://github.com/acornjs/acorn-jsx/issues/105>
             if (node.type === "Literal") {
                 const literal = node as ESTree.Literal;
-                if (literal.raw !== undefined)
-                    this.replace(Object.assign({}, node, { raw: undefined }));
+                if (literal.raw !== undefined) {
+                    const replacement = { ...literal, raw: undefined };
+                    this.replace(replacement);
+                }
+            }
+            else if (node.type === "Program" && builder.runtime.importPath) {
+                const program = node as ESTree.Program;
+                const require: ESTree.Statement = {
+                    type: "VariableDeclaration",
+                    kind: "const",
+                    declarations: [{
+                        type: "VariableDeclarator",
+                        id: builder.runtime.prefix,
+                        init: Operations.call(Operations.identifier("require"), Reify.string(builder.runtime.importPath))
+                    }]
+                };
+                const replacement = { ...program, body: [require, ...program.body] };
+                this.replace(replacement);
             }
             else if (node.type === "JSXElement") {
                 const element = node as JSXElement;
@@ -43,7 +60,7 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
                 const fragment = node as JSXFragment;
                 const children = fragment.children as ESTree.Expression[];
                 this.replace(builder.elementOrMacro(
-                    builder.fragment,
+                    builder.runtime.fragmentMacro,
                     processAttributes([]),
                     children
                 ));

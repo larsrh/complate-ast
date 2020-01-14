@@ -1,11 +1,13 @@
 import * as Structured from "../../ast/structured";
 import * as ESTree from "estree";
 import * as Operations from "../../estree/operations";
-import {injectAST, ProcessedAttributes, RuntimeModule} from "./util";
+import {injectAST, ProcessedAttributes} from "./util";
 import {processChildren, ProcessedChildren, Tag} from "./optimizing/util";
 import {ESTreeBuilder} from "../estreebuilder";
+import {RuntimeModule} from "../runtime";
 
 export interface Factory {
+    readonly kind: string;
     makeElement(runtime: RuntimeModule, tag: Tag, attributes: ProcessedAttributes, children: ProcessedChildren): ESTree.Expression;
     reify(runtime: RuntimeModule, ast: Structured.AST): ESTree.Expression;
 }
@@ -13,9 +15,9 @@ export interface Factory {
 export class OptimizingBuilder extends ESTreeBuilder {
     constructor(
         private readonly factory: Factory,
-        private readonly runtime: RuntimeModule
+        runtime: RuntimeModule
     ) {
-        super(true, runtime._member("Fragment"));
+        super(true, runtime);
     }
 
     private reified(ast: Structured.AST): ESTree.Expression {
@@ -74,7 +76,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             return Operations.call(
                 _tag,
                 attributes.merged,
-                processChildren(_children).normalized(this.runtime)
+                processChildren(_children).normalized(this.factory.kind, this.runtime)
             );
         }
     }
