@@ -14,54 +14,54 @@ import commonjs from "@rollup/plugin-commonjs";
 
 describe("Rollup", () => {
 
-    it("Rollup plugin (simple)", async () => {
-        const mock = requireMock();
+    jest.setTimeout(10000);
 
+    async function test(sandbox: object, options: InputOptions): Promise<void> {
         const inputFile = tempy.file({ extension: "jsx" });
         await fs.writeFile(inputFile, `<div><span />{ ["text"] }</div>`);
 
-        const inputOptions: InputOptions = {
+        const inputOptions = {
+            ...options,
             input: inputFile,
-            plugins: [
-                complate(mock.runtime)
-            ],
             acornInjectPlugins: [jsx()]
-        };
-
-        const outputFile = tempy.file({ extension: "js" });
-
-        const outputOptions: OutputOptions = {
-            file: outputFile,
-            format: "cjs",
-            sourcemap: false
         };
 
         const rollupBuild = await rollup(inputOptions);
 
-        await rollupBuild.write(outputOptions);
+        const outputOptions: OutputOptions = {
+            format: "cjs",
+            sourcemap: false
+        };
 
-        const output = await fs.readFile(outputFile, "utf8");
+        const { output } = await rollupBuild.generate(outputOptions);
+        expect(output).toHaveLength(1);
 
-        const result = runInNewContext(output, mock.sandbox);
+        const result = runInNewContext(output[0].code, sandbox);
 
         expect(result).toEqual({
             astType: "raw",
             value: "<div><span></span>text</div>"
         });
 
-        mock.assertMock();
-
         await fs.unlink(inputFile);
-        await fs.unlink(outputFile);
+    }
+
+    it("Rollup plugin (simple)", async () => {
+        const mock = requireMock();
+
+        await test(mock.sandbox, {
+            plugins: [
+                complate(mock.runtime)
+            ]
+        });
+
+        mock.assertMock();
     });
 
     it("Rollup plugin (with resolve)", async () => {
         const root = projectRoot();
-        const inputFile = tempy.file({ extension: "jsx" });
-        await fs.writeFile(inputFile, `<div><span />{ ["text"] }</div>`);
 
-        const inputOptions: InputOptions = {
-            input: inputFile,
+        await test({}, {
             plugins: [
                 complate({
                     importPath: path.resolve(root, "src", "runtime"),
@@ -75,32 +75,7 @@ describe("Rollup", () => {
                     include: `${root}/node_modules/**`
                 })
             ],
-            acornInjectPlugins: [jsx()]
-        };
-
-        const outputFile = tempy.file({ extension: "js" });
-
-        const outputOptions: OutputOptions = {
-            file: outputFile,
-            format: "cjs",
-            sourcemap: false
-        };
-
-        const rollupBuild = await rollup(inputOptions);
-
-        await rollupBuild.write(outputOptions);
-
-        const output = await fs.readFile(outputFile, "utf8");
-
-        const result = runInNewContext(output, {});
-
-        expect(result).toEqual({
-            astType: "raw",
-            value: "<div><span></span>text</div>"
         });
-
-        await fs.unlink(inputFile);
-        await fs.unlink(outputFile);
     });
 
 });
