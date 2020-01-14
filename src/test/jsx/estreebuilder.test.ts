@@ -1,4 +1,4 @@
-import {matrix} from "./_util";
+import {matrix} from "../_util";
 import {spec} from "../../testkit/specs/estreebuilder";
 import {astInfos} from "../../ast";
 

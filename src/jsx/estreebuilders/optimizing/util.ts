@@ -6,7 +6,7 @@ import * as Reify from "../../../estree/reify";
 import {ArrayExpr} from "../../../estree/expr";
 import * as Structured from "../../../ast/structured";
 import * as Raw from "../../../ast/raw";
-import _ from "lodash";
+import {every} from "lodash-es";
 import {RuntimeModule} from "../../runtime";
 
 export class Tag {
@@ -88,7 +88,7 @@ export class DynamicProcessedChildren implements BaseProcessedChildren {
 export type ProcessedChildren = StaticProcessedChildren | DynamicProcessedChildren
 
 export function processChildren(children: ESTree.Expression[]): ProcessedChildren {
-    if (_.every(children, '_staticAST'))
+    if (every(children, '_staticAST'))
         return StaticProcessedChildren.fromExpressions(children);
     else
         return new DynamicProcessedChildren(children);

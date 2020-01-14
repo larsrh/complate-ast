@@ -1,6 +1,6 @@
 import * as Base from "./base";
 import {Attributes, escapeHTML, isVoidElement, renderAttributes} from "../jsx/syntax";
-import _ from "lodash";
+import {clone} from "lodash-es";
 import {Builder, defaultTagCheck} from "./builder";
 
 export interface Buffer {
@@ -52,10 +52,10 @@ export function _clone(
     if (!ast.isElement)
         throw new Error("Cannot extend non-element with extra children nor extra attributes");
 
-    // The original AST is cloned (using lodash to also clone the methods, Object.assign doesn't work here)
+    // The original AST is cloned (using lodash-es to also clone the methods, Object.assign doesn't work here)
     // in  a second step, we use Object.assign to overwrite the children and attributes
     // no binding required, since the ASTs are always called on the proper `this` argument
-    const newAST = _.clone(ast);
+    const newAST = clone(ast);
     Object.assign(newAST, {
         _extraChildren: childrenFn(ast._extraChildren),
         _extraAttributes: attrFn(ast._extraAttributes)

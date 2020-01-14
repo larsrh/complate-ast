@@ -1,13 +1,13 @@
 import {Options, Parser} from "acorn";
 import {walk} from "estree-walker";
 import * as ESTree from "estree";
-import * as Reify from "../estree/reify";
 import * as Operations from "../estree/operations";
 import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
 import {isMacro} from "./syntax";
 import jsx from "acorn-jsx";
 import {processAttributes} from "./estreebuilders/util";
 import {ESTreeBuilder} from "./estreebuilder";
+import {importStatement, RuntimeConfig, runtimeModuleFromConfig} from "./runtime";
 
 export const acorn = Parser.extend(jsx());
 
@@ -15,7 +15,14 @@ export function parse(js: string, options?: Options): ESTree.BaseNode {
     return acorn.parse(js, options);
 }
 
-export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree.Node {
+export function preprocess(
+    ast: ESTree.BaseNode,
+    builder: ESTreeBuilder,
+    config: RuntimeConfig
+): ESTree.Node {
+    // TODO pass to builder?
+    const runtime = runtimeModuleFromConfig(config);
+
     return walk(ast, {
         leave(node) {
             // <https://github.com/acornjs/acorn-jsx/issues/105>
@@ -26,18 +33,9 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
                     this.replace(replacement);
                 }
             }
-            else if (node.type === "Program" && builder.runtime.importPath) {
+            else if (node.type === "Program" && config.importPath) {
                 const program = node as ESTree.Program;
-                const require: ESTree.Statement = {
-                    type: "VariableDeclaration",
-                    kind: "const",
-                    declarations: [{
-                        type: "VariableDeclarator",
-                        id: builder.runtime.prefix,
-                        init: Operations.call(Operations.identifier("require"), Reify.string(builder.runtime.importPath))
-                    }]
-                };
-                const replacement = { ...program, body: [require, ...program.body] };
+                const replacement = { ...program, body: [importStatement(config), ...program.body] };
                 this.replace(replacement);
             }
             else if (node.type === "JSXElement") {
@@ -60,7 +58,7 @@ export function preprocess(ast: ESTree.BaseNode, builder: ESTreeBuilder): ESTree
                 const fragment = node as JSXFragment;
                 const children = fragment.children as ESTree.Expression[];
                 this.replace(builder.elementOrMacro(
-                    builder.runtime.fragmentMacro,
+                    runtime.fragmentMacro,
                     processAttributes([]),
                     children
                 ));

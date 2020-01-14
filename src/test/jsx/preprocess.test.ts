@@ -3,7 +3,7 @@ import * as ESTree from "estree";
 import * as Structured from "../../ast/structured";
 import {generate} from "astring";
 import {runInNewContext} from "vm";
-import {matrix} from "./_util";
+import {matrix, requireMock, runtimeConfig} from "../_util";
 import {force} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
 import {extractAST} from "../../jsx/estreebuilders/util";
@@ -34,7 +34,7 @@ describe("Preprocessing", () => {
             }
             describe(name, () => {
                 const input = parse(jsx);
-                const processed = preprocess(input, esBuilder) as ESTree.Program;
+                const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
                 const sandbox = doStatic ? {} : {JSXRuntime: _JSXRuntime};
 
@@ -60,7 +60,7 @@ describe("Preprocessing", () => {
             const sandbox = {JSXRuntime: _JSXRuntime};
             it(name, () => {
                 const input = parse(jsx);
-                const processed = preprocess(input, esBuilder) as ESTree.Program;
+                const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
                 const generated = generate(processed);
                 expect(() => force(runInNewContext(generated, sandbox))).toThrow(regex);
             })
@@ -69,7 +69,7 @@ describe("Preprocessing", () => {
         function checkCompileFailure(name: string, jsx: string, regex: RegExp): void {
             it(name, () => {
                 const input = parse(jsx);
-                expect(() => preprocess(input, esBuilder)).toThrow(regex);
+                expect(() => preprocess(input, esBuilder, runtimeConfig)).toThrow(regex);
             })
         }
 
@@ -507,7 +507,7 @@ describe("Preprocessing", () => {
 
                 const jsx = Structured.render(ast, Raw.info.builder).value;
                 const input = parse(jsx);
-                const processed = preprocess(input, esBuilder) as ESTree.Program;
+                const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
                 const ast2 = runInNewContext(generate(processed), sandbox);
                 expect(force(ast2)).toEqual(force(ast1));
@@ -523,25 +523,19 @@ describe("Preprocessing", () => {
     });
 
     it("Automatic import", () => {
-        const source = `<span />`;
-        const importPath = "__MOCKED__";
-        const runtime = runtimeModuleFromConfig({
-            importPath: importPath,
-            prefix: "__TEST_RUNTIME__"
-        });
+        const mock = requireMock();
+        const runtime = runtimeModuleFromConfig(mock.runtime);
         const builder = esTreeBuilderFromConfig(runtime, {
             target: "raw",
             mode: "simple"
         });
-        const require = jest.fn(() => _JSXRuntime);
-        const generated = generate(preprocess(parse(source), builder));
+        const generated = generate(preprocess(parse(`<span />`), builder, mock.runtime));
 
-        const result = runInNewContext(generated, { require: require });
+        const result = runInNewContext(generated, mock.sandbox);
 
         expect(result).toEqual({ astType: "raw", value: "<span></span>" });
 
-        expect(require).toHaveBeenCalledTimes(1);
-        expect(require).toHaveBeenCalledWith(importPath);
+        mock.assertMock();
     });
 
 });

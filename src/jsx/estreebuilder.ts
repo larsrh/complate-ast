@@ -3,13 +3,11 @@ import * as ESTree from "estree";
 import {NoSpreadProcessedAttributes, ProcessedAttributes} from "./estreebuilders/util";
 import {Attributes, AttributeValue, normalizeAttribute} from "./syntax";
 import * as Reify from "../estree/reify";
-import {RuntimeModule} from "./runtime";
 
 export abstract class ESTreeBuilder implements BaseBuilder<ESTree.Expression, ESTree.Expression, ESTree.Expression> {
 
     constructor(
-        readonly canStatic: boolean,
-        readonly runtime: RuntimeModule
+        readonly canStatic: boolean
     ) {}
 
     abstract elementOrMacro(
