@@ -28,7 +28,7 @@ export class StreamFactory implements Factory {
         const buffer = this.gen.sym();
 
         return Reify.object({
-            astType: Reify.string("stream"),
+            astKind: Reify.string("stream"),
             isElement: Reify.boolean(isElement),
             render: {
                 type: "FunctionExpression",

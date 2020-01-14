@@ -16,7 +16,7 @@ export const astInfos: { [key in Kind]: Base.ASTInfo<AST, any> } = {
 };
 
 export function isAST(object: any): object is AST {
-    return object.astType && object.astType in astInfos;
+    return object.astKind && object.astKind in astInfos;
 }
 
 export function normalizeChildren(kind: Kind, ...children: any[]): AST[] {
@@ -29,8 +29,8 @@ export function normalizeChildren(kind: Kind, ...children: any[]): AST[] {
 
         if (!isAST(child))
             throw new Error("Invalid child: Expected AST");
-        if (child.astType !== kind)
-            throw new Error(`Cannot normalize heterogeneous children: Expected ${kind}, received ${child.astType}`);
+        if (child.astKind !== kind)
+            throw new Error(`Cannot normalize heterogeneous children: Expected ${kind}, received ${child.astKind}`);
 
         return child;
     });
@@ -38,22 +38,22 @@ export function normalizeChildren(kind: Kind, ...children: any[]): AST[] {
 
 export function addItems<AST extends Base.AST>(ast: AST, attributes?: Attributes, ..._children: any[]): AST {
     if (!isAST(ast))
-        throw new Error(`Unknown AST kind ${ast.astType}`);
+        throw new Error(`Unknown AST kind ${ast.astKind}`);
 
-    const children = normalizeChildren(ast.astType, ..._children);
-    const info = astInfos[ast.astType];
+    const children = normalizeChildren(ast.astKind, ..._children);
+    const info = astInfos[ast.astKind];
 
     if (info.introspection)
         return info.introspection.addItems(ast, attributes || {}, children) as any;
     else
-        throw new Error(`AST kind ${ast.astType} does not support introspection`);
+        throw new Error(`AST kind ${ast.astKind} does not support introspection`);
 }
 
 // TODO replace
 export function force(ast: AST): AST {
-    switch (ast.astType) {
+    switch (ast.astKind) {
         case "stream":
-            return { astType: "raw", value: Stream.force(ast) };
+            return { astKind: "raw", value: Stream.force(ast) };
         default:
             return ast;
     }

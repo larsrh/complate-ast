@@ -89,7 +89,7 @@ export class RawFactory implements Factory {
             ];
 
         return Reify.object({
-            astType: Reify.string("raw"),
+            astKind: Reify.string("raw"),
             value: Reify.array([...partsOpen, ...partsClosed]).join(Reify.string(""))
         });
     }

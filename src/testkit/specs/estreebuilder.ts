@@ -37,7 +37,7 @@ export class Spec<AST extends Base.AST, Forced> {
     private checkEvaluation(ast: Structured.AST, expr: ESTree.Expression, strict = false): void {
         const result = this.info.force(this.evaluate(expr, strict));
         // some renderers may reorder attributes; so we have to compare the resulting DOM
-        if (this.info.astType === "structured" || strict)
+        if (this.info.astKind === "structured" || strict)
             expect(result).toEqual(this.info.force(Structured.render(ast, this.info.builder)));
         else
             compareHTML(this.info.asString(result), Structured.render(ast, Raw.info.builder).value);
@@ -50,7 +50,7 @@ export class Spec<AST extends Base.AST, Forced> {
                 fc.assert(fc.property(exactGen, ast => {
                     const expr = Structured.render(ast, this.treeBuilder);
                     const result = this.evaluate(expr);
-                    expect(result).toHaveProperty("astType", this.info.astType);
+                    expect(result).toHaveProperty("astKind", this.info.astKind);
                 }));
             });
 

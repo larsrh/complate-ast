@@ -20,7 +20,7 @@ export class StringBuffer implements Buffer {
 }
 
 export interface AST extends Base.AST {
-    readonly astType: "stream";
+    readonly astKind: "stream";
     readonly isElement: boolean;
     readonly _extraChildren?: AST[];
     readonly _extraAttributes?: Attributes;
@@ -65,7 +65,7 @@ export function _clone(
 
 function create(fn: (buffer: Buffer) => void): AST {
     return {
-        astType: "stream",
+        astKind: "stream",
         isElement: false,
         render: fn
     };
@@ -80,7 +80,7 @@ export class ASTBuilder<P> extends Builder<AST, P> {
         defaultTagCheck(tag, children);
 
         return {
-            astType: "stream",
+            astKind: "stream",
             isElement: true,
 
             render(buffer: Buffer): void {
@@ -123,7 +123,7 @@ export function force(ast: AST): string {
 }
 
 export const info: Base.ASTInfo<AST, string> = {
-    astType: "stream",
+    astKind: "stream",
     builder: new ASTBuilder<never>(() => () => {/* do nothing */}),
     introspection: {
         addItems(ast: AST, attributes: Attributes, children: AST[]): AST {

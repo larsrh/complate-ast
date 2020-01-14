@@ -16,7 +16,7 @@ export class StructuredFactory implements Factory {
         children: ProcessedChildren
     ): ESTree.Expression {
         return Reify.object({
-            astType: Reify.string("structured"),
+            astKind: Reify.string("structured"),
             nodeType: Reify.string("element"),
             tag: tag.expr,
             attributes: runtime.normalizeAttributes(attributes.merged),

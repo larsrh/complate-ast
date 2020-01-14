@@ -100,9 +100,9 @@ export class Spec<AST extends Base.AST, Forced> {
     all(name: string): void {
         describe(name, () => {
 
-            it("Correct AST type", () => {
+            it("Correct AST kind", () => {
                 fc.assert(fc.property(this.gen, ast => {
-                    expect(ast.astType).toEqual(this.info.astType);
+                    expect(ast.astKind).toEqual(this.info.astKind);
                 }))
             });
 

@@ -3,13 +3,13 @@ import {Attributes, escapeHTML, isVoidElement, renderAttributes} from "../jsx/sy
 import {Builder, defaultTagCheck} from "./builder";
 
 export interface AST extends Base.AST {
-    readonly astType: "raw";
+    readonly astKind: "raw";
     readonly value: string;
 }
 
 export function create(value: string): AST {
     return {
-        astType: "raw",
+        astKind: "raw",
         value: value
     };
 }
@@ -42,7 +42,7 @@ export class ASTBuilder extends Builder<AST, string> {
 }
 
 export const info: Base.ASTInfo<AST> = {
-    astType: "raw",
+    astKind: "raw",
     builder: new ASTBuilder(),
     force: ast => ast,
     asString: ast => ast.value

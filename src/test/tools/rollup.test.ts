@@ -39,7 +39,7 @@ describe("Rollup", () => {
         const result = runInNewContext(output[0].code, sandbox);
 
         expect(result).toEqual({
-            astType: "raw",
+            astKind: "raw",
             value: "<div><span></span>text</div>"
         });
 

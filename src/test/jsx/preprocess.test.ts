@@ -533,7 +533,7 @@ describe("Preprocessing", () => {
 
         const result = runInNewContext(generated, mock.sandbox);
 
-        expect(result).toEqual({ astType: "raw", value: "<span></span>" });
+        expect(result).toEqual({ astKind: "raw", value: "<span></span>" });
 
         mock.assertMock();
     });

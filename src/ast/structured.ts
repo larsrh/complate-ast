@@ -10,7 +10,7 @@ export type AST<P = never> = TextNode | ElementNode<P> | PrerenderedNode<P>
 
 export interface BaseAST extends Base.AST {
     readonly nodeType: NodeType;
-    readonly astType: "structured";
+    readonly astKind: "structured";
 }
 
 export function render<P, O, AV>(ast: AST<P>, builder: BaseBuilder<O, P, AV>): O {
@@ -30,7 +30,7 @@ export function render<P, O, AV>(ast: AST<P>, builder: BaseBuilder<O, P, AV>): O
 
 export class TextNode implements BaseAST {
     public readonly nodeType = "text";
-    public readonly astType = "structured";
+    public readonly astKind = "structured";
 
     constructor(
         public readonly text: string
@@ -39,7 +39,7 @@ export class TextNode implements BaseAST {
 
 export class ElementNode<P> implements BaseAST {
     public readonly nodeType = "element";
-    public readonly astType = "structured";
+    public readonly astKind = "structured";
 
     constructor(
         public readonly tag: string,
@@ -52,7 +52,7 @@ export class ElementNode<P> implements BaseAST {
 
 export class PrerenderedNode<P> implements BaseAST {
     public readonly nodeType = "prerendered";
-    public readonly astType = "structured";
+    public readonly astKind = "structured";
 
     constructor(
         public readonly content: P
@@ -81,7 +81,7 @@ export class ASTBuilder<P = never> extends Builder<AST<P>, P> {
 }
 
 export const info: Base.ASTInfo<AST> = {
-    astType: "structured",
+    astKind: "structured",
     builder: new ASTBuilder(),
     introspection: {
         addItems(ast: AST, attributes: Attributes, children: AST[]): AST {
