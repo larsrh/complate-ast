@@ -8,10 +8,10 @@ import {RuntimeModule} from "../runtime";
 
 export class SimpleBuilder extends ESTreeBuilder {
     constructor(
-        runtime: RuntimeModule,
+        private readonly runtime: RuntimeModule,
         private readonly kind: string
     ) {
-        super(false, runtime);
+        super(false);
     }
 
     elementOrMacro(

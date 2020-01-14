@@ -4,6 +4,7 @@ import {Builder} from "../ast/builder";
 import {ESTreeBuilder} from "../jsx/estreebuilder";
 import {RuntimeConfig, runtimeModuleFromConfig} from "../jsx/runtime";
 import * as _JSXRuntime from "../runtime";
+import path from "path";
 
 const allConfigs: ESTreeBuilderConfig[] = [
     { mode: "simple", target: "structured" },
@@ -14,11 +15,13 @@ const allConfigs: ESTreeBuilderConfig[] = [
     { mode: "optimizing", target: "raw" }
 ];
 
+export const runtimeConfig: RuntimeConfig = {};
+
 export function matrix(
     action: (config: ESTreeBuilderConfig, astBuilder: Builder<AST>, esBuilder: ESTreeBuilder) => void
 ): void {
     describe.each(allConfigs)(`%o`, config =>
-        action(config, astInfos[config.target].builder, esTreeBuilderFromConfig(runtimeModuleFromConfig(), config))
+        action(config, astInfos[config.target].builder, esTreeBuilderFromConfig(runtimeModuleFromConfig(runtimeConfig), config))
     );
 }
 
@@ -43,4 +46,8 @@ export function requireMock(): RequireMock {
             expect(require).toHaveBeenCalledWith(importPath);
         }
     };
+}
+
+export function projectRoot(): string {
+    return path.resolve(__dirname, "..", "..");
 }

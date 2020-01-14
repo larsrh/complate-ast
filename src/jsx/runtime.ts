@@ -5,8 +5,7 @@ import * as Reify from "../estree/reify";
 
 export class RuntimeModule {
     constructor(
-        readonly prefix: ESTree.Identifier,
-        readonly importPath?: string
+        private readonly prefix: ESTree.Identifier,
     ) {}
 
     _member(name: string): ESTree.Expression {
@@ -57,12 +56,41 @@ export class RuntimeModule {
 export interface RuntimeConfig {
     readonly prefix?: string;
     readonly importPath?: string;
+    readonly es6Import?: boolean;
 }
 
 export const defaultRuntimeConfig = {
     prefix: "JSXRuntime"
 };
 
+function prefix(config: RuntimeConfig): ESTree.Identifier {
+    return Operations.identifier(config.prefix || defaultRuntimeConfig.prefix);
+}
+
 export function runtimeModuleFromConfig(config: RuntimeConfig = defaultRuntimeConfig): RuntimeModule {
-    return new RuntimeModule(Operations.identifier(config.prefix || defaultRuntimeConfig.prefix), config.importPath);
+    return new RuntimeModule(prefix(config));
+}
+
+export function importStatement(config: RuntimeConfig): ESTree.Statement {
+    const source = Reify.string(config.importPath!);
+
+    if (config.es6Import === true)
+        return {
+            type: "ImportDeclaration",
+            specifiers: [{
+                type: "ImportNamespaceSpecifier",
+                local: prefix(config)
+            }],
+            source: source
+        } as any;
+    else
+        return {
+            type: "VariableDeclaration",
+            kind: "const",
+            declarations: [{
+                type: "VariableDeclarator",
+                id: prefix(config),
+                init: Operations.call(Operations.identifier("require"), source)
+            }]
+        };
 }

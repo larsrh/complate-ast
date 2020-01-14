@@ -4,7 +4,7 @@ import * as Operations from "../../estree/operations";
 import * as Reify from "../../estree/reify";
 import {mapObject} from "../../util";
 import {JSXAttribute, JSXSimpleAttribute} from "../../estree/jsx";
-import _ from "lodash";
+import {every} from "lodash-es";
 import * as Structured from "../../ast/structured";
 
 export function tagExpression(tag: string): ESTree.Expression {
@@ -120,7 +120,7 @@ export class SpreadProcessedAttributes implements BaseProcessedAttributes {
 export type ProcessedAttributes = NoSpreadProcessedAttributes | SpreadProcessedAttributes;
 
 export function processAttributes(attributes: JSXAttribute[]): ProcessedAttributes {
-    if (_.every(attributes, { type: "JSXAttribute" })) {
+    if (every(attributes, { type: "JSXAttribute" })) {
         return NoSpreadProcessedAttributes.fromExpressions(Object.fromEntries(attributes.map(attribute => {
             const attr = attribute as JSXSimpleAttribute;
             const value = attr.value as ESTree.Expression || Reify.boolean(true);

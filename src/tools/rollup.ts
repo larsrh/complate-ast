@@ -23,7 +23,7 @@ export function complate(
 
             const ast = this.parse(code, {});
             const esTreeBuilder = esTreeBuilderFromConfig(runtimeModuleFromConfig(runtimeConfig), esTreeConfig);
-            return generate(preprocess(ast, esTreeBuilder));
+            return generate(preprocess(ast, esTreeBuilder, runtimeConfig));
         }
     }
 }

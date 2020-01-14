@@ -15,9 +15,9 @@ export interface Factory {
 export class OptimizingBuilder extends ESTreeBuilder {
     constructor(
         private readonly factory: Factory,
-        runtime: RuntimeModule
+        private readonly runtime: RuntimeModule
     ) {
-        super(true, runtime);
+        super(true);
     }
 
     private reified(ast: Structured.AST): ESTree.Expression {

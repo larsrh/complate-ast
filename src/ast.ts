@@ -1,5 +1,5 @@
 import * as Base from "./ast/base";
-import * as _ from "lodash";
+import {flattenDeep} from "lodash-es";
 import * as Structured from "./ast/structured";
 import * as Raw from "./ast/raw";
 import * as Stream from "./ast/stream";
@@ -21,7 +21,7 @@ export function isAST(object: any): object is AST {
 
 export function normalizeChildren(kind: Kind, ...children: any[]): AST[] {
     const builder = astInfos[kind].builder;
-    return _.flattenDeep(children).filter(child =>
+    return flattenDeep(children).filter(child =>
         child !== undefined && child !== false && child !== null
     ).map(child => {
         if (typeof child === "string")

@@ -3,7 +3,7 @@ import * as ESTree from "estree";
 import * as Structured from "../../ast/structured";
 import {generate} from "astring";
 import {runInNewContext} from "vm";
-import {matrix, requireMock} from "../_util";
+import {matrix, requireMock, runtimeConfig} from "../_util";
 import {force} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
 import {extractAST} from "../../jsx/estreebuilders/util";
@@ -34,7 +34,7 @@ describe("Preprocessing", () => {
             }
             describe(name, () => {
                 const input = parse(jsx);
-                const processed = preprocess(input, esBuilder) as ESTree.Program;
+                const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
                 const sandbox = doStatic ? {} : {JSXRuntime: _JSXRuntime};
 
@@ -60,7 +60,7 @@ describe("Preprocessing", () => {
             const sandbox = {JSXRuntime: _JSXRuntime};
             it(name, () => {
                 const input = parse(jsx);
-                const processed = preprocess(input, esBuilder) as ESTree.Program;
+                const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
                 const generated = generate(processed);
                 expect(() => force(runInNewContext(generated, sandbox))).toThrow(regex);
             })
@@ -69,7 +69,7 @@ describe("Preprocessing", () => {
         function checkCompileFailure(name: string, jsx: string, regex: RegExp): void {
             it(name, () => {
                 const input = parse(jsx);
-                expect(() => preprocess(input, esBuilder)).toThrow(regex);
+                expect(() => preprocess(input, esBuilder, runtimeConfig)).toThrow(regex);
             })
         }
 
@@ -507,7 +507,7 @@ describe("Preprocessing", () => {
 
                 const jsx = Structured.render(ast, Raw.info.builder).value;
                 const input = parse(jsx);
-                const processed = preprocess(input, esBuilder) as ESTree.Program;
+                const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
                 const ast2 = runInNewContext(generate(processed), sandbox);
                 expect(force(ast2)).toEqual(force(ast1));
@@ -529,7 +529,7 @@ describe("Preprocessing", () => {
             target: "raw",
             mode: "simple"
         });
-        const generated = generate(preprocess(parse(`<span />`), builder));
+        const generated = generate(preprocess(parse(`<span />`), builder, mock.runtime));
 
         const result = runInNewContext(generated, mock.sandbox);
 
