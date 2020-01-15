@@ -1,6 +1,12 @@
 import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
-import {isMacro, normalizeAttribute, normalizeAttributes, renderAttributes} from "../../jsx/syntax";
+import {
+    isMacro,
+    normalizeAttribute,
+    normalizeAttributes,
+    normalizeWhitespace,
+    renderAttributes
+} from "../../jsx/syntax";
 
 describe("JSX/HTML syntax", () => {
 
@@ -39,6 +45,20 @@ describe("JSX/HTML syntax", () => {
            expect(normalizeAttribute(10 as any)).toEqual("10");
        });
 
+   });
+
+   describe("Whitespace normalization", () => {
+       // <https://reactjs.org/docs/jsx-in-depth.html#string-literals-1>
+       const whitespaceExamples: Record<string, string> = {
+           none: "Hello World",
+           simple: "\n  Hello World\n",
+           inner: "\n  Hello\n  World\n",
+           extra: "\n\n  Hello World\n"
+       };
+
+       it.each(Object.keys(whitespaceExamples))(`%s`, key => {
+           expect(normalizeWhitespace(whitespaceExamples[key])).toEqual("Hello World");
+       });
    });
 
    it("Attribute rendering", () => {
