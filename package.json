@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsc --watch",
     "test": "tsc --noEmit && jest",
-    "eslint": "eslint src --ext .ts"
+    "eslint": "eslint src --ext .ts",
+    "dist": "rm -rf dist && tsc && jest"
   },
   "author": "",
   "license": "ISC",

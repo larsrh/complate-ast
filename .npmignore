@@ -1,0 +1,14 @@
+coverage
+src
+docs
+dist/test
+dist/testkit # TODO remove later
+dist/scratch.*
+.idea
+.github
+.gitignore
+tsconfig.*
+*.tgz
+.eslint*
+babel.config.js
+jest.config.js
