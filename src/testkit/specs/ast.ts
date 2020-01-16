@@ -78,6 +78,17 @@ export class Spec<AST extends Base.AST, Forced> {
                 expect(this.info.force(ast2)).toEqual(this.info.force(expected));
             });
 
+            it("Throws on non-elements", () => {
+                const text = this.info.builder.text("text");
+                expect(() => this.info.force(_addItems(text, {}, []))).toThrow();
+            });
+
+            it("Throws for void elements", () => {
+                const element = this.info.builder.element("br");
+                const text = this.info.builder.text("text");
+                expect(() => this.info.force(_addItems(element, {}, [text]))).toThrow();
+            });
+
             it("Reference", () => {
                 const gen = fc.tuple(
                     elementGen,

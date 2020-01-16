@@ -12,3 +12,8 @@ export function filterObject<V>(object: Record<string, V | null>): Record<string
             newObject[key] = value;
     return newObject;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function assertNever(p: never): any {
+    throw new Error("Unexpected call");
+}
