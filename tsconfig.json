@@ -5,7 +5,6 @@
     "rootDir": "./src",
     "module": "commonjs",
     "declaration": true,
-    "incremental": true,
     "strict": true,
     "noImplicitAny": false
   }

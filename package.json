@@ -4,10 +4,10 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsc --watch",
+    "dev": "tsc --watch --incremental",
     "test": "tsc --noEmit && jest",
     "eslint": "eslint src --ext .ts",
-    "dist": "rm -rf dist && tsc && jest"
+    "dist": "tsc && jest"
   },
   "author": "",
   "license": "ISC",
