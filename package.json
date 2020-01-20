@@ -29,7 +29,7 @@
     "@types/estree": "0.0.42",
     "@types/jest": "^24.9.0",
     "@types/lodash-es": "^4.17.3",
-    "@types/node": "^13.1.7",
+    "@types/node": "^13.1.8",
     "@typescript-eslint/eslint-plugin": "^2.16.0",
     "@typescript-eslint/parser": "^2.16.0",
     "babel-jest": "^24.9.0",
