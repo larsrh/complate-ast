@@ -1,18 +1,25 @@
 import * as Structured from "../structured";
 import {Attributes, normalizeAttributes} from "../../jsx/syntax";
 import {mapObject} from "../../util";
+import {defaultTo} from "lodash-es";
+
+export interface CompactingOptions {
+    readonly children?: boolean;
+    readonly attributes?: boolean;
+    readonly trueAttributes?: boolean;
+}
 
 export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
     private readonly doChildren: boolean;
     private readonly doAttributes: boolean;
     private readonly doTrueAttributes: boolean;
 
-    constructor(what?: { children: boolean; attributes: boolean; trueAttributes: boolean }) {
+    constructor(what: CompactingOptions = {}) {
         super((p: P) => p);
 
-        this.doChildren = !what || what.children;
-        this.doAttributes = !what || what.attributes;
-        this.doTrueAttributes = what !== undefined ? what.trueAttributes : false;
+        this.doChildren = defaultTo(what.children, true);
+        this.doAttributes = defaultTo(what.attributes, true);
+        this.doTrueAttributes = defaultTo(what.trueAttributes, false);
     }
 
     element(tag: string, attributes?: Attributes, ...children: Structured.AST<P>[]): Structured.AST<P> {
@@ -22,7 +29,7 @@ export class CompactingBuilder<P> extends Structured.MappingBuilder<P, P> {
             let currentText = "";
             for (const child of children) {
                 if (child.nodeType === "text") {
-                    currentText += (child as Structured.TextNode).text;
+                    currentText += child.text;
                 }
                 else {
                     if (currentText !== "") {

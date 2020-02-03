@@ -3,7 +3,7 @@ import {walk} from "estree-walker";
 import * as ESTree from "estree";
 import * as Operations from "../estree/operations";
 import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
-import {isMacro} from "./syntax";
+import {isMacro, normalizeWhitespace} from "./syntax";
 import jsx from "acorn-jsx";
 import {processAttributes} from "./estreebuilders/util";
 import {ESTreeBuilder} from "./estreebuilder";
@@ -65,7 +65,8 @@ export function preprocess(
             }
             else if (node.type === "JSXText") {
                 const text = node as JSXText;
-                this.replace(builder.text(text.value));
+                // TODO remove when empty after normalization
+                this.replace(builder.text(normalizeWhitespace(text.value)));
             }
         }
     }) as ESTree.Node;
