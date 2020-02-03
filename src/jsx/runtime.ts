@@ -5,11 +5,11 @@ import * as Reify from "../estree/reify";
 
 export class RuntimeModule {
     constructor(
-        private readonly prefix: ESTree.Identifier,
+        private readonly prefix: string,
     ) {}
 
     _member(name: string): ESTree.Expression {
-        return Operations.member(this.prefix, Operations.identifier(name));
+        return Operations.identifier(this.prefix + name);
     }
 
     _call(name: string, ...args: (ESTree.Expression | ESTree.SpreadElement)[]): ESTree.Expression {
@@ -45,7 +45,7 @@ export class RuntimeModule {
     }
 
     builder(kind: string): ESTree.Expression {
-        return this._member(`${kind}Builder`);
+        return Operations.member(this._member(`${kind}Info`), Operations.identifier("builder"));
     }
 
     textBuilder(kind: string): ESTree.Expression {
@@ -60,41 +60,46 @@ export class RuntimeModule {
 export interface RuntimeConfig {
     readonly prefix?: string;
     readonly importPath?: string;
-    readonly es6Import?: boolean;
 }
 
 export const defaultRuntimeConfig = {
-    prefix: "JSXRuntime"
+    prefix: "__JSXRuntime__"
 };
 
-function prefix(config: RuntimeConfig): ESTree.Identifier {
-    return Operations.identifier(config.prefix || defaultRuntimeConfig.prefix);
+function prefixOrDefault(config: RuntimeConfig): string {
+    return config.prefix !== undefined ? config.prefix : defaultRuntimeConfig.prefix;
 }
 
 export function runtimeModuleFromConfig(config: RuntimeConfig = defaultRuntimeConfig): RuntimeModule {
-    return new RuntimeModule(prefix(config));
+    return new RuntimeModule(prefixOrDefault(config));
 }
 
+const runtimeSymbols: string[] = [
+    "normalizeChildren",
+    "escapeHTML",
+    "isVoidElement",
+    "normalizeAttribute",
+    "normalizeAttributes",
+    "renderAttributes",
+    "Fragment",
+    ...["structured", "stream", "raw"].flatMap(kind => [
+        `${kind}Info`,
+        `${kind}Text`
+    ])
+];
+
 export function importStatement(config: RuntimeConfig): ESTree.Statement {
+    const prefix = prefixOrDefault(config);
     const source = Reify.string(config.importPath!);
 
-    if (config.es6Import === true)
-        return {
-            type: "ImportDeclaration",
-            specifiers: [{
-                type: "ImportNamespaceSpecifier",
-                local: prefix(config)
-            }],
-            source: source
-        } as any;
-    else
-        return {
-            type: "VariableDeclaration",
-            kind: "const",
-            declarations: [{
-                type: "VariableDeclarator",
-                id: prefix(config),
-                init: Operations.call(Operations.identifier("require"), source)
-            }]
-        };
+    // FIXME import declaration not yet supported in ESTree?!
+    return {
+        type: "ImportDeclaration",
+        specifiers: runtimeSymbols.map(symbol => ({
+            type: "ImportSpecifier",
+            imported: Operations.identifier(symbol),
+            local: Operations.identifier(prefix + symbol)
+        })),
+        source: source
+    } as any;
 }

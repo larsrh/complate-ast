@@ -3,7 +3,7 @@ import * as ESTree from "estree";
 import * as Structured from "../../ast/structured";
 import {generate} from "astring";
 import {runInNewContext} from "vm";
-import {matrix, requireMock, runtimeConfig} from "../_util";
+import {matrix, runtimeConfig} from "../_util";
 import {force} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
 import {extractAST} from "../../jsx/estreebuilders/util";
@@ -11,11 +11,7 @@ import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
 import {CompactingBuilder} from "../../ast/builders/compact";
 import * as Raw from "../../ast/raw";
-import {runtimeModuleFromConfig} from "../../jsx/runtime";
-import {esTreeBuilderFromConfig} from "../../jsx/estreebuilders/config";
-
-// underscored to test correct scoping (generated code references `JSXRuntime`)
-import * as _JSXRuntime from "../../runtime";
+import * as JSXRuntime from "../../runtime";
 
 // TODO golden tests
 describe("Preprocessing", () => {
@@ -36,7 +32,7 @@ describe("Preprocessing", () => {
                 const input = parse(jsx);
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
-                const sandbox = doStatic ? {} : {JSXRuntime: _JSXRuntime};
+                const sandbox = doStatic ? {} : JSXRuntime;
 
                 it("Equivalence", () => {
                     const result = runInNewContext(generate(processed), sandbox);
@@ -57,7 +53,7 @@ describe("Preprocessing", () => {
         }
 
         function checkRuntimeFailure(name: string, jsx: string, regex: RegExp): void {
-            const sandbox = {JSXRuntime: _JSXRuntime};
+            const sandbox = JSXRuntime;
             it(name, () => {
                 const input = parse(jsx);
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
@@ -289,10 +285,7 @@ describe("Preprocessing", () => {
 
         check(
             "Fragment (explicit)",
-            `(() => {
-                const Fragment = JSXRuntime.Fragment;
-                return <div><Fragment><br /><span /></Fragment></div>;
-            })()`,
+            `<div><Fragment><br /><span /></Fragment></div>`,
             builder.element("div", {},
                 builder.element("br"),
                 builder.element("span"),
@@ -377,7 +370,7 @@ describe("Preprocessing", () => {
             check(
                 "Introspection with children",
                 `(() => {
-                    const Test = (props, child) => JSXRuntime.addItems(child, {}, child, "hi");
+                    const Test = (props, child) => addItems(child, {}, child, "hi");
                     return <Test><div /></Test>;
                 })()`,
                 builder.element(
@@ -391,7 +384,7 @@ describe("Preprocessing", () => {
             check(
                 "Introspection overrides attributes",
                 `(() => {
-                    const Test = (props, child) => JSXRuntime.addItems(child, { class: "bar" });
+                    const Test = (props, child) => addItems(child, { class: "bar" });
                     return <Test><div class="foo" /></Test>;
                 })()`,
                 builder.element("div", { class: "bar" })
@@ -400,7 +393,7 @@ describe("Preprocessing", () => {
             check(
                 "Introspection discards attributes",
                 `(() => {
-                    const Test = (props, child) => JSXRuntime.addItems(child, { class: undefined });
+                    const Test = (props, child) => addItems(child, { class: undefined });
                     return <Test><div class="foo" /></Test>;
                 })()`,
                 builder.element("div")
@@ -409,7 +402,7 @@ describe("Preprocessing", () => {
             check(
                 "Introspection respects true attributes",
                 `(() => {
-                    const Test = (props, child) => JSXRuntime.addItems(child, { disabled: true });
+                    const Test = (props, child) => addItems(child, { disabled: true });
                     return <Test><button /></Test>;
                 })()`,
                 builder.element("button", { disabled: true })
@@ -418,7 +411,7 @@ describe("Preprocessing", () => {
             check(
                 "Introspection with spread attributes",
                 `(() => {
-                    const Test = (props, child) => JSXRuntime.addItems(child, { class: "bar" });
+                    const Test = (props, child) => addItems(child, { class: "bar" });
                     return <Test><div {...{ class: "foo" }} /></Test>;
                 })()`,
                 builder.element("div", { class: "bar" })
@@ -427,7 +420,7 @@ describe("Preprocessing", () => {
             check(
                 "Introspection with spread attributes discards",
                 `(() => {
-                    const Test = (props, child) => JSXRuntime.addItems(child, { class: undefined });
+                    const Test = (props, child) => addItems(child, { class: undefined });
                     return <Test><div {...{ class: "foo" }} /></Test>;
                 })()`,
                 builder.element("div")
@@ -436,7 +429,7 @@ describe("Preprocessing", () => {
             check(
                 "Introspection with spread attributes respects true attrributes",
                 `(() => {
-                    const Test = (props, child) => JSXRuntime.addItems(child, { disabled: true });
+                    const Test = (props, child) => addItems(child, { disabled: true });
                     return <Test><button {...{ disabled: false }} /></Test>;
                 })()`,
                 builder.element("button", { disabled: true })
@@ -447,7 +440,7 @@ describe("Preprocessing", () => {
                 `(() => {
                     function Add({ attrs, chldrn }, ...children) {
                         return children.map(child =>
-                            JSXRuntime.addItems(child, attrs, ...chldrn)
+                            addItems(child, attrs, ...chldrn)
                         );
                     }
                     return <div><Add attrs={ ({ class: "foo" }) } chldrn={ [<span />, "hi"] }><span /><div /></Add></div>;
@@ -462,7 +455,7 @@ describe("Preprocessing", () => {
             checkRuntimeFailure(
                 "Introspection",
                 `(() => {
-                    const Test = (props, child) => JSXRuntime.addItems(child);
+                    const Test = (props, child) => addItems(child);
                     return <Test><div /></Test>;
                 })()`,
                 /does not support/
@@ -491,7 +484,7 @@ describe("Preprocessing", () => {
          */
         it("Roundtrip (Structured → JSX → ESTree → Preprocess → AST)", () => {
             const gen = Gen.defaultAST(Structured.info.builder).filter(ast => ast.nodeType !== "text");
-            const sandbox = esBuilder.canStatic ? {} : {JSXRuntime: _JSXRuntime};
+            const sandbox = esBuilder.canStatic ? {} : JSXRuntime;
 
             fc.assert(fc.property(gen, ast => {
                 const ast1 = Structured.render(
@@ -514,22 +507,6 @@ describe("Preprocessing", () => {
             }));
         });
 
-    });
-
-    it("Automatic import", () => {
-        const mock = requireMock();
-        const runtime = runtimeModuleFromConfig(mock.runtime);
-        const builder = esTreeBuilderFromConfig(runtime, {
-            target: "raw",
-            mode: "simple"
-        });
-        const generated = generate(preprocess(parse(`<span />`), builder, mock.runtime));
-
-        const result = runInNewContext(generated, mock.sandbox);
-
-        expect(result).toEqual({ astKind: "raw", value: "<span></span>" });
-
-        mock.assertMock();
     });
 
 });

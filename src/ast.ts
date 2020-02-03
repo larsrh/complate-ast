@@ -1,18 +1,18 @@
 import * as Base from "./ast/base";
-import * as Structured from "./ast/structured";
-import * as Raw from "./ast/raw";
-import * as Stream from "./ast/stream";
+import {info as structuredInfo, AST as StructuredAST} from "./ast/structured";
+import {info as streamInfo, AST as StreamAST, force as streamForce} from "./ast/stream";
+import {info as rawInfo, AST as RawAST} from "./ast/raw";
 import {Attributes} from "./jsx/syntax";
 import {TextBuilder} from "./ast/_text";
 
 export type Kind = "raw" | "stream" | "structured"
 
-export type AST = Structured.AST | Stream.AST | Raw.AST
+export type AST = StructuredAST | StreamAST | RawAST
 
 export const astInfos: { [key in Kind]: Base.ASTInfo<AST, any> } = {
-    "structured": Structured.info,
-    "stream": Stream.info,
-    "raw": Raw.info
+    "structured": structuredInfo,
+    "stream": streamInfo,
+    "raw": rawInfo
 };
 
 export function isAST(object: any): object is AST {
@@ -53,7 +53,7 @@ export function addItems<AST extends Base.AST>(ast: AST, attributes?: Attributes
 export function force(ast: AST): AST {
     switch (ast.astKind) {
         case "stream":
-            return { astKind: "raw", value: Stream.force(ast) };
+            return { astKind: "raw", value: streamForce(ast) };
         default:
             return ast;
     }

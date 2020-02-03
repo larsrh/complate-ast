@@ -35,6 +35,7 @@
     "babel-jest": "^25.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-import": "^2.20.1",
+    "esm": "^3.2.25",
     "fast-check": "^1.22.1",
     "jest": "^25.1.0",
     "lodash": "^4.17.15",

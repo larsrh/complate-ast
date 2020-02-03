@@ -1,7 +1,7 @@
 /* eslint import/namespace: 0 */
 
 import {complate} from "../../tools/rollup";
-import {projectRoot, requireMock} from "../_util";
+import {projectRoot} from "../_util";
 import jsx from "acorn-jsx";
 import {InputOptions, OutputOptions, rollup} from "rollup";
 import resolve from "@rollup/plugin-node-resolve";
@@ -16,12 +16,25 @@ describe("Rollup", () => {
 
     jest.setTimeout(30000);
 
-    async function test(sandbox: object, options: InputOptions): Promise<void> {
+    it("Rollup plugin", async () => {
+        const root = projectRoot();
+
         const inputFile = tempy.file({ extension: "jsx" });
         await fs.writeFile(inputFile, `<div><span />{ ["text"] }</div>`);
 
-        const inputOptions = {
-            ...options,
+        const inputOptions: InputOptions = {
+            plugins: [
+                complate({
+                    importPath: path.resolve(root, "src", "runtime")
+                }),
+                typescript({
+                    tsconfig: path.resolve(root, "tsconfig.rollup.json")
+                }),
+                resolve({ extensions: [".js", ".ts"] }),
+                commonjs({
+                    include: `${root}/node_modules/**`
+                })
+            ],
             input: inputFile,
             acornInjectPlugins: [jsx()]
         };
@@ -34,9 +47,10 @@ describe("Rollup", () => {
         };
 
         const { output } = await rollupBuild.generate(outputOptions);
+
         expect(output).toHaveLength(1);
 
-        const result = runInNewContext(output[0].code, sandbox);
+        const result = runInNewContext(output[0].code, {});
 
         expect(result).toEqual({
             astKind: "raw",
@@ -44,38 +58,6 @@ describe("Rollup", () => {
         });
 
         await fs.unlink(inputFile);
-    }
-
-    it("Rollup plugin (simple)", async () => {
-        const mock = requireMock();
-
-        await test(mock.sandbox, {
-            plugins: [
-                complate(mock.runtime)
-            ]
-        });
-
-        mock.assertMock();
-    });
-
-    it("Rollup plugin (with resolve)", async () => {
-        const root = projectRoot();
-
-        await test({}, {
-            plugins: [
-                complate({
-                    importPath: path.resolve(root, "src", "runtime"),
-                    es6Import: true
-                }),
-                typescript({
-                    tsconfig: path.resolve(root, "tsconfig.base.json")
-                }),
-                resolve({ extensions: [".js", ".ts"] }),
-                commonjs({
-                    include: `${root}/node_modules/**`
-                })
-            ],
-        });
     });
 
 });
