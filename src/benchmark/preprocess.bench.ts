@@ -4,6 +4,7 @@ import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../jsx/estreebuilder
 import {defaultRuntimeConfig, runtimeModuleFromConfig} from "../jsx/runtime";
 import {generate} from "astring";
 import * as sucrase from "sucrase";
+import * as babel from "@babel/core";
 import {allConfigs} from "../test/_util";
 
 const suite = new Suite();
@@ -34,6 +35,15 @@ suite
         () => {
             sucrase.transform(data, {
                 transforms: ["jsx"]
+            })
+        }
+    )
+    .add(
+        "babel",
+        () => {
+            babel.transform(data, {
+                plugins: ["@babel/plugin-transform-react-jsx"],
+                filename: "bench.jsx"
             })
         }
     )
