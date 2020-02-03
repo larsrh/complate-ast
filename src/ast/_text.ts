@@ -1,12 +1,9 @@
-import * as Base from "./base";
 import * as Structured from "./structured";
 import * as Stream from "./stream";
 import * as Raw from "./raw";
 import {escapeHTML} from "../jsx/syntax";
 
 // optimized builders for plain text nodes
-
-export type TextBuilder<AST extends Base.AST> = (text: string) => AST;
 
 export function structuredText<P>(text: string): Structured.AST<P> {
     return {

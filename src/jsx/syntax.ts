@@ -61,6 +61,25 @@ export function renderAttributes(attrs?: Attributes): string {
     return result;
 }
 
+export type TextBuilder<AST> = (text: string) => AST;
+
+export function normalizeChildren<AST>(textBuilder: TextBuilder<AST>, ...children: any[]): AST[] {
+    const newChildren: AST[] = [];
+    for (const child of children) {
+        if (child === undefined || child === false || child === null)
+            continue;
+
+        if (typeof child === "string")
+            newChildren.push(textBuilder(child));
+        else if (Array.isArray(child))
+            newChildren.push(...normalizeChildren(textBuilder, ...child));
+        else
+            // potential type-unsafety: assuming the correct AST is present here
+            newChildren.push(child)
+    }
+    return newChildren;
+}
+
 // Implementation copied from babel
 // Copyright (c) 2014-present Sebastian McKenzie and other contributors, MIT license
 // <https://github.com/babel/babel/blob/e7961a08a839b0bfe2c5a08f2e1c7e3d436af144/packages/babel-types/src/utils/react/cleanJSXElementLiteralChild.js>

@@ -1,5 +1,4 @@
-export {addItems, normalizeChildren} from "./ast";
-export {escapeHTML, normalizeAttribute, normalizeAttributes, renderAttributes, isVoidElement} from "./jsx/syntax";
+export {escapeHTML, normalizeAttribute, normalizeAttributes, normalizeChildren, renderAttributes, isVoidElement} from "./jsx/syntax";
 
 export {info as structuredInfo} from "./ast/structured";
 export {info as streamInfo} from "./ast/stream";

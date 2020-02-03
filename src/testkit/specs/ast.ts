@@ -4,8 +4,7 @@ import * as Raw from "../../ast/raw";
 import fc, {Arbitrary} from "fast-check";
 import * as Gen from "../gen";
 import {addItems} from "../../ast";
-import {TextBuilder} from "../../ast/_text";
-import {escapeHTML} from "../../jsx/syntax";
+import {TextBuilder, escapeHTML} from "../../jsx/syntax";
 
 const exactBuilder = new Structured.ASTBuilder(false);
 

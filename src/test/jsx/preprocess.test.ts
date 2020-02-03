@@ -4,7 +4,7 @@ import * as Structured from "../../ast/structured";
 import {generate} from "astring";
 import {runInNewContext} from "vm";
 import {matrix, runtimeConfig} from "../_util";
-import {force} from "../../ast";
+import {addItems, force} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
 import {extractAST} from "../../jsx/estreebuilders/util";
 import * as Gen from "../../testkit/gen";
@@ -32,7 +32,7 @@ describe("Preprocessing", () => {
                 const input = parse(jsx);
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
-                const sandbox = doStatic ? {} : JSXRuntime;
+                const sandbox = doStatic ? {} : {...JSXRuntime, addItems};
 
                 it("Equivalence", () => {
                     const result = runInNewContext(generate(processed), sandbox);
@@ -53,7 +53,7 @@ describe("Preprocessing", () => {
         }
 
         function checkRuntimeFailure(name: string, jsx: string, regex: RegExp): void {
-            const sandbox = JSXRuntime;
+            const sandbox = {...JSXRuntime, addItems};
             it(name, () => {
                 const input = parse(jsx);
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;

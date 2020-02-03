@@ -1,9 +1,8 @@
 import * as Base from "./ast/base";
-import {info as structuredInfo, AST as StructuredAST} from "./ast/structured";
-import {info as streamInfo, AST as StreamAST, force as streamForce} from "./ast/stream";
-import {info as rawInfo, AST as RawAST} from "./ast/raw";
-import {Attributes} from "./jsx/syntax";
-import {TextBuilder} from "./ast/_text";
+import {AST as StructuredAST, info as structuredInfo} from "./ast/structured";
+import {AST as StreamAST, force as streamForce, info as streamInfo} from "./ast/stream";
+import {AST as RawAST, info as rawInfo} from "./ast/raw";
+import {Attributes, normalizeChildren} from "./jsx/syntax";
 
 export type Kind = "raw" | "stream" | "structured"
 
@@ -17,23 +16,6 @@ export const astInfos: { [key in Kind]: Base.ASTInfo<AST, any> } = {
 
 export function isAST(object: any): object is AST {
     return object.astKind && object.astKind in astInfos;
-}
-
-export function normalizeChildren(textBuilder: TextBuilder<AST>, ...children: any[]): AST[] {
-    const newChildren: AST[] = [];
-    for (const child of children) {
-        if (child === undefined || child === false || child === null)
-            continue;
-
-        if (typeof child === "string")
-            newChildren.push(textBuilder(child));
-        else if (Array.isArray(child))
-            newChildren.push(...normalizeChildren(textBuilder, ...child));
-        else
-            // potential type-unsafety: assuming the correct AST is present here
-            newChildren.push(child)
-    }
-    return newChildren;
 }
 
 export function addItems<AST extends Base.AST>(ast: AST, attributes?: Attributes, ..._children: any[]): AST {
