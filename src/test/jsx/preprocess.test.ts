@@ -324,12 +324,6 @@ describe("Preprocessing", () => {
             )
         );
 
-        checkRuntimeFailure(
-            "Invalid children",
-            "<div>{ 3 }</div>",
-            /invalid child/i
-        );
-
         checkCompileFailure(
             "Statically non-empty void elements",
             "<br>{null}</br>",

@@ -4,6 +4,8 @@ import * as Raw from "../../ast/raw";
 import fc, {Arbitrary} from "fast-check";
 import * as Gen from "../gen";
 import {addItems} from "../../ast";
+import {TextBuilder} from "../../ast/_text";
+import {escapeHTML} from "../../jsx/syntax";
 
 const exactBuilder = new Structured.ASTBuilder(false);
 
@@ -30,7 +32,8 @@ const renderExamples: Record<string, RenderExample> = {
 export class Spec<AST extends Base.AST, Forced> {
 
     constructor(
-        public readonly info: Base.ASTInfo<AST, Forced>
+        public readonly info: Base.ASTInfo<AST, Forced>,
+        public readonly textBuilder: TextBuilder<AST>
     ) {}
 
     get gen(): Arbitrary<AST> {
@@ -83,6 +86,11 @@ export class Spec<AST extends Base.AST, Forced> {
                 expect(() => this.info.force(_addItems(text, {}, []))).toThrow();
             });
 
+            it("Throws on non-elements (text builder)", () => {
+                const text = this.textBuilder("text");
+                expect(() => this.info.force(_addItems(text, {}, []))).toThrow();
+            });
+
             it("Throws for void elements", () => {
                 const element = this.info.builder.element("br");
                 const text = this.info.builder.text("text");
@@ -126,14 +134,28 @@ export class Spec<AST extends Base.AST, Forced> {
                 }));
             });
 
-            describe("Rendering examples", () => {
+            describe("Optimized text builder", () => {
+                it("Reference", () => {
+                    fc.assert(fc.property(fc.fullUnicodeString(), text => {
+                        expect(this.asString(this.textBuilder(text))).toEqual(escapeHTML(text));
+                    }))
+                });
 
+                it("Equal to builder", () => {
+                    fc.assert(fc.property(fc.fullUnicodeString(), text => {
+                        const target = this.info.force(this.textBuilder(text));
+                        const reference = this.info.force(this.info.builder.text(text));
+                        expect(target).toEqual(reference);
+                    }))
+                })
+            });
+
+            describe("Rendering examples", () => {
                 it.each(Object.keys(renderExamples))(`%s`, key => {
                     const example = renderExamples[key];
                     const target = Structured.render(example.ast, this.info.builder);
                     expect(this.asString(target)).toEqual(example.expected);
                 });
-
             });
 
             it("Disallows dynamic tags", () => {
@@ -162,6 +184,10 @@ export class Spec<AST extends Base.AST, Forced> {
 
 }
 
-export function spec<AST extends Base.AST, Forced>(info: Base.ASTInfo<AST, Forced>, name = "Spec"): void {
-    new Spec(info).all(name);
+export function spec<AST extends Base.AST, Forced>(
+    info: Base.ASTInfo<AST, Forced>,
+    textBuilder: TextBuilder<AST>,
+    name = "Spec"
+): void {
+    new Spec(info, textBuilder).all(name);
 }

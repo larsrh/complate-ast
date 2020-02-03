@@ -4,11 +4,12 @@ import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
 import {CompactingBuilder} from "../../ast/builders/compact";
 import {spec} from "../../testkit/specs/ast";
+import {structuredText} from "../../ast/_text";
 
 describe("Structured AST", () => {
 
-    spec(Structured.info);
-    spec({ ...Structured.info, builder: new Structured.ASTBuilder(false) }, "Spec (exact builder)");
+    spec(Structured.info, structuredText);
+    spec({ ...Structured.info, builder: new Structured.ASTBuilder(false) }, structuredText, "Spec (exact builder)");
 
     const builder = Structured.info.builder;
     const gen = Gen.ast(builder, Gen.attr, fc.integer());

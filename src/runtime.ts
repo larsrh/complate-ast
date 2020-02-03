@@ -9,6 +9,8 @@ export const structuredBuilder = Structured.info.builder;
 export const streamBuilder = Stream.info.builder;
 export const rawBuilder = Raw.info.builder;
 
+export {structuredText, streamText, rawText} from "./ast/_text";
+
 export function Fragment<T>(props: {}, ...children: T[]): T[] {
     return children;
 }

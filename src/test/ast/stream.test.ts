@@ -1,11 +1,12 @@
 import * as Stream from "../../ast/stream";
 import {spec} from "../../testkit/specs/ast";
+import {streamText} from "../../ast/_text";
 
 const builder = Stream.info.builder;
 
 describe("Stream AST", () => {
 
-    spec(Stream.info);
+    spec(Stream.info, streamText);
 
     describe("Cloning", () => {
 
