@@ -5,7 +5,7 @@ import {ESTreeBuilder} from "../jsx/estreebuilder";
 import {RuntimeConfig, runtimeModuleFromConfig} from "../jsx/runtime";
 import path from "path";
 
-const allConfigs: ESTreeBuilderConfig[] = [
+export const allConfigs: ESTreeBuilderConfig[] = [
     { mode: "simple", target: "structured" },
     { mode: "simple", target: "stream" },
     { mode: "simple", target: "raw" },
