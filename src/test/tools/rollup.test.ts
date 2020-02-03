@@ -14,7 +14,7 @@ import commonjs from "@rollup/plugin-commonjs";
 
 describe("Rollup", () => {
 
-    jest.setTimeout(10000);
+    jest.setTimeout(30000);
 
     async function test(sandbox: object, options: InputOptions): Promise<void> {
         const inputFile = tempy.file({ extension: "jsx" });
