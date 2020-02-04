@@ -16,7 +16,7 @@
     "acorn": "^7.1.0",
     "acorn-jsx": "^5.1.0",
     "astring": "^1.4.3",
-    "estree-walker": "^1.0.1",
+    "estree-walker": "^2.0.1",
     "lodash-es": "^4.17.15"
   },
   "devDependencies": {
