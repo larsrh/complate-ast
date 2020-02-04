@@ -12,13 +12,17 @@ import fc from "fast-check";
 import {CompactingBuilder} from "../../ast/builders/compact";
 import * as Raw from "../../ast/raw";
 import * as JSXRuntime from "../../runtime";
+import {esTreeBuilderFromConfig} from "../../jsx/estreebuilders/config";
+import {runtimeModuleFromConfig} from "../../jsx/runtime";
 
 // TODO golden tests
 describe("Preprocessing", () => {
 
-    matrix((config, astBuilder, esBuilder) => {
+    matrix(config => {
 
+        const astBuilder = astInfos(config.target).builder;
         const force = astInfos(config.target).force;
+        const esBuilder = esTreeBuilderFromConfig(runtimeModuleFromConfig(runtimeConfig), config);
 
         function check(name: string, jsx: string, _expected: Structured.AST | string, expectStatic = false): void {
             const doStatic = expectStatic && esBuilder.canStatic;
