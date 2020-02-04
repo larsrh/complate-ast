@@ -1,63 +1,81 @@
 /* eslint import/namespace: 0 */
 
 import {complate} from "../../tools/rollup";
-import {projectRoot} from "../_util";
+import {matrix, projectRoot} from "../_util";
 import jsx from "acorn-jsx";
 import {InputOptions, OutputOptions, rollup} from "rollup";
 import resolve from "@rollup/plugin-node-resolve";
 import * as tempy from "tempy";
 import {promises as fs} from "fs";
 import {runInNewContext} from "vm";
-import typescript from "@rollup/plugin-typescript";
+import sucrase from "@rollup/plugin-sucrase";
 import path from "path";
 import commonjs from "@rollup/plugin-commonjs";
+import {astInfos} from "../../ast";
 
 describe("Rollup", () => {
 
-    jest.setTimeout(30000);
+    jest.setTimeout(10000);
 
-    it("Rollup plugin", async () => {
-        const root = projectRoot();
+    const root = projectRoot();
 
-        const inputFile = tempy.file({ extension: "jsx" });
-        await fs.writeFile(inputFile, `<div><span />{ ["text"] }</div>`);
+    matrix(config => {
 
-        const inputOptions: InputOptions = {
-            plugins: [
-                complate({
-                    importPath: path.resolve(root, "src", "runtime")
-                }),
-                typescript({
-                    tsconfig: path.resolve(root, "tsconfig.rollup.json")
-                }),
-                resolve({ extensions: [".js", ".ts"] }),
-                commonjs({
-                    include: `${root}/node_modules/**`
-                })
-            ],
-            input: inputFile,
-            acornInjectPlugins: [jsx()]
-        };
+        const info = astInfos(config.target);
+        const builder = info.builder;
 
-        const rollupBuild = await rollup(inputOptions);
+        it("Rollup plugin", async () => {
 
-        const outputOptions: OutputOptions = {
-            format: "cjs",
-            sourcemap: false
-        };
+            const inputFile = tempy.file({ extension: "jsx" });
+            await fs.writeFile(inputFile, `resolve(<div><span />{ ["text"] }</div>)`);
 
-        const { output } = await rollupBuild.generate(outputOptions);
+            const inputOptions: InputOptions = {
+                plugins: [
+                    complate(
+                        {
+                            importPath: path.resolve(root, "src", "runtime")
+                        },
+                        config
+                    ),
+                    resolve({ extensions: [".js", ".ts"] }),
+                    sucrase({
+                        exclude: [`${root}/node_modules/**`],
+                        transforms: ["typescript"]
+                    }),
+                    commonjs({
+                        include: `${root}/node_modules/**`
+                    })
+                ],
+                input: inputFile,
+                acornInjectPlugins: [jsx()]
+            };
 
-        expect(output).toHaveLength(1);
+            const rollupBuild = await rollup(inputOptions);
 
-        const result = runInNewContext(output[0].code, {});
+            const outputOptions: OutputOptions = {
+                format: "cjs",
+                sourcemap: false
+            };
 
-        expect(result).toEqual({
-            astKind: "raw",
-            value: "<div><span></span>text</div>"
+            const { output } = await rollupBuild.generate(outputOptions);
+
+            expect(output).toHaveLength(1);
+
+            const result = await new Promise<any>(resolve =>
+                runInNewContext(output[0].code, { resolve })
+            );
+
+            const expected = info.force(
+                builder.element("div", {}, builder.element("span"), builder.text("text"))
+            );
+
+            expect(info.force(result)).toEqual(expected);
+
+            await fs.unlink(inputFile);
         });
 
-        await fs.unlink(inputFile);
+
     });
+
 
 });
