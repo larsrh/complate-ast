@@ -41,9 +41,9 @@ export class ASTBuilder extends Builder<AST, string> {
     }
 }
 
-export const info: Base.ASTInfo<AST> = {
+export const info: () => Base.ASTInfo<AST> = () => ({
     astKind: "raw",
     builder: new ASTBuilder(),
     force: ast => ast,
     asString: ast => ast.value
-};
+});

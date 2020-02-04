@@ -56,17 +56,17 @@ describe("Reify", () => {
     it("any(array)", () => checkReify(fc.array(fc.fullUnicodeString()), Reify.any));
 
     it("any(raw)", () => {
-        const gen = Gen.defaultAST(Raw.info.builder);
+        const gen = Gen.defaultAST(Raw.info().builder);
         checkReify(gen, Reify.any);
     });
 
     it("any(structured)", () => {
-        const gen = Gen.defaultAST(Structured.info.builder);
+        const gen = Gen.defaultAST(Structured.info().builder);
         checkReify(gen, Reify.any);
     });
 
     it("any(structured(raw))", () => {
-        const gen = Gen.ast(new Structured.ASTBuilder(), Gen.attr, Gen.defaultAST(Raw.info.builder));
+        const gen = Gen.ast(new Structured.ASTBuilder(), Gen.attr, Gen.defaultAST(Raw.info().builder));
         checkReify(gen, Reify.any);
     });
 

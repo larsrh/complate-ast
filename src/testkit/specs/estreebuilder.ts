@@ -13,9 +13,7 @@ import {compareHTML} from "../dom";
 import {zipBuilders} from "../../ast/builders/zip";
 import {extractAST} from "../../jsx/estreebuilders/util";
 import {CompactingBuilder} from "../../ast/builders/compact";
-
-// underscored to test correct scoping (generated code references `JSXRuntime`)
-import * as _JSXRuntime from "../../runtime";
+import * as JSXRuntime from "../../runtime";
 
 const exactBuilder = new Structured.ASTBuilder(false);
 const exactGen = Gen.defaultAST(exactBuilder);
@@ -28,7 +26,7 @@ export class Spec<AST extends Base.AST, Forced> {
     ) {}
 
     private evaluate(expr: ESTree.Expression, strict = false): any {
-        const sandbox = strict && this.treeBuilder.canStatic ? {} : { JSXRuntime: _JSXRuntime };
+        const sandbox = strict && this.treeBuilder.canStatic ? {} : JSXRuntime;
         const statement = expressionStatement(expr);
         const js = generate(statement);
         return runInNewContext(js, sandbox);
@@ -40,7 +38,7 @@ export class Spec<AST extends Base.AST, Forced> {
         if (this.info.astKind === "structured" || strict)
             expect(result).toEqual(this.info.force(Structured.render(ast, this.info.builder)));
         else
-            compareHTML(this.info.asString(result), Structured.render(ast, Raw.info.builder).value);
+            compareHTML(this.info.asString(result), Structured.render(ast, Raw.info().builder).value);
     }
 
     all(name: string): void {

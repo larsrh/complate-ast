@@ -55,7 +55,7 @@ export class StaticProcessedChildren implements BaseProcessedChildren {
     }
 
     get staticString(): string {
-        return this.children.map(child => Structured.render(child, Raw.info.builder).value).join("");
+        return this.children.map(child => Structured.render(child, Raw.info().builder).value).join("");
     }
 
     normalized(): ArrayExpr {
@@ -81,7 +81,7 @@ export class DynamicProcessedChildren implements BaseProcessedChildren {
     }
 
     normalized(kind: string, runtime: RuntimeModule): ArrayExpr {
-        return runtime.normalizeChildren(kind, this.raw);
+        return runtime.normalizeChildren(runtime.textBuilder(kind), this.raw);
     }
 }
 

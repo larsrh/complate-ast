@@ -37,7 +37,10 @@ export class SimpleBuilder extends ESTreeBuilder {
             callee,
             ...args,
             attributes.merged,
-            this.runtime.normalizeChildren(this.kind, children)
+            this.runtime.normalizeChildren(
+                Operations.member(this.runtime.builder(this.kind), Operations.identifier("text")),
+                children
+            )
         )
     }
 

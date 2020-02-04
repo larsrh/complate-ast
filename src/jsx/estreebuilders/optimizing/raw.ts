@@ -95,6 +95,6 @@ export class RawFactory implements Factory {
     }
 
     reify(runtime: RuntimeModule, ast: Structured.AST): ESTree.Expression {
-        return Reify.any(Structured.render(ast, Raw.info.builder));
+        return Reify.any(Structured.render(ast, Raw.info().builder));
     }
 }

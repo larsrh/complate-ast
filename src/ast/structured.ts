@@ -80,7 +80,7 @@ export class ASTBuilder<P = never> extends Builder<AST<P>, P> {
     }
 }
 
-export const info: Base.ASTInfo<AST> = {
+export const info: () => Base.ASTInfo<AST> = () => ({
     astKind: "structured",
     builder: new ASTBuilder(),
     introspection: {
@@ -97,8 +97,8 @@ export const info: Base.ASTInfo<AST> = {
         }
     },
     force: t => t,
-    asString: ast => render(ast, Raw.info.builder).value
-};
+    asString: ast => render(ast, Raw.info().builder).value
+});
 
 export class MappingBuilder<P, Q> extends Builder<AST<Q>, P> {
     constructor(

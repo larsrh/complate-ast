@@ -1,81 +1,79 @@
 /* eslint import/namespace: 0 */
 
 import {complate} from "../../tools/rollup";
-import {projectRoot, requireMock} from "../_util";
+import {matrix, projectRoot} from "../_util";
 import jsx from "acorn-jsx";
 import {InputOptions, OutputOptions, rollup} from "rollup";
 import resolve from "@rollup/plugin-node-resolve";
 import * as tempy from "tempy";
 import {promises as fs} from "fs";
 import {runInNewContext} from "vm";
-import typescript from "@rollup/plugin-typescript";
+import sucrase from "@rollup/plugin-sucrase";
 import path from "path";
 import commonjs from "@rollup/plugin-commonjs";
+import {astInfos} from "../../ast";
 
 describe("Rollup", () => {
 
-    jest.setTimeout(30000);
+    jest.setTimeout(10000);
 
-    async function test(sandbox: object, options: InputOptions): Promise<void> {
-        const inputFile = tempy.file({ extension: "jsx" });
-        await fs.writeFile(inputFile, `<div><span />{ ["text"] }</div>`);
+    const root = projectRoot();
 
-        const inputOptions = {
-            ...options,
-            input: inputFile,
-            acornInjectPlugins: [jsx()]
-        };
+    matrix(config => {
 
-        const rollupBuild = await rollup(inputOptions);
+        const info = astInfos(config.target);
+        const builder = info.builder;
 
-        const outputOptions: OutputOptions = {
-            format: "cjs",
-            sourcemap: false
-        };
+        it("Rollup plugin", async () => {
 
-        const { output } = await rollupBuild.generate(outputOptions);
-        expect(output).toHaveLength(1);
+            const inputFile = tempy.file({ extension: "jsx" });
+            await fs.writeFile(inputFile, `resolve(<div><span />{ ["text"] }</div>)`);
 
-        const result = runInNewContext(output[0].code, sandbox);
+            const inputOptions: InputOptions = {
+                plugins: [
+                    complate(
+                        {
+                            importPath: path.resolve(root, "src", "runtime")
+                        },
+                        config
+                    ),
+                    resolve({ extensions: [".js", ".ts"] }),
+                    sucrase({
+                        exclude: [`${root}/node_modules/**`],
+                        transforms: ["typescript"]
+                    }),
+                    commonjs({
+                        include: `${root}/node_modules/**`
+                    })
+                ],
+                input: inputFile,
+                acornInjectPlugins: [jsx()]
+            };
 
-        expect(result).toEqual({
-            astKind: "raw",
-            value: "<div><span></span>text</div>"
+            const rollupBuild = await rollup(inputOptions);
+
+            const outputOptions: OutputOptions = {
+                format: "cjs",
+                sourcemap: false
+            };
+
+            const { output } = await rollupBuild.generate(outputOptions);
+
+            expect(output).toHaveLength(1);
+
+            const result = await new Promise<any>(resolve =>
+                runInNewContext(output[0].code, { resolve })
+            );
+
+            const expected = info.force(
+                builder.element("div", {}, builder.element("span"), builder.text("text"))
+            );
+
+            expect(info.force(result)).toEqual(expected);
+
+            await fs.unlink(inputFile);
         });
 
-        await fs.unlink(inputFile);
-    }
-
-    it("Rollup plugin (simple)", async () => {
-        const mock = requireMock();
-
-        await test(mock.sandbox, {
-            plugins: [
-                complate(mock.runtime)
-            ]
-        });
-
-        mock.assertMock();
-    });
-
-    it("Rollup plugin (with resolve)", async () => {
-        const root = projectRoot();
-
-        await test({}, {
-            plugins: [
-                complate({
-                    importPath: path.resolve(root, "src", "runtime"),
-                    es6Import: true
-                }),
-                typescript({
-                    tsconfig: path.resolve(root, "tsconfig.base.json")
-                }),
-                resolve({ extensions: [".js", ".ts"] }),
-                commonjs({
-                    include: `${root}/node_modules/**`
-                })
-            ],
-        });
     });
 
 });

@@ -2,8 +2,10 @@ coverage
 src
 docs
 dist/test
+dist/benchmark
 dist/testkit # TODO remove later
 dist/scratch.*
+bin
 .idea
 .github
 .gitignore

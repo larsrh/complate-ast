@@ -25,8 +25,9 @@ export const voidElements = new Set([
     "link", "meta", "param", "source", "track", "wbr"
 ]);
 
-export const isVoidElement: (s: string) => boolean =
-    voidElements.has.bind(voidElements);
+export function isVoidElement(s: string): boolean {
+    return voidElements.has(s);
+}
 
 export function normalizeAttribute(value: AttributeValue): string | true | null {
     if (value === true)
@@ -59,6 +60,25 @@ export function renderAttributes(attrs?: Attributes): string {
     }
 
     return result;
+}
+
+export type TextBuilder<AST> = (text: string) => AST;
+
+export function normalizeChildren<AST>(textBuilder: TextBuilder<AST>, ...children: any[]): AST[] {
+    const newChildren: AST[] = [];
+    for (const child of children) {
+        if (child === undefined || child === false || child === null)
+            continue;
+
+        if (typeof child === "string")
+            newChildren.push(textBuilder(child));
+        else if (Array.isArray(child))
+            newChildren.push(...normalizeChildren(textBuilder, ...child));
+        else
+            // potential type-unsafety: assuming the correct AST is present here
+            newChildren.push(child)
+    }
+    return newChildren;
 }
 
 // Implementation copied from babel

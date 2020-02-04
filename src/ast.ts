@@ -1,60 +1,39 @@
 import * as Base from "./ast/base";
-import {flattenDeep} from "lodash-es";
-import * as Structured from "./ast/structured";
-import * as Raw from "./ast/raw";
-import * as Stream from "./ast/stream";
-import {Attributes} from "./jsx/syntax";
+import {AST as StructuredAST, info as structuredInfo} from "./ast/structured";
+import {AST as StreamAST, info as streamInfo} from "./ast/stream";
+import {AST as RawAST, info as rawInfo} from "./ast/raw";
+import {Attributes, normalizeChildren} from "./jsx/syntax";
 
 export type Kind = "raw" | "stream" | "structured"
 
-export type AST = Structured.AST | Stream.AST | Raw.AST
+export const allKinds: Kind[] = ["raw", "stream", "structured"];
 
-export const astInfos: { [key in Kind]: Base.ASTInfo<AST, any> } = {
-    "structured": Structured.info,
-    "stream": Stream.info,
-    "raw": Raw.info
-};
+export type AST = StructuredAST | StreamAST | RawAST
 
-export function isAST(object: any): object is AST {
-    return object.astKind && object.astKind in astInfos;
+export function astInfos(kind: Kind): Base.ASTInfo<AST, any> {
+    switch (kind) {
+        case "structured":
+            return structuredInfo();
+        case "stream":
+            return streamInfo();
+        case "raw":
+            return rawInfo();
+    }
 }
 
-export function normalizeChildren(kind: Kind, ...children: any[]): AST[] {
-    const builder = astInfos[kind].builder;
-    return flattenDeep(children).filter(child =>
-        child !== undefined && child !== false && child !== null
-    ).map(child => {
-        if (typeof child === "string")
-            return builder.text(child);
-
-        if (!isAST(child))
-            throw new Error("Invalid child: Expected AST");
-        if (child.astKind !== kind)
-            throw new Error(`Cannot normalize heterogeneous children: Expected ${kind}, received ${child.astKind}`);
-
-        return child;
-    });
+export function isAST(object: any): object is AST {
+    return object.astKind && allKinds.includes(object.astKind);
 }
 
 export function addItems<AST extends Base.AST>(ast: AST, attributes?: Attributes, ..._children: any[]): AST {
     if (!isAST(ast))
         throw new Error(`Unknown AST kind ${ast.astKind}`);
 
-    const children = normalizeChildren(ast.astKind, ..._children);
-    const info = astInfos[ast.astKind];
+    const info = astInfos(ast.astKind);
+    const children = normalizeChildren(info.builder.text, ..._children);
 
     if (info.introspection)
         return info.introspection.addItems(ast, attributes || {}, children) as any;
     else
         throw new Error(`AST kind ${ast.astKind} does not support introspection`);
-}
-
-// TODO replace
-export function force(ast: AST): AST {
-    switch (ast.astKind) {
-        case "stream":
-            return { astKind: "raw", value: Stream.force(ast) };
-        default:
-            return ast;
-    }
 }

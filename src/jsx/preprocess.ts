@@ -1,4 +1,4 @@
-import {Options, Parser} from "acorn";
+import {Parser} from "acorn";
 import {walk} from "estree-walker";
 import * as ESTree from "estree";
 import * as Operations from "../estree/operations";
@@ -11,8 +11,10 @@ import {importStatement, RuntimeConfig, runtimeModuleFromConfig} from "./runtime
 
 export const acorn = Parser.extend(jsx());
 
-export function parse(js: string, options?: Options): ESTree.BaseNode {
-    return acorn.parse(js, options);
+export function parse(js: string): ESTree.BaseNode {
+    return acorn.parse(js, {
+        sourceType: "module"
+    });
 }
 
 export function preprocess(
