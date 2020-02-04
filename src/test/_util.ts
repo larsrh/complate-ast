@@ -22,7 +22,7 @@ export function matrix(
     action: (config: ESTreeBuilderConfig, astBuilder: Builder<AST>, esBuilder: ESTreeBuilder) => void
 ): void {
     describe.each(allConfigs)(`%o`, config =>
-        action(config, astInfos[config.target].builder, esTreeBuilderFromConfig(runtimeModuleFromConfig(runtimeConfig), config))
+        action(config, astInfos(config.target).builder, esTreeBuilderFromConfig(runtimeModuleFromConfig(runtimeConfig), config))
     );
 }
 

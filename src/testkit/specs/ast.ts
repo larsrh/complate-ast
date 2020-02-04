@@ -107,7 +107,7 @@ export class Spec<AST extends Base.AST, Forced> {
                     const base = _base as Structured.ElementNode<never>;
                     const ast1 = exactBuilder.element(base.tag, {...base.attributes, ...attrs}, ...base.children, ...children);
                     const ast2 = _addItems(make(base), attrs, children.map(make));
-                    expect(this.asString(ast2)).toEqual(Structured.info.asString(ast1));
+                    expect(this.asString(ast2)).toEqual(Structured.info().asString(ast1));
                 }));
             });
 
@@ -128,7 +128,7 @@ export class Spec<AST extends Base.AST, Forced> {
                 const gen = Gen.defaultAST(exactBuilder).filter(ast => ast.nodeType === "element");
                 fc.assert(fc.property(gen, ast => {
                     const target = Structured.render(ast, this.info.builder);
-                    const reference = Structured.render(ast, Raw.info.builder);
+                    const reference = Structured.render(ast, Raw.info().builder);
                     expect(this.asString(target)).toEqual(reference.value);
                 }));
             });

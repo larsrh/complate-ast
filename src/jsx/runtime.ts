@@ -45,7 +45,10 @@ export class RuntimeModule {
     }
 
     builder(kind: string): ESTree.Expression {
-        return Operations.member(this._member(`${kind}Info`), Operations.identifier("builder"));
+        return Operations.member(
+            Operations.call(this._member(`${kind}Info`)),
+            Operations.identifier("builder")
+        );
     }
 
     textBuilder(kind: string): ESTree.Expression {

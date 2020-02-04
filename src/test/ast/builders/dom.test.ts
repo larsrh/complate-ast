@@ -8,7 +8,7 @@ import {compareHTML} from "../../../testkit/dom";
 
 describe("Structured AST roundtrips", () => {
 
-    const builder = Structured.info.builder;
+    const builder = Structured.info().builder;
     const gen = Gen.defaultAST(builder);
 
     describe("DOM rendering", () => {
@@ -29,17 +29,17 @@ describe("Structured AST roundtrips", () => {
         it("Roundtrip property", () => {
             fc.assert(fc.property(gen, ast => {
                 const ast1 = Structured.render(ast, new CompactingBuilder({ trueAttributes: true }));
-                const ast2 = fromDOM(builder, parseHTML(document, Stream.force(Structured.render(ast, Stream.info.builder))));
+                const ast2 = fromDOM(builder, parseHTML(document, Stream.force(Structured.render(ast, Stream.info().builder))));
                 expect(ast2).toEqual(ast1);
             }));
         });
 
         it("Equal after normalization", () => {
             fc.assert(fc.property(gen, ast => {
-                const html1 = Stream.force(Structured.render(ast, Stream.info.builder));
+                const html1 = Stream.force(Structured.render(ast, Stream.info().builder));
                 const html2 = Stream.force(Structured.render(
                     Structured.render(ast, new CompactingBuilder()),
-                    Stream.info.builder
+                    Stream.info().builder
                 ));
                 expect(html2).toEqual(html1);
             }));
@@ -51,7 +51,7 @@ describe("Structured AST roundtrips", () => {
 
         fc.assert(fc.property(gen.filter(ast => ast.nodeType !== "text"), ast => {
             const html2 = (Structured.render(ast, new DOMBuilder(window.document)) as Element).outerHTML;
-            const html1 = Stream.force(Structured.render(ast, Stream.info.builder));
+            const html1 = Stream.force(Structured.render(ast, Stream.info().builder));
             compareHTML(html1, html2);
         }));
 

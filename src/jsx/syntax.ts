@@ -25,8 +25,9 @@ export const voidElements = new Set([
     "link", "meta", "param", "source", "track", "wbr"
 ]);
 
-export const isVoidElement: (s: string) => boolean =
-    voidElements.has.bind(voidElements);
+export function isVoidElement(s: string): boolean {
+    return voidElements.has(s);
+}
 
 export function normalizeAttribute(value: AttributeValue): string | true | null {
     if (value === true)

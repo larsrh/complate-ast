@@ -8,10 +8,10 @@ import {structuredText} from "../../ast/_text";
 
 describe("Structured AST", () => {
 
-    spec(Structured.info, structuredText);
-    spec({ ...Structured.info, builder: new Structured.ASTBuilder(false) }, structuredText, "Spec (exact builder)");
+    spec(Structured.info(), structuredText);
+    spec({ ...Structured.info(), builder: new Structured.ASTBuilder(false) }, structuredText, "Spec (exact builder)");
 
-    const builder = Structured.info.builder;
+    const builder = Structured.info().builder;
     const gen = Gen.ast(builder, Gen.attr, fc.integer());
 
     it("map(identity)", () => {
@@ -37,9 +37,9 @@ describe("Structured AST", () => {
         );
         fc.assert(fc.property(gen, ast => {
             const ast1 = Structured.flatten(ast);
-            const ast2 = Structured.map(ast, inner => Structured.render(inner, Stream.info.builder));
+            const ast2 = Structured.map(ast, inner => Structured.render(inner, Stream.info().builder));
 
-            const result1 = Stream.force(Structured.render(ast1, Stream.info.builder));
+            const result1 = Stream.force(Structured.render(ast1, Stream.info().builder));
             const result2 = Stream.force(Structured.render(ast2, new Stream.ASTBuilder(x => buffer => x.render(buffer))));
 
             expect(result2).toEqual(result1);

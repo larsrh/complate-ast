@@ -4,6 +4,6 @@ import {rawText} from "../../ast/_text";
 
 describe("Raw AST", () => {
 
-    spec(Raw.info, rawText);
+    spec(Raw.info(), rawText);
 
 });

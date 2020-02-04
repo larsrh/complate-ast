@@ -123,7 +123,7 @@ export function force(ast: AST): string {
     return buffer.content;
 }
 
-export const info: Base.ASTInfo<AST, string> = {
+export const info: () => Base.ASTInfo<AST, string> = () => ({
     astKind: "stream",
     builder: new ASTBuilder(assertNever),
     introspection: {
@@ -137,4 +137,4 @@ export const info: Base.ASTInfo<AST, string> = {
     },
     force: force,
     asString: string => string
-};
+});

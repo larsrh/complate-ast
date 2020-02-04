@@ -38,7 +38,7 @@ export class Spec<AST extends Base.AST, Forced> {
         if (this.info.astKind === "structured" || strict)
             expect(result).toEqual(this.info.force(Structured.render(ast, this.info.builder)));
         else
-            compareHTML(this.info.asString(result), Structured.render(ast, Raw.info.builder).value);
+            compareHTML(this.info.asString(result), Structured.render(ast, Raw.info().builder).value);
     }
 
     all(name: string): void {

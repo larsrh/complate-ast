@@ -48,7 +48,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                 !tag.isDynamic
             ) {
                 // checking void rule is done by the builder
-                const ast = Structured.info.builder.element(
+                const ast = Structured.info().builder.element(
                     _tag,
                     attributes.statics,
                     ...children.children
@@ -82,6 +82,6 @@ export class OptimizingBuilder extends ESTreeBuilder {
     }
 
     text(text: string): ESTree.Expression {
-        return this.reified(Structured.info.builder.text(text));
+        return this.reified(Structured.info().builder.text(text));
     }
 }

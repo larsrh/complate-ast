@@ -6,7 +6,7 @@ describe("ESTreeBuilder", () => {
 
     matrix((config, astBuilder, esBuilder) => {
 
-        spec(astInfos[config.target], esBuilder);
+        spec(astInfos(config.target), esBuilder);
 
     });
 

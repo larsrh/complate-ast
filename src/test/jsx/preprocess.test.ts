@@ -4,7 +4,7 @@ import * as Structured from "../../ast/structured";
 import {generate} from "astring";
 import {runInNewContext} from "vm";
 import {matrix, runtimeConfig} from "../_util";
-import {addItems, force} from "../../ast";
+import {addItems, astInfos} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
 import {extractAST} from "../../jsx/estreebuilders/util";
 import * as Gen from "../../testkit/gen";
@@ -17,6 +17,8 @@ import * as JSXRuntime from "../../runtime";
 describe("Preprocessing", () => {
 
     matrix((config, astBuilder, esBuilder) => {
+
+        const force = astInfos(config.target).force;
 
         function check(name: string, jsx: string, _expected: Structured.AST | string, expectStatic = false): void {
             const doStatic = expectStatic && esBuilder.canStatic;
@@ -69,7 +71,7 @@ describe("Preprocessing", () => {
             })
         }
 
-        const builder = Structured.info.builder;
+        const builder = Structured.info().builder;
 
         check(
             "Simple wrapped text",
@@ -483,7 +485,7 @@ describe("Preprocessing", () => {
          *   static(‡) === †
          */
         it("Roundtrip (Structured → JSX → ESTree → Preprocess → AST)", () => {
-            const gen = Gen.defaultAST(Structured.info.builder).filter(ast => ast.nodeType !== "text");
+            const gen = Gen.defaultAST(Structured.info().builder).filter(ast => ast.nodeType !== "text");
             const sandbox = esBuilder.canStatic ? {} : JSXRuntime;
 
             fc.assert(fc.property(gen, ast => {
@@ -492,7 +494,7 @@ describe("Preprocessing", () => {
                     astBuilder
                 );
 
-                const jsx = Structured.render(ast, Raw.info.builder).value;
+                const jsx = Structured.render(ast, Raw.info().builder).value;
                 const input = parse(jsx);
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
