@@ -9,7 +9,7 @@
     "esModuleInterop": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "module": "commonjs",
+    "module": "es6",
     "declaration": true,
     "strict": true,
     "noImplicitAny": false

@@ -74,8 +74,6 @@ describe("Rollup", () => {
             await fs.unlink(inputFile);
         });
 
-
     });
-
 
 });
