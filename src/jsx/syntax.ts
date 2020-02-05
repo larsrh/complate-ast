@@ -62,7 +62,13 @@ export function renderAttributes(attrs?: Attributes): string {
     return result;
 }
 
-export type TextBuilder<AST> = (text: string) => AST;
+export class HTMLString {
+    constructor(
+        readonly content: string
+    ) {}
+}
+
+export type TextBuilder<AST> = (text: string, escape: boolean) => AST;
 
 export function normalizeChildren<AST>(textBuilder: TextBuilder<AST>, ...children: any[]): AST[] {
     const newChildren: AST[] = [];
@@ -71,9 +77,11 @@ export function normalizeChildren<AST>(textBuilder: TextBuilder<AST>, ...childre
             continue;
 
         if (typeof child === "string")
-            newChildren.push(textBuilder(child));
+            newChildren.push(textBuilder(child, true));
         else if (Array.isArray(child))
             newChildren.push(...normalizeChildren(textBuilder, ...child));
+        else if (child instanceof HTMLString)
+            newChildren.push(textBuilder(child.content, false));
         else
             // potential type-unsafety: assuming the correct AST is present here
             newChildren.push(child)

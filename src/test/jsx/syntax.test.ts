@@ -1,12 +1,18 @@
 import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
 import {
+    HTMLString,
     isMacro,
     normalizeAttribute,
     normalizeAttributes,
+    normalizeChildren,
     normalizeWhitespace,
-    renderAttributes
+    renderAttributes,
+    TextBuilder
 } from "../../jsx/syntax";
+import {allKinds, astInfos} from "../../ast";
+import {AST} from "../../ast/base";
+import {rawText, streamText, structuredText} from "../../ast/_text";
 
 describe("JSX/HTML syntax", () => {
 
@@ -72,6 +78,48 @@ describe("JSX/HTML syntax", () => {
        };
        const expected = ` disabled data-bar="&lt;&gt;&quot;" data-test="test"`;
        expect(renderAttributes(attrs)).toEqual(expected);
+   });
+
+   describe("Children normalization", () => {
+
+       describe.each(allKinds)(`%s`, kind => {
+
+           const info = astInfos(kind);
+           let textBuilder: TextBuilder<AST>;
+           switch (kind) {
+               case "structured":
+                   textBuilder = structuredText;
+                   break;
+               case "stream":
+                   textBuilder = streamText;
+                   break;
+               case "raw":
+                   textBuilder = rawText;
+                   break;
+           }
+
+           function norm(...children: any[]): AST[] {
+               return normalizeChildren(textBuilder, ...children);
+           }
+
+           it("Strings are text nodes", () => {
+               fc.assert(fc.property(fc.fullUnicodeString(), string => {
+                   const actual = norm(string).map(ast => info.force(ast));
+                   const expected = [info.force(info.builder.text(string))];
+                   expect(actual).toEqual(expected);
+               }))
+           });
+
+           it("Raw nodes are prerendered nodes", () => {
+               fc.assert(fc.property(fc.fullUnicodeString(), string => {
+                   const actual = norm(new HTMLString(string)).map(ast => info.force(ast));
+                   const expected = [info.force(info.builder.prerendered(string))];
+                   expect(actual).toEqual(expected);
+               }))
+           });
+
+       });
+
    });
 
 });

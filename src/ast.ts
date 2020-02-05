@@ -10,7 +10,7 @@ export const allKinds: Kind[] = ["raw", "stream", "structured"];
 
 export type AST = StructuredAST<string> | StreamAST | RawAST
 
-export function astInfos(kind: Kind): Base.ASTInfo<AST, any> {
+export function astInfos(kind: Kind): Base.ASTInfo<Base.AST, any> {
     switch (kind) {
         case "structured":
             return structuredInfo();

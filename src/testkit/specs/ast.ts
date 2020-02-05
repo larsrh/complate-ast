@@ -85,8 +85,13 @@ export class Spec<AST extends Base.AST, Forced> {
                 expect(() => this.info.force(_addItems(text, {}, []))).toThrow();
             });
 
-            it("Throws on non-elements (text builder)", () => {
-                const text = this.textBuilder("text");
+            it("Throws on non-elements (text builder, escape)", () => {
+                const text = this.textBuilder("text", true);
+                expect(() => this.info.force(_addItems(text, {}, []))).toThrow();
+            });
+
+            it("Throws on non-elements (text builder, no escape)", () => {
+                const text = this.textBuilder("text", false);
                 expect(() => this.info.force(_addItems(text, {}, []))).toThrow();
             });
 
@@ -133,20 +138,36 @@ export class Spec<AST extends Base.AST, Forced> {
                 }));
             });
 
-            describe("Optimized text builder", () => {
+            describe("Optimized text builder (escape)", () => {
                 it("Reference", () => {
                     fc.assert(fc.property(fc.fullUnicodeString(), text => {
-                        expect(this.asString(this.textBuilder(text))).toEqual(escapeHTML(text));
+                        expect(this.asString(this.textBuilder(text, true))).toEqual(escapeHTML(text));
                     }))
                 });
 
                 it("Equal to builder", () => {
                     fc.assert(fc.property(fc.fullUnicodeString(), text => {
-                        const target = this.info.force(this.textBuilder(text));
+                        const target = this.info.force(this.textBuilder(text, true));
                         const reference = this.info.force(this.info.builder.text(text));
                         expect(target).toEqual(reference);
                     }))
-                })
+                });
+            });
+
+            describe("Optimized text builder (no escape)", () => {
+                it("Reference", () => {
+                    fc.assert(fc.property(fc.fullUnicodeString(), text => {
+                        expect(this.asString(this.textBuilder(text, false))).toEqual(text);
+                    }))
+                });
+
+                it("Equal to builder", () => {
+                    fc.assert(fc.property(fc.fullUnicodeString(), text => {
+                        const target = this.info.force(this.textBuilder(text, false));
+                        const reference = this.info.force(this.info.builder.prerendered(text));
+                        expect(target).toEqual(reference);
+                    }))
+                });
             });
 
             describe("Rendering examples", () => {
