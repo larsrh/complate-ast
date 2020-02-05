@@ -2,7 +2,6 @@ import * as Base from "./base";
 import {Attributes, escapeHTML, isVoidElement, renderAttributes} from "../jsx/syntax";
 import {clone} from "lodash-es";
 import {Builder, defaultTagCheck} from "./builder";
-import {assertNever} from "../util";
 
 export interface Buffer {
     write(content: string): void;
@@ -125,7 +124,7 @@ export function force(ast: AST): string {
 
 export const info: () => Base.ASTInfo<AST, string> = () => ({
     astKind: "stream",
-    builder: new ASTBuilder(assertNever),
+    builder: new ASTBuilder(p => buffer => buffer.write(p)),
     introspection: {
         addItems(ast: AST, attributes: Attributes, children: AST[]): AST {
             return _clone(

@@ -11,7 +11,7 @@ export interface Introspection<T extends AST> {
 
 export interface ASTInfo<T extends AST, Forced = T> {
     readonly astKind: string;
-    readonly builder: Builder<T>;
+    readonly builder: Builder<T, string>;
     readonly introspection?: Introspection<T>;
     force(t: T): Forced;
     asString(forced: Forced): string;

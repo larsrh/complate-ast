@@ -80,11 +80,11 @@ export class ASTBuilder<P = never> extends Builder<AST<P>, P> {
     }
 }
 
-export const info: () => Base.ASTInfo<AST> = () => ({
+export const info: () => Base.ASTInfo<AST<string>> = () => ({
     astKind: "structured",
-    builder: new ASTBuilder(),
+    builder: new ASTBuilder<string>(),
     introspection: {
-        addItems(ast: AST, attributes: Attributes, children: AST[]): AST {
+        addItems(ast: AST<string>, attributes: Attributes, children: AST<string>[]): AST<string> {
             switch (ast.nodeType) {
                 case "element": {
                     const newChildren = [...ast.children, ...children];

@@ -75,7 +75,7 @@ describe("Preprocessing", () => {
             })
         }
 
-        const builder = Structured.info().builder;
+        const builder = new Structured.ASTBuilder();
 
         check(
             "Simple wrapped text",

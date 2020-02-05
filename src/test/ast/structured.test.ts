@@ -11,8 +11,7 @@ describe("Structured AST", () => {
     spec(Structured.info(), structuredText);
     spec({ ...Structured.info(), builder: new Structured.ASTBuilder(false) }, structuredText, "Spec (exact builder)");
 
-    const builder = Structured.info().builder;
-    const gen = Gen.ast(builder, Gen.attr, fc.integer());
+    const gen = Gen.ast(new Structured.ASTBuilder<number>(), Gen.attr, fc.integer());
 
     it("map(identity)", () => {
         fc.assert(fc.property(gen, ast => {
@@ -33,7 +32,7 @@ describe("Structured AST", () => {
         const gen = Gen.ast(
             new Structured.ASTBuilder<Structured.AST>(),
             Gen.attr,
-            Gen.defaultAST(builder)
+            Gen.defaultAST(Structured.info().builder)
         );
         fc.assert(fc.property(gen, ast => {
             const ast1 = Structured.flatten(ast);

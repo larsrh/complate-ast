@@ -1,4 +1,4 @@
-import * as Structured from "../../ast/structured";
+import {AST, ASTBuilder} from "../../ast/structured";
 import * as ESTree from "estree";
 import * as Operations from "../../estree/operations";
 import {injectAST, ProcessedAttributes} from "./util";
@@ -9,8 +9,10 @@ import {RuntimeModule} from "../runtime";
 export interface Factory {
     readonly kind: string;
     makeElement(runtime: RuntimeModule, tag: Tag, attributes: ProcessedAttributes, children: ProcessedChildren): ESTree.Expression;
-    reify(runtime: RuntimeModule, ast: Structured.AST): ESTree.Expression;
+    reify(runtime: RuntimeModule, ast: AST): ESTree.Expression;
 }
+
+const builder = new ASTBuilder();
 
 export class OptimizingBuilder extends ESTreeBuilder {
     constructor(
@@ -20,7 +22,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
         super(true);
     }
 
-    private reified(ast: Structured.AST): ESTree.Expression {
+    private reified(ast: AST): ESTree.Expression {
         const node = this.factory.reify(this.runtime, ast);
         injectAST(node, ast);
         return node;
@@ -48,7 +50,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                 !tag.isDynamic
             ) {
                 // checking void rule is done by the builder
-                const ast = Structured.info().builder.element(
+                const ast = builder.element(
                     _tag,
                     attributes.statics,
                     ...children.children
@@ -82,6 +84,6 @@ export class OptimizingBuilder extends ESTreeBuilder {
     }
 
     text(text: string): ESTree.Expression {
-        return this.reified(Structured.info().builder.text(text));
+        return this.reified(builder.text(text));
     }
 }
