@@ -1,21 +1,11 @@
-import {Parser} from "acorn";
 import {walk} from "estree-walker";
 import * as ESTree from "estree";
 import * as Operations from "../estree/operations";
 import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
 import {isMacro, normalizeWhitespace} from "./syntax";
-import jsx from "acorn-jsx";
 import {processAttributes} from "./estreebuilders/util";
 import {ESTreeBuilder} from "./estreebuilder";
 import {importStatement, RuntimeConfig, runtimeModuleFromConfig} from "./runtime";
-
-export const acorn = Parser.extend(jsx());
-
-export function parse(js: string): ESTree.BaseNode {
-    return acorn.parse(js, {
-        sourceType: "module"
-    });
-}
 
 export function preprocess(
     ast: ESTree.BaseNode,

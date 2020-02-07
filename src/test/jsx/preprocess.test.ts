@@ -1,4 +1,4 @@
-import {parse, preprocess} from "../../jsx/preprocess";
+import {preprocess} from "../../jsx/preprocess";
 import * as ESTree from "estree";
 import * as Structured from "../../ast/structured";
 import {generate} from "astring";
@@ -14,6 +14,10 @@ import * as Raw from "../../ast/raw";
 import * as JSXRuntime from "../../runtime";
 import {esTreeBuilderFromConfig} from "../../jsx/estreebuilders/config";
 import {runtimeModuleFromConfig} from "../../jsx/runtime";
+import {Parser} from "acorn";
+import jsx from "acorn-jsx";
+
+const parser = Parser.extend(jsx());
 
 // TODO golden tests
 describe("Preprocessing", () => {
@@ -35,7 +39,7 @@ describe("Preprocessing", () => {
                 expected = Structured.render(_expected, astBuilder);
             }
             describe(name, () => {
-                const input = parse(jsx);
+                const input = parser.parse(jsx);
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
                 const sandbox = doStatic ? {} : {...JSXRuntime, addItems};
@@ -61,7 +65,7 @@ describe("Preprocessing", () => {
         function checkRuntimeFailure(name: string, jsx: string, regex: RegExp): void {
             const sandbox = {...JSXRuntime, addItems};
             it(name, () => {
-                const input = parse(jsx);
+                const input = parser.parse(jsx);
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
                 const generated = generate(processed);
                 expect(() => force(runInNewContext(generated, sandbox))).toThrow(regex);
@@ -70,7 +74,7 @@ describe("Preprocessing", () => {
 
         function checkCompileFailure(name: string, jsx: string, regex: RegExp): void {
             it(name, () => {
-                const input = parse(jsx);
+                const input = parser.parse(jsx);
                 expect(() => preprocess(input, esBuilder, runtimeConfig)).toThrow(regex);
             })
         }
@@ -499,7 +503,7 @@ describe("Preprocessing", () => {
                 );
 
                 const jsx = Structured.render(ast, Raw.info().builder).value;
-                const input = parse(jsx);
+                const input = parser.parse(jsx);
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
                 const ast2 = runInNewContext(generate(processed), sandbox);

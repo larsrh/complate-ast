@@ -1,11 +1,13 @@
 import {Event, Suite} from "benchmark";
-import {parse, preprocess} from "../jsx/preprocess";
+import {preprocess} from "../jsx/preprocess";
 import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../jsx/estreebuilders/config";
 import {defaultRuntimeConfig, runtimeModuleFromConfig} from "../jsx/runtime";
 import {generate} from "astring";
 import * as sucrase from "sucrase";
 import * as babel from "@babel/core";
 import {allConfigs} from "../test/_util";
+import {Parser} from "acorn";
+import jsx from "acorn-jsx";
 
 const suite = new Suite();
 
@@ -22,7 +24,14 @@ function addConfig(config: ESTreeBuilderConfig): void {
         `complate-ast (${config.mode}/${config.target})`,
         () => {
             const esTreeBuilder = esTreeBuilderFromConfig(runtimeModuleFromConfig(defaultRuntimeConfig), config);
-            generate(preprocess(parse(data), esTreeBuilder, defaultRuntimeConfig));
+            const acorn = Parser.extend(jsx());
+            const parsed = acorn.parse(
+                data,
+                {
+                    sourceType: "module"
+                }
+            );
+            generate(preprocess(parsed, esTreeBuilder, defaultRuntimeConfig));
         }
     )
 }
