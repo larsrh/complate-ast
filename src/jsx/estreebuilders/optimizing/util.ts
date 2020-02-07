@@ -81,7 +81,7 @@ export class DynamicProcessedChildren implements BaseProcessedChildren {
     }
 
     normalized(kind: string, runtime: RuntimeModule): ArrayExpr {
-        return runtime.normalizeChildren(runtime.textBuilder(kind), this.raw);
+        return runtime.normalizeChildren(kind, this.raw);
     }
 }
 

@@ -16,10 +16,10 @@ export class RuntimeModule {
         return Operations.call(this._member(name), ...args);
     }
 
-    normalizeChildren(textBuilder: ESTree.Expression, children: ESTree.Expression[]): ArrayExpr {
+    normalizeChildren(kind: string, children: ESTree.Expression[]): ArrayExpr {
         return new ArrayExpr(this._call(
             "normalizeChildren",
-            textBuilder,
+            this._member(`${kind}Text`),
             ...children
         ));
     }
@@ -49,10 +49,6 @@ export class RuntimeModule {
             Operations.call(this._member(`${kind}Info`)),
             Operations.identifier("builder")
         );
-    }
-
-    textBuilder(kind: string): ESTree.Expression {
-        return this._member(`${kind}Text`);
     }
 
     get fragmentMacro(): ESTree.Expression {
