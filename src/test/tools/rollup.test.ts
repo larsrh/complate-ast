@@ -27,7 +27,11 @@ describe("Rollup", () => {
         it("Rollup plugin", async () => {
 
             const inputFile = tempy.file({ extension: "jsx" });
-            await fs.writeFile(inputFile, `resolve(<div><span />{ ["text"] }</div>)`);
+            await fs.writeFile(inputFile, `
+                import {safe} from "${root}/src/lib";
+
+                resolve(<div><span />{ ["text", safe("<" + "br>")] }</div>);
+            `);
 
             const inputOptions: InputOptions = {
                 plugins: [
@@ -66,7 +70,7 @@ describe("Rollup", () => {
             );
 
             const expected = info.force(
-                builder.element("div", {}, builder.element("span"), builder.text("text"))
+                builder.element("div", {}, builder.element("span"), builder.text("text"), builder.prerendered("<br>"))
             );
 
             expect(info.force(result)).toEqual(expected);
