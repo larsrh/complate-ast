@@ -1,13 +1,13 @@
 import * as ESTree from "estree";
-import {extractAST, tagExpression} from "../util";
+import {extractAST, hasAST, tagExpression} from "../util";
 import {isVoidElement, isDynamic, isMacro} from "../../syntax";
 import * as Operations from "../../../estree/operations";
 import * as Reify from "../../../estree/reify";
 import {ArrayExpr} from "../../../estree/expr";
 import * as Structured from "../../../ast/structured";
 import * as Raw from "../../../ast/raw";
-import {every} from "lodash-es";
 import {RuntimeModule} from "../../runtime";
+import {every} from "../../../util";
 
 export class Tag {
     readonly expr: ESTree.Expression;
@@ -88,8 +88,15 @@ export class DynamicProcessedChildren implements BaseProcessedChildren {
 export type ProcessedChildren = StaticProcessedChildren | DynamicProcessedChildren
 
 export function processChildren(children: ESTree.Expression[]): ProcessedChildren {
-    if (every(children, '_staticAST'))
-        return StaticProcessedChildren.fromExpressions(children);
+    const maybeStatic = every(children, child => {
+        if (hasAST(child))
+            return child;
+        else
+            return false;
+    });
+    if (maybeStatic !== false)
+        // FIXME maybeStatic has more precise type -- fix fromExpressions
+        return StaticProcessedChildren.fromExpressions(maybeStatic);
     else
         return new DynamicProcessedChildren(children);
 }
