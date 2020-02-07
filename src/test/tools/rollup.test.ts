@@ -1,6 +1,6 @@
 /* eslint import/namespace: 0 */
 
-import {complate} from "../../tools/rollup";
+import complate from "../../tools/rollup";
 import {matrix, projectRoot} from "../_util";
 import jsx from "acorn-jsx";
 import {InputOptions, OutputOptions, rollup} from "rollup";
@@ -28,7 +28,7 @@ describe("Rollup", () => {
 
             const inputFile = tempy.file({ extension: "jsx" });
             await fs.writeFile(inputFile, `
-                import {safe} from "${root}/src/lib";
+                import {safe} from "${root}/src/index";
 
                 resolve(<div><span />{ ["text", safe("<" + "br>")] }</div>);
             `);

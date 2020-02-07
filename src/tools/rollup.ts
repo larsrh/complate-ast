@@ -4,14 +4,14 @@ import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../jsx/estreebuilder
 import {generate} from "astring";
 import {RuntimeConfig, runtimeModuleFromConfig} from "../jsx/runtime";
 
-export const defaultESTreeConfig: ESTreeBuilderConfig = {
+const defaultESTreeConfig: ESTreeBuilderConfig = {
     target: "raw",
     mode: "optimizing"
 };
 
-export const defaultRuntimeConfig: RuntimeConfig = {};
+const defaultRuntimeConfig: RuntimeConfig = {};
 
-export function complate(
+export default function complate(
     runtimeConfig: RuntimeConfig = defaultRuntimeConfig,
     esTreeConfig: ESTreeBuilderConfig = defaultESTreeConfig
 ): Plugin {

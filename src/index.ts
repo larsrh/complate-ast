@@ -1,3 +1,9 @@
-import {complate} from "./tools/rollup";
+export {Fragment} from "./runtime";
 
-export const rollupPlugin = complate;
+import {HTMLString} from "./jsx/syntax";
+
+export function safe(content: string): HTMLString {
+    return new HTMLString(content);
+}
+
+export {addItems} from "./ast";

@@ -5,7 +5,7 @@ import {InputOptions, Plugin, OutputOptions, rollup} from "rollup";
 import * as tempy from "tempy";
 import {promises as fs} from "fs";
 import jsx from "acorn-jsx";
-import {complate} from "../tools/rollup";
+import complate from "../tools/rollup";
 import path from "path";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
