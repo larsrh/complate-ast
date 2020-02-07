@@ -3,7 +3,7 @@ import {Attributes, isDynamic, normalizeAttribute, normalizeAttributes, renderAt
 import * as Operations from "../../estree/operations";
 import * as Reify from "../../estree/reify";
 import {every, mapObject} from "../../util";
-import {JSXAttribute, JSXSimpleAttribute} from "../../estree/jsx";
+import {JSXAttribute} from "../../estree/jsx";
 import * as Structured from "../../ast/structured";
 
 export function tagExpression(tag: string): ESTree.Expression {
