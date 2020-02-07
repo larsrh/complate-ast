@@ -6,7 +6,6 @@ import {
     normalizeAttribute,
     normalizeAttributes,
     normalizeChildren,
-    normalizeWhitespace,
     renderAttributes,
     TextBuilder
 } from "../../jsx/syntax";
@@ -51,20 +50,6 @@ describe("JSX/HTML syntax", () => {
            expect(normalizeAttribute(10 as any)).toEqual("10");
        });
 
-   });
-
-   describe("Whitespace normalization", () => {
-       // <https://reactjs.org/docs/jsx-in-depth.html#string-literals-1>
-       const whitespaceExamples: Record<string, string> = {
-           none: "Hello World",
-           simple: "\n  Hello World\n",
-           inner: "\n  Hello\n  World\n",
-           extra: "\n\n  Hello World\n"
-       };
-
-       it.each(Object.keys(whitespaceExamples))(`%s`, key => {
-           expect(normalizeWhitespace(whitespaceExamples[key])).toEqual("Hello World");
-       });
    });
 
    it("Attribute rendering", () => {

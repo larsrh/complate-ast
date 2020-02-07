@@ -1,4 +1,4 @@
-import {preprocess} from "../../jsx/preprocess";
+import {normalizeWhitespace, preprocess} from "../../jsx/preprocess";
 import * as ESTree from "estree";
 import * as Structured from "../../ast/structured";
 import {generate} from "astring";
@@ -21,6 +21,20 @@ const parser = Parser.extend(jsx());
 
 // TODO golden tests
 describe("Preprocessing", () => {
+
+    describe("Whitespace normalization", () => {
+        // <https://reactjs.org/docs/jsx-in-depth.html#string-literals-1>
+        const whitespaceExamples: Record<string, string> = {
+            none: "Hello World",
+            simple: "\n  Hello World\n",
+            inner: "\n  Hello\n  World\n",
+            extra: "\n\n  Hello World\n"
+        };
+
+        it.each(Object.keys(whitespaceExamples))(`%s`, key => {
+            expect(normalizeWhitespace(whitespaceExamples[key])).toEqual("Hello World");
+        });
+    });
 
     matrix(config => {
 

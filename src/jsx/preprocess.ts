@@ -2,10 +2,58 @@ import {walk} from "estree-walker";
 import * as ESTree from "estree";
 import * as Operations from "../estree/operations";
 import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
-import {isMacro, normalizeWhitespace} from "./syntax";
+import {isMacro} from "./syntax";
 import {processAttributes} from "./estreebuilders/util";
 import {ESTreeBuilder} from "./estreebuilder";
 import {importStatement, RuntimeConfig, runtimeModuleFromConfig} from "./runtime";
+
+// Implementation copied from babel
+// Copyright (c) 2014-present Sebastian McKenzie and other contributors, MIT license
+// <https://github.com/babel/babel/blob/e7961a08a839b0bfe2c5a08f2e1c7e3d436af144/packages/babel-types/src/utils/react/cleanJSXElementLiteralChild.js>
+export function normalizeWhitespace(text: string): string {
+    const lines = text.split(/\r\n|\n|\r/);
+
+    let lastNonEmptyLine = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].match(/[^ \t]/)) {
+            lastNonEmptyLine = i;
+        }
+    }
+
+    let str = "";
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        const isFirstLine = i === 0;
+        const isLastLine = i === lines.length - 1;
+        const isLastNonEmptyLine = i === lastNonEmptyLine;
+
+        // replace rendered whitespace tabs with spaces
+        let trimmedLine = line.replace(/\t/g, " ");
+
+        // trim whitespace touching a newline
+        if (!isFirstLine) {
+            trimmedLine = trimmedLine.replace(/^[ ]+/, "");
+        }
+
+        // trim whitespace touching an endline
+        if (!isLastLine) {
+            trimmedLine = trimmedLine.replace(/[ ]+$/, "");
+        }
+
+        if (trimmedLine) {
+            if (!isLastNonEmptyLine) {
+                trimmedLine += " ";
+            }
+
+            str += trimmedLine;
+        }
+    }
+
+    return str;
+}
 
 export function preprocess(
     ast: ESTree.BaseNode,
