@@ -1,4 +1,4 @@
-import {filterObject, mapObject} from "../util";
+import {filterObject, isPromise, mapObject} from "../util";
 
 export type Attributes<AV = AttributeValue> = Record<string, AV>;
 export type AttributeValue = string | boolean | null | undefined;
@@ -69,24 +69,59 @@ export class HTMLString {
 }
 
 export type TextBuilder<AST> = (text: string, escape: boolean) => AST;
+type MaybePromise<T> = T | Promise<T>;
+
+function _normalizeChildren<AST>(textBuilder: TextBuilder<AST>, async: boolean, children: unknown[]): MaybePromise<AST[]> {
+    function one(child: unknown): MaybePromise<AST[]> {
+        if (child === undefined || child === false || child === null)
+            return [];
+        if (typeof child === "string")
+            return [textBuilder(child, true)];
+        if (child instanceof HTMLString)
+            return [textBuilder(child.content, false)];
+        if (Array.isArray(child))
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            return many(child);
+        if (isPromise(child) && async)
+            return child.then(value => one(value));
+        if (isPromise(child))
+            throw new Error("Unexpected promise");
+
+        // now we assume that the child is an appropriate AST
+        return [child as AST];
+    }
+
+    function many(children: unknown[]): MaybePromise<AST[]> {
+        const processed = children.map(one);
+        const newChildren: AST[] = [];
+        for (let i = 0; i < processed.length; ++i) {
+            const items = processed[i];
+            if (Array.isArray(items))
+                newChildren.push(...items);
+            else if (async)
+                return (async () => {
+                    const rest = await Promise.all(processed.slice(i + 1));
+                    return [
+                        ...newChildren,
+                        ...await items,
+                        ...rest.flat(1)
+                    ]
+                })();
+            else
+                throw new Error("Unexpected promise");
+        }
+        return newChildren;
+    }
+
+    return many(children);
+}
 
 export function normalizeChildren<AST>(textBuilder: TextBuilder<AST>, ...children: any[]): AST[] {
-    const newChildren: AST[] = [];
-    for (const child of children) {
-        if (child === undefined || child === false || child === null)
-            continue;
+    return _normalizeChildren(textBuilder, false, children) as AST[];
+}
 
-        if (typeof child === "string")
-            newChildren.push(textBuilder(child, true));
-        else if (Array.isArray(child))
-            newChildren.push(...normalizeChildren(textBuilder, ...child));
-        else if (child instanceof HTMLString)
-            newChildren.push(textBuilder(child.content, false));
-        else
-            // potential type-unsafety: assuming the correct AST is present here
-            newChildren.push(child)
-    }
-    return newChildren;
+export function normalizeChildrenAsync<AST>(textBuilder: TextBuilder<AST>, ...children: any[]): Promise<AST[]> {
+    return Promise.resolve().then(() => normalizeChildren(textBuilder, true, children));
 }
 
 // Implementation copied from babel

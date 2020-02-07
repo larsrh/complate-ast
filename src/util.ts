@@ -12,3 +12,7 @@ export function filterObject<V>(object: Record<string, V | null>): Record<string
             newObject[key] = value;
     return newObject;
 }
+
+export function isPromise(object: any): object is Promise<unknown> {
+    return typeof object.then === "function";
+}
