@@ -2,7 +2,7 @@ import {walk} from "estree-walker";
 import * as ESTree from "estree";
 import * as Operations from "../estree/operations";
 import * as Reify from "../estree/reify";
-import {JSXAttribute, JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
+import {JSXAttribute, JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "estree-jsx";
 import {isMacro} from "./syntax";
 import {processAttributes} from "./estreebuilders/util";
 import {ESTreeBuilder} from "./estreebuilder";

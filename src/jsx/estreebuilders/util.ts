@@ -3,7 +3,7 @@ import {Attributes, isDynamic, normalizeAttribute, normalizeAttributes, renderAt
 import * as Operations from "../../estree/operations";
 import * as Reify from "../../estree/reify";
 import {every, mapObject} from "../../util";
-import {JSXAttribute} from "../../estree/jsx";
+import {JSXAttribute} from "estree-jsx";
 
 export function tagExpression(tag: string): ESTree.Expression {
     if (isDynamic(tag))
