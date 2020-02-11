@@ -1,5 +1,5 @@
 import * as ESTree from "estree";
-import {extractAST, hasAST, tagExpression} from "../util";
+import {tagExpression} from "../util";
 import {isVoidElement, isDynamic, isMacro} from "../../syntax";
 import * as Operations from "../../../estree/operations";
 import * as Reify from "../../../estree/reify";
@@ -7,7 +7,23 @@ import {ArrayExpr} from "../../../estree/expr";
 import * as Structured from "../../../ast/structured";
 import * as Raw from "../../../ast/raw";
 import {RuntimeModule} from "../../runtime";
-import {every} from "../../../util";
+import {AST} from "../../../ast/structured";
+
+// TODO use hygiene?
+export class Gensym {
+    private counter: bigint;
+
+    constructor(
+        readonly prefix: string
+    ) {
+        this.counter = BigInt(0);
+    }
+
+    sym(): ESTree.Identifier {
+        this.counter += BigInt(1);
+        return Operations.identifier(this.prefix + this.counter);
+    }
+}
 
 export class Tag {
     readonly expr: ESTree.Expression;
@@ -44,6 +60,10 @@ export interface BaseProcessedChildren {
     normalized(kind: string, runtime: RuntimeModule): ArrayExpr;
 }
 
+export interface RichNode extends ESTree.BaseNode {
+    _staticAST: AST;
+}
+
 export class StaticProcessedChildren implements BaseProcessedChildren {
     readonly isStatic: true = true;
     readonly isEmpty: boolean;
@@ -66,8 +86,8 @@ export class StaticProcessedChildren implements BaseProcessedChildren {
         return new StaticProcessedChildren(children, children.map(Reify.any));
     }
 
-    static fromExpressions(raw: ESTree.Expression[]): StaticProcessedChildren {
-        return new StaticProcessedChildren(raw.map(child => extractAST(child as ESTree.BaseNode)!), raw);
+    static fromExpressions(raw: (ESTree.Expression & RichNode)[]): StaticProcessedChildren {
+        return new StaticProcessedChildren(raw.map(child => child._staticAST), raw);
     }
 }
 
@@ -86,17 +106,3 @@ export class DynamicProcessedChildren implements BaseProcessedChildren {
 }
 
 export type ProcessedChildren = StaticProcessedChildren | DynamicProcessedChildren
-
-export function processChildren(children: ESTree.Expression[]): ProcessedChildren {
-    const maybeStatic = every(children, child => {
-        if (hasAST(child))
-            return child;
-        else
-            return false;
-    });
-    if (maybeStatic !== false)
-        // FIXME maybeStatic has more precise type -- fix fromExpressions
-        return StaticProcessedChildren.fromExpressions(maybeStatic);
-    else
-        return new DynamicProcessedChildren(children);
-}

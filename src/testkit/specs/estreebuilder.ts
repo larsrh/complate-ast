@@ -11,7 +11,6 @@ import * as Structured from "../../ast/structured";
 import * as Raw from "../../ast/raw";
 import {compareHTML} from "../dom";
 import {zipBuilders} from "../../ast/builders/zip";
-import {extractAST} from "../../jsx/estreebuilders/util";
 import {CompactingBuilder} from "../../ast/builders/compact";
 import * as JSXRuntime from "../../runtime";
 
@@ -64,13 +63,12 @@ export class Spec<AST extends Base.AST, Forced> {
                     const expr = Structured.render(ast, this.treeBuilder);
                     this.checkEvaluation(ast, expr, true);
                     if (this.treeBuilder.canStatic) {
-                        const extracted = extractAST(expr);
                         const normalized = Structured.render(ast, new CompactingBuilder({
                             children: false,
                             attributes: true,
                             trueAttributes: false
                         }));
-                        expect(extracted).toEqual(normalized);
+                        expect(expr).toHaveProperty("_staticAST", normalized);
                     }
                 }));
             });

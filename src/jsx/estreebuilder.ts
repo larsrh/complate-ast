@@ -10,11 +10,7 @@ export abstract class ESTreeBuilder implements BaseBuilder<ESTree.Expression, ES
         readonly canStatic: boolean
     ) {}
 
-    abstract elementOrMacro(
-        tag: string | ESTree.Expression,
-        attributes: ProcessedAttributes,
-        children: ESTree.Expression[]
-    ): ESTree.Expression;
+    abstract jsxElement(tag: string, attributes: ProcessedAttributes, children: ESTree.Expression[]): ESTree.Expression;
 
     abstract text(text: string): ESTree.Expression;
 
@@ -31,7 +27,7 @@ export abstract class ESTreeBuilder implements BaseBuilder<ESTree.Expression, ES
         attributes?: Attributes<ESTree.Expression>,
         ...children: ESTree.Expression[]
     ): ESTree.Expression {
-        return this.elementOrMacro(
+        return this.jsxElement(
             tag,
             NoSpreadProcessedAttributes.fromExpressions(attributes || {}),
             children

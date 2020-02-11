@@ -10,6 +10,15 @@ const alphabetic =
         20
     ).map(array => array.join(""));
 
+export const safeUnicodeString: Arbitrary<string> = fc.stringOf(
+    fc.oneof(
+        fc.fullUnicode().filter(c =>
+            c.charCodeAt(0) > 32 || c == ' ' || c == '\n'
+        ),
+        fc.char()
+    )
+);
+
 export const attr: Arbitrary<AttributeValue> = fc.oneof<AttributeValue>(
     fc.fullUnicodeString(),
     fc.boolean(),
@@ -49,14 +58,12 @@ export function ast<A, P, AV>(
                 )
             ),
         text:
-            fc.fullUnicodeString()
+            safeUnicodeString
                 .filter(text =>
                     text.trim() !== "" &&
                         // required for preprocess_roundtrip: strings containing { or } produce JSX parse errors
                         !text.includes('{') &&
-                        !text.includes('}') &&
-                        // no NUL bytes
-                        !text.includes('\u0000')
+                        !text.includes('}')
                 )
                 .map(text => builder.text(text)),
         prerendered:

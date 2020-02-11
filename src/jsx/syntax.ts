@@ -82,6 +82,8 @@ export function normalizeChildren<AST>(textBuilder: TextBuilder<AST>, ...childre
             newChildren.push(...normalizeChildren(textBuilder, ...child));
         else if (child instanceof HTMLString)
             newChildren.push(textBuilder(child.content, false));
+        else if (typeof child !== "object" || !child.astKind)
+            newChildren.push(textBuilder(child.toString(), true));
         else
             // potential type-unsafety: assuming the correct AST is present here
             newChildren.push(child)
