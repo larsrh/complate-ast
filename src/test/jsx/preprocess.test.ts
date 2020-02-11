@@ -6,7 +6,6 @@ import {runInNewContext} from "vm";
 import {matrix, runtimeConfig} from "../_util";
 import {addItems, astInfos} from "../../ast";
 import {fromDOM, parseHTML} from "../../ast/builders/dom";
-import {extractAST} from "../../jsx/estreebuilders/util";
 import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
 import {CompactingBuilder} from "../../ast/builders/compact";
@@ -16,6 +15,7 @@ import {esTreeBuilderFromConfig} from "../../jsx/estreebuilders/config";
 import {runtimeModuleFromConfig} from "../../jsx/runtime";
 import {Parser} from "acorn";
 import jsx from "acorn-jsx";
+import {safe} from "../../index";
 
 const parser = Parser.extend(jsx());
 
@@ -67,11 +67,10 @@ describe("Preprocessing", () => {
 
                 it(name, () => {
                     const inner = (processed.body[0] as ESTree.ExpressionStatement).expression;
-                    const extracted = extractAST(inner);
                     if (doStatic)
-                        expect(extracted).toEqual(_expected);
+                        expect(inner).toHaveProperty("_staticAST", _expected);
                     else
-                        expect(extracted).toBeNull();
+                        expect(inner).not.toHaveProperty("_staticAST");
                 });
             });
         }
@@ -195,7 +194,8 @@ describe("Preprocessing", () => {
                 builder.text("a"),
                 builder.element("br"),
                 builder.element("span")
-            )
+            ),
+            true
         );
 
         check(
@@ -340,6 +340,82 @@ describe("Preprocessing", () => {
                 builder.text("abc")
             )
         );
+
+        it("Macro children and props", () => {
+            const expected = astBuilder.element("div", {},
+                astBuilder.prerendered("<br>"),
+                astBuilder.text("true"),
+                astBuilder.text("<"),
+                astBuilder.text("testc"),
+                astBuilder.text("testd"),
+                astBuilder.text("testb"),
+                astBuilder.text("testa"),
+                astBuilder.element("span")
+            );
+
+            const input = parser.parse(`
+                <div>
+                    <Macro1>
+                        <Macro2
+                            test1="a" test2={ 3 } test3={ null } test4={ false } test5={ true }
+                            {...{ test6: "b", test7: null, test8: false }} test8="c" test9={ '"' }>
+                            <span />
+                            testa
+                            { "testb" }
+                            { ["testc", "testd"] }
+                            { [null, false, true, undefined, "<" ] }
+                            { safe("<br>") }
+                        </Macro2>
+                    </Macro1>
+                </div>
+            `);
+
+            const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
+
+            const macro1 = jest.fn((props: object, ...children: any[]) => children);
+            const macro2 = jest.fn((props: object, ...children: any[]) => children.reverse());
+
+            const sandbox = {...JSXRuntime, safe, Macro1: macro1, Macro2: macro2};
+
+            const result = runInNewContext(generate(processed), sandbox);
+
+            expect(force(result)).toEqual(force(expected));
+
+            expect(macro1).toHaveBeenCalledTimes(1);
+            expect(macro2).toHaveBeenCalledTimes(1);
+
+            const macro1Call = macro1.mock.calls[0];
+            expect(macro1Call[0]).toEqual({});
+            expect(macro1Call[1].slice(0, 5)).toEqual([
+                safe("<br>"),
+                [null, false, true, undefined, "<"],
+                ["testc", "testd"],
+                "testb",
+                "testa"
+            ]);
+            expect(force(macro1Call[1][5])).toEqual(force(astBuilder.element("span")));
+
+            const macro2Call = macro2.mock.calls[0];
+            expect(macro2Call[0]).toEqual({
+                test1: "a",
+                test2: 3,
+                test3: null,
+                test4: false,
+                test5: true,
+                test6: "b",
+                test7: null,
+                test8: "c",
+                test9: '"'
+            });
+            expect(force(macro2Call[1])).toEqual(force(astBuilder.element("span")));
+            expect(macro2Call.slice(2)).toEqual([
+                "testa",
+                "testb",
+                ["testc", "testd"],
+                [null, false, true, undefined, "<"],
+                safe("<br>")
+            ]);
+        });
 
         checkCompileFailure(
             "Statically non-empty void elements",
@@ -525,8 +601,7 @@ describe("Preprocessing", () => {
 
                 if (esBuilder.canStatic) {
                     const inner = (processed.body[0] as ESTree.ExpressionStatement).expression;
-                    const extracted = extractAST(inner);
-                    expect(extracted).toEqual(Structured.render(ast, new CompactingBuilder()));
+                    expect(inner).toHaveProperty("_staticAST", Structured.render(ast, new CompactingBuilder()));
                 }
             }));
         });

@@ -1,7 +1,8 @@
 import {walk} from "estree-walker";
 import * as ESTree from "estree";
 import * as Operations from "../estree/operations";
-import {JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
+import * as Reify from "../estree/reify";
+import {JSXAttribute, JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "../estree/jsx";
 import {isMacro} from "./syntax";
 import {processAttributes} from "./estreebuilders/util";
 import {ESTreeBuilder} from "./estreebuilder";
@@ -55,6 +56,34 @@ export function normalizeWhitespace(text: string): string {
     return str;
 }
 
+function macro(expr: ESTree.Expression, attributes: JSXAttribute[], children: ESTree.Expression[]): ESTree.Expression {
+    // TODO duplicated code with processAttributes
+    const props: (ESTree.Property | ESTree.SpreadElement)[] = attributes.map(attr => {
+        switch (attr.type) {
+            case "JSXAttribute": {
+                const key = Operations.identifier(attr.name.name);
+                const value = (attr.value as ESTree.Expression | null) || Reify.boolean(true);
+                return {
+                    type: "Property",
+                    method: false,
+                    shorthand: false,
+                    computed: false,
+                    key: key,
+                    value: value,
+                    kind: "init"
+                }
+            }
+            case "JSXSpreadAttribute":
+                return {
+                    type: "SpreadElement",
+                    argument: attr.argument as ESTree.Expression
+                };
+        }
+    });
+
+    return Operations.call(expr, Operations.object(...props), ...children);
+}
+
 export function preprocess(
     ast: ESTree.BaseNode,
     builder: ESTreeBuilder,
@@ -83,11 +112,12 @@ export function preprocess(
                 const tag = element.openingElement.name.name;
                 const attributes = element.openingElement.attributes;
                 const children = element.children as ESTree.Expression[];
-                const replacement = builder.elementOrMacro(
-                    isMacro(tag) ? Operations.identifier(tag) : tag,
-                    processAttributes(attributes),
-                    children
-                );
+
+                let replacement: ESTree.Expression;
+                if (isMacro(tag))
+                    replacement = macro(Operations.identifier(tag), attributes, children);
+                else
+                    replacement = builder.jsxElement(tag, processAttributes(attributes), children);
                 this.replace(replacement);
             }
             else if (node.type === "JSXExpressionContainer") {
@@ -97,11 +127,7 @@ export function preprocess(
             else if (node.type === "JSXFragment") {
                 const fragment = node as JSXFragment;
                 const children = fragment.children as ESTree.Expression[];
-                this.replace(builder.elementOrMacro(
-                    runtime.fragmentMacro,
-                    processAttributes([]),
-                    children
-                ));
+                this.replace(macro(runtime.fragmentMacro, [], children));
             }
             else if (node.type === "JSXText") {
                 const text = node as JSXText;
@@ -109,7 +135,7 @@ export function preprocess(
                 if (normalized === "")
                     this.remove();
                 else
-                    this.replace(builder.text(normalized));
+                    this.replace(Reify.string(normalized));
             }
         }
     }) as ESTree.Node;
