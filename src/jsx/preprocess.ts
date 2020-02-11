@@ -105,8 +105,11 @@ export function preprocess(
             }
             else if (node.type === "JSXText") {
                 const text = node as JSXText;
-                // TODO remove when empty after normalization
-                this.replace(builder.text(normalizeWhitespace(text.value)));
+                const normalized = normalizeWhitespace(text.value);
+                if (normalized === "")
+                    this.remove();
+                else
+                    this.replace(builder.text(normalized));
             }
         }
     }) as ESTree.Node;
