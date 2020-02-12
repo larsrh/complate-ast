@@ -1,6 +1,6 @@
 import {Expr} from "../estree/expr";
 import fc, {Arbitrary} from "fast-check";
-import * as Reify from "../estree/reify";
+import * as Reify from "reify-to-estree";
 import * as Operations from "../estree/operations";
 import {AttributeValue} from "../jsx/syntax";
 

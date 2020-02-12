@@ -1,7 +1,7 @@
 import * as ESTree from "estree";
 import * as Operations from "../estree/operations";
 import {ArrayExpr} from "../estree/expr";
-import * as Reify from "../estree/reify";
+import * as Reify from "reify-to-estree";
 
 export class RuntimeModule {
     constructor(

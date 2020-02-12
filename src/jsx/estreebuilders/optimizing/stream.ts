@@ -1,7 +1,7 @@
 import * as ESTree from "estree";
 import * as Operations from "../../../estree/operations";
 import {NoSpreadProcessedAttributes, ProcessedAttributes} from "../util";
-import * as Reify from "../../../estree/reify";
+import * as Reify from "reify-to-estree";
 import {Gensym, ProcessedChildren, StaticProcessedChildren, Tag} from "./util";
 import {Attributes, escapeHTML, renderAttributes} from "../../syntax";
 import {ArrayExpr} from "../../../estree/expr";

@@ -1,7 +1,7 @@
 import {ProcessedAttributes} from "../util";
 import {ProcessedChildren, Tag} from "./util";
 import * as ESTree from "estree";
-import * as Reify from "../../../estree/reify";
+import * as Reify from "reify-to-estree";
 import * as Structured from "../../../ast/structured";
 import {Factory} from "../optimizing";
 import {RuntimeModule} from "../../runtime";

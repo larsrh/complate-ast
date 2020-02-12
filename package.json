@@ -14,7 +14,8 @@
   "license": "ISC",
   "dependencies": {
     "astring": "^1.4.3",
-    "estree-walker": "^2.0.1"
+    "estree-walker": "^2.0.1",
+    "reify-to-estree": "^0.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.8.4",

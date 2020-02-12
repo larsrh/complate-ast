@@ -2,7 +2,7 @@ import {BaseBuilder} from "../ast/builder";
 import * as ESTree from "estree";
 import {NoSpreadProcessedAttributes, ProcessedAttributes} from "./estreebuilders/util";
 import {Attributes, AttributeValue, normalizeAttribute} from "./syntax";
-import * as Reify from "../estree/reify";
+import * as Reify from "reify-to-estree";
 
 export abstract class ESTreeBuilder implements BaseBuilder<ESTree.Expression, ESTree.Expression, ESTree.Expression> {
 

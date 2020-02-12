@@ -4,7 +4,7 @@ import {ProcessedAttributes, tagExpression} from "./util";
 import {isVoidElement} from "../syntax";
 import {ESTreeBuilder} from "../estreebuilder";
 import {RuntimeModule} from "../runtime";
-import * as Reify from "../../estree/reify";
+import * as Reify from "reify-to-estree";
 
 export class SimpleBuilder extends ESTreeBuilder {
     constructor(

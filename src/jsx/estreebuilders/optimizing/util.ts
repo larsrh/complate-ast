@@ -2,7 +2,7 @@ import * as ESTree from "estree";
 import {tagExpression} from "../util";
 import {isVoidElement, isDynamic, isMacro} from "../../syntax";
 import * as Operations from "../../../estree/operations";
-import * as Reify from "../../../estree/reify";
+import * as Reify from "reify-to-estree";
 import {ArrayExpr} from "../../../estree/expr";
 import * as Structured from "../../../ast/structured";
 import * as Raw from "../../../ast/raw";
@@ -79,7 +79,7 @@ export class StaticProcessedChildren implements BaseProcessedChildren {
     }
 
     normalized(): ArrayExpr {
-        return Reify.array(this.raw);
+        return new ArrayExpr(Reify.array(this.raw));
     }
 
     static fromASTs(children: Structured.AST[]): StaticProcessedChildren {

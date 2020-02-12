@@ -2,7 +2,7 @@ import {ProcessedAttributes} from "../util";
 import {Gensym, ProcessedChildren, Tag} from "./util";
 import * as ESTree from "estree";
 import * as Operations from "../../../estree/operations";
-import * as Reify from "../../../estree/reify";
+import * as Reify from "reify-to-estree";
 import {ArrayExpr} from "../../../estree/expr";
 import * as Structured from "../../../ast/structured";
 import * as Raw from "../../../ast/raw";
@@ -69,7 +69,7 @@ export class RawFactory implements Factory {
 
         let partsChildren: ArrayExpr;
         if (children.isStatic)
-            partsChildren = Reify.array([Reify.string(children.staticString)]);
+            partsChildren = new ArrayExpr(Reify.array([Reify.string(children.staticString)]));
         else
             partsChildren = children.normalized(this.kind, runtime).map(selector);
 
@@ -82,7 +82,7 @@ export class RawFactory implements Factory {
             partsClosed = [
                 new ArrayExpr(Operations.conditional(
                     runtime.isVoidElement(tag.expr),
-                    Reify.array([]).raw,
+                    Reify.array([]),
                     partsChildren.raw
                 )),
                 tag.close
@@ -90,7 +90,7 @@ export class RawFactory implements Factory {
 
         return Reify.object({
             astKind: Reify.string("raw"),
-            value: Reify.array([...partsOpen, ...partsClosed]).join(Reify.string(""))
+            value: new ArrayExpr(Reify.array([...partsOpen, ...partsClosed])).join(Reify.string(""))
         });
     }
 
