@@ -3,8 +3,8 @@ import {render, ASTBuilder} from "../../../ast/structured";
 import * as Stream from "../../../ast/stream";
 import {CompactingBuilder} from "../../../ast/builders/compact";
 import * as Gen from "../../../testkit/gen";
-import {DOMBuilder, fromDOM, parseHTML} from "../../../ast/builders/dom";
-import {compareHTML} from "../../../testkit/dom";
+import {DOMBuilder} from "../../../ast/builders/dom";
+import {compareHTML, fromDOM, parseHTML} from "../../../testkit/dom";
 
 describe("Structured AST roundtrips", () => {
 

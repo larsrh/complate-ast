@@ -5,7 +5,6 @@ import {generate} from "astring";
 import {runInNewContext} from "vm";
 import {matrix, runtimeConfig} from "../_util";
 import {addItems, astInfos} from "../../ast";
-import {fromDOM, parseHTML} from "../../ast/builders/dom";
 import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
 import {CompactingBuilder} from "../../ast/builders/compact";
@@ -16,6 +15,7 @@ import {runtimeModuleFromConfig} from "../../jsx/runtime";
 import {Parser} from "acorn";
 import jsx from "acorn-jsx";
 import {safe} from "../../index";
+import {fromDOM, parseHTML} from "../../testkit/dom";
 
 const parser = Parser.extend(jsx());
 
