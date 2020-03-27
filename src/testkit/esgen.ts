@@ -79,7 +79,7 @@ function expressions(): Arbitraries {
 export const exprs: Arbitraries = expressions();
 
 export function attributeValue(arbitraries: Arbitraries): Arbitrary<StaticExpr<AttributeValue>> {
-    return fc.oneof<StaticExpr<AttributeValue>>(
+    return fc.oneof(
         arbitraries.string,
         arbitraries.boolean,
         arbitraries.nul,

@@ -19,7 +19,7 @@ export const safeUnicodeString: Arbitrary<string> = fc.stringOf(
     )
 );
 
-export const attr: Arbitrary<AttributeValue> = fc.oneof<AttributeValue>(
+export const attr: Arbitrary<AttributeValue> = fc.oneof(
     fc.fullUnicodeString(),
     fc.boolean(),
     fc.constant(null),
