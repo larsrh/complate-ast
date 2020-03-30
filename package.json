@@ -29,7 +29,7 @@
     "@types/benchmark": "^1.0.31",
     "@types/estree": "0.0.44",
     "@types/jest": "^25.1.4",
-    "@types/node": "^13.9.4",
+    "@types/node": "^13.9.5",
     "@typescript-eslint/eslint-plugin": "^2.25.0",
     "@typescript-eslint/parser": "^2.25.0",
     "acorn": "^7.1.1",
