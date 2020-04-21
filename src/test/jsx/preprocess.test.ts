@@ -1,5 +1,5 @@
 import {normalizeWhitespace, preprocess} from "../../jsx/preprocess";
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 import * as Structured from "../../ast/structured";
 import {generate} from "astring";
 import {runInNewContext} from "vm";

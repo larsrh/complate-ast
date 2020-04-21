@@ -1,5 +1,5 @@
 import {AST, ASTBuilder} from "../../ast/structured";
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 import {ProcessedAttributes} from "./util";
 import {DynamicProcessedChildren, ProcessedChildren, RichNode, StaticProcessedChildren, Tag} from "./optimizing/util";
 import {ESTreeBuilder} from "../estreebuilder";

@@ -1,6 +1,6 @@
 import {ProcessedAttributes} from "../util";
 import {ProcessedChildren, Tag} from "./util";
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 import * as Reify from "reify-to-estree";
 import * as Structured from "../../../ast/structured";
 import {Factory} from "../optimizing";

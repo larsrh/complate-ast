@@ -1,6 +1,6 @@
 import {ProcessedAttributes} from "../util";
 import {Gensym, ProcessedChildren, Tag} from "./util";
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 import * as Operations from "../../../estree/operations";
 import * as Reify from "reify-to-estree";
 import {ArrayExpr} from "../../../estree/expr";

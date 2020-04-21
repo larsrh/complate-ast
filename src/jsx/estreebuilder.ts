@@ -1,5 +1,5 @@
 import {BaseBuilder} from "../ast/builder";
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 import {NoSpreadProcessedAttributes, ProcessedAttributes} from "./estreebuilders/util";
 import {Attributes, AttributeValue, normalizeAttribute} from "./syntax";
 import * as Reify from "reify-to-estree";
