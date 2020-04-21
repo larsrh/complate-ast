@@ -1,9 +1,8 @@
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 import {Attributes, isDynamic, normalizeAttribute, normalizeAttributes, renderAttributes} from "../syntax";
 import * as Operations from "../../estree/operations";
 import * as Reify from "reify-to-estree";
 import {every, mapObject} from "../../util";
-import {JSXAttribute} from "estree-jsx";
 
 export function tagExpression(tag: string): ESTree.Expression {
     if (isDynamic(tag))
@@ -101,7 +100,7 @@ export class SpreadProcessedAttributes implements BaseProcessedAttributes {
 
 export type ProcessedAttributes = NoSpreadProcessedAttributes | SpreadProcessedAttributes;
 
-export function processAttributes(attributes: JSXAttribute[]): ProcessedAttributes {
+export function processAttributes(attributes: (ESTree.JSXAttribute | ESTree.JSXSpreadAttribute)[]): ProcessedAttributes {
     const maybeSimple = every(attributes, attr => {
         switch (attr.type) {
             case "JSXAttribute":
@@ -114,7 +113,7 @@ export function processAttributes(attributes: JSXAttribute[]): ProcessedAttribut
     if (maybeSimple !== false) {
         return NoSpreadProcessedAttributes.fromExpressions(Object.fromEntries(maybeSimple.map(attribute => {
             const value = attribute.value as ESTree.Expression || Reify.boolean(true);
-            return [attribute.name.name, value]
+            return [(attribute.name as ESTree.JSXIdentifier).name, value]
         })));
     }
     else {
@@ -122,7 +121,7 @@ export function processAttributes(attributes: JSXAttribute[]): ProcessedAttribut
         for (const attribute of attributes)
             switch (attribute.type) {
                 case "JSXAttribute": {
-                    const key = Operations.identifier(attribute.name.name);
+                    const key = Operations.identifier((attribute.name as ESTree.JSXIdentifier).name);
                     const attr = processAttribute(attribute.value as ESTree.Expression || Reify.boolean(true));
                     let value: ESTree.Expression;
                     // a later x={null} or x={false} attribute may override a previous attribute from a spread,

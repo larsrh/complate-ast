@@ -1,4 +1,4 @@
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 
 export function plus(left: ESTree.Expression, ...rights: ESTree.Expression[]): ESTree.Expression {
     let result = left;

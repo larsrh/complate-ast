@@ -1,4 +1,4 @@
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 import * as Operations from "../../../estree/operations";
 import {NoSpreadProcessedAttributes, ProcessedAttributes} from "../util";
 import * as Reify from "reify-to-estree";

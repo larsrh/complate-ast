@@ -1,4 +1,4 @@
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 import * as Operations from "../estree/operations";
 import {ArrayExpr} from "../estree/expr";
 import * as Reify from "reify-to-estree";

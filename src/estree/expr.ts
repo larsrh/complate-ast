@@ -1,4 +1,4 @@
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 import {call, identifier, member} from "./operations";
 
 export interface Expr {

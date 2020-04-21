@@ -1,4 +1,4 @@
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 import * as Operations from "../../estree/operations";
 import {ProcessedAttributes, tagExpression} from "./util";
 import {isVoidElement} from "../syntax";

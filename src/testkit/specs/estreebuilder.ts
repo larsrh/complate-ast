@@ -1,5 +1,5 @@
 import * as Base from "../../ast/base";
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
 import * as Gen from "../gen";
 import * as ESGen from "../esgen";
 import {runInNewContext} from "vm";

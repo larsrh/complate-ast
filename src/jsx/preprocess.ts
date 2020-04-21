@@ -1,8 +1,8 @@
 import {walk} from "estree-walker";
-import * as ESTree from "estree";
+import * as ESTree from "estree-jsx";
+import {Node} from "estree";
 import * as Operations from "../estree/operations";
 import * as Reify from "reify-to-estree";
-import {JSXAttribute, JSXElement, JSXExpressionContainer, JSXFragment, JSXText} from "estree-jsx";
 import {isMacro} from "./syntax";
 import {processAttributes} from "./estreebuilders/util";
 import {ESTreeBuilder} from "./estreebuilder";
@@ -56,12 +56,12 @@ export function normalizeWhitespace(text: string): string {
     return str;
 }
 
-function macro(expr: ESTree.Expression, attributes: JSXAttribute[], children: ESTree.Expression[]): ESTree.Expression {
+function macro(expr: ESTree.Expression, attributes: (ESTree.JSXAttribute | ESTree.JSXSpreadAttribute)[], children: ESTree.Expression[]): ESTree.Expression {
     // TODO duplicated code with processAttributes
     const props: (ESTree.Property | ESTree.SpreadElement)[] = attributes.map(attr => {
         switch (attr.type) {
             case "JSXAttribute": {
-                const key = Operations.identifier(attr.name.name);
+                const key = Operations.identifier((attr.name as ESTree.JSXIdentifier).name);
                 const value = (attr.value as ESTree.Expression | null) || Reify.boolean(true);
                 return {
                     type: "Property",
@@ -88,30 +88,28 @@ export function preprocess(
     ast: ESTree.BaseNode,
     builder: ESTreeBuilder,
     config: RuntimeConfig
-): ESTree.Node {
+): Node {
     // TODO pass to builder?
     const runtime = runtimeModuleFromConfig(config);
 
     return walk(ast, {
-        leave(node) {
+        leave(_node) {
+            const node = _node as ESTree.Node;
             // <https://github.com/acornjs/acorn-jsx/issues/105>
             if (node.type === "Literal") {
-                const literal = node as ESTree.Literal;
-                if (literal.raw !== undefined) {
-                    const replacement = { ...literal, raw: undefined };
+                if (node.raw !== undefined) {
+                    const replacement = { ...node, raw: undefined };
                     this.replace(replacement);
                 }
             }
             else if (node.type === "Program" && config.importPath) {
-                const program = node as ESTree.Program;
-                const replacement = { ...program, body: [importStatement(config), ...program.body] };
+                const replacement = { ...node, body: [importStatement(config), ...node.body] };
                 this.replace(replacement);
             }
             else if (node.type === "JSXElement") {
-                const element = node as JSXElement;
-                const tag = element.openingElement.name.name;
-                const attributes = element.openingElement.attributes;
-                const children = element.children as ESTree.Expression[];
+                const tag = (node.openingElement.name as ESTree.JSXIdentifier).name;
+                const attributes = node.openingElement.attributes;
+                const children = node.children as any[];
 
                 let replacement: ESTree.Expression;
                 if (isMacro(tag))
@@ -121,22 +119,19 @@ export function preprocess(
                 this.replace(replacement);
             }
             else if (node.type === "JSXExpressionContainer") {
-                const container = node as JSXExpressionContainer;
-                this.replace(container.expression as ESTree.Expression);
+                this.replace(node.expression);
             }
             else if (node.type === "JSXFragment") {
-                const fragment = node as JSXFragment;
-                const children = fragment.children as ESTree.Expression[];
+                const children = node.children as any[];
                 this.replace(macro(runtime.fragmentMacro, [], children));
             }
             else if (node.type === "JSXText") {
-                const text = node as JSXText;
-                const normalized = normalizeWhitespace(text.value);
+                const normalized = normalizeWhitespace(node.value);
                 if (normalized === "")
                     this.remove();
                 else
                     this.replace(Reify.string(normalized));
             }
         }
-    }) as ESTree.Node;
+    }) as Node;
 }
