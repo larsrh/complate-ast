@@ -1,4 +1,4 @@
-export {escapeHTML, normalizeAttribute, normalizeAttributes, normalizeChildren, renderAttributes, isVoidElement} from "./jsx/syntax";
+export {escapeHTML, flatCompact, normalizeAttribute, normalizeAttributes, normalizeChildren, renderAttributes, isVoidElement} from "./jsx/syntax";
 export {structuredText, streamText, rawText} from "./ast/_text";
 
 export {info as structuredInfo} from "./ast/structured";

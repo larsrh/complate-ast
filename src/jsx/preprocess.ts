@@ -6,7 +6,7 @@ import * as Reify from "reify-to-estree";
 import {isMacro} from "./syntax";
 import {processAttributes} from "./estreebuilders/util";
 import {ESTreeBuilder} from "./estreebuilder";
-import {importStatement, RuntimeConfig, runtimeModuleFromConfig} from "./runtime";
+import {importStatement, RuntimeConfig, RuntimeModule, runtimeModuleFromConfig} from "./runtime";
 
 // Implementation copied from babel
 // Copyright (c) 2014-present Sebastian McKenzie and other contributors, MIT license
@@ -56,7 +56,12 @@ export function normalizeWhitespace(text: string): string {
     return str;
 }
 
-function macro(expr: ESTree.Expression, attributes: (ESTree.JSXAttribute | ESTree.JSXSpreadAttribute)[], children: ESTree.Expression[]): ESTree.Expression {
+function macro(
+    runtime: RuntimeModule,
+    expr: ESTree.Expression,
+    attributes: (ESTree.JSXAttribute | ESTree.JSXSpreadAttribute)[],
+    children: ESTree.Expression[]
+): ESTree.Expression {
     // TODO duplicated code with processAttributes
     const props: (ESTree.Property | ESTree.SpreadElement)[] = attributes.map(attr => {
         switch (attr.type) {
@@ -81,7 +86,13 @@ function macro(expr: ESTree.Expression, attributes: (ESTree.JSXAttribute | ESTre
         }
     });
 
-    return Operations.call(expr, Operations.object(...props), ...children);
+    const flattened = runtime.flatCompact(children);
+
+    return Operations.call(
+        expr,
+        Operations.object(...props),
+        flattened
+    );
 }
 
 export function preprocess(
@@ -113,7 +124,7 @@ export function preprocess(
 
                 let replacement: ESTree.Expression;
                 if (isMacro(tag))
-                    replacement = macro(Operations.identifier(tag), attributes, children);
+                    replacement = macro(runtime, Operations.identifier(tag), attributes, children);
                 else
                     replacement = builder.jsxElement(tag, processAttributes(attributes), children);
                 this.replace(replacement);
@@ -123,7 +134,7 @@ export function preprocess(
             }
             else if (node.type === "JSXFragment") {
                 const children = node.children as any[];
-                this.replace(macro(runtime.fragmentMacro, [], children));
+                this.replace(macro(runtime, runtime.fragmentMacro, [], children));
             }
             else if (node.type === "JSXText") {
                 const normalized = normalizeWhitespace(node.value);

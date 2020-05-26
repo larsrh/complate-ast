@@ -24,6 +24,13 @@ export class RuntimeModule {
         ));
     }
 
+    flatCompact(children: ESTree.Expression[]): ArrayExpr {
+        return new ArrayExpr(this._call(
+            "flatCompact",
+            ...children
+        ));
+    }
+
     escapeHTML(argument: ESTree.Expression): ESTree.Expression {
         return this._call("escapeHTML", argument);
     }
@@ -75,6 +82,7 @@ export function runtimeModuleFromConfig(config: RuntimeConfig = defaultRuntimeCo
 
 const runtimeSymbols: string[] = [
     "normalizeChildren",
+    "flatCompact",
     "escapeHTML",
     "isVoidElement",
     "normalizeAttribute",
