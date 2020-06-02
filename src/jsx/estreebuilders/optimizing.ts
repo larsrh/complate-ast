@@ -16,9 +16,11 @@ export interface Factory {
     reify(runtime: RuntimeModule, ast: AST): ESTree.Expression;
 }
 
-const builder = new ASTBuilder();
-
 export class OptimizingBuilder extends ESTreeBuilder {
+
+    // this could be a global variable, but for tree-shaking reasons we avoid that
+    private builder: ASTBuilder = new ASTBuilder();
+
     constructor(
         private readonly factory: Factory,
         private readonly runtime: RuntimeModule
@@ -38,7 +40,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
                 return child;
             // TODO expand to more value types
             if (child.type === "Literal" && typeof child.value === "string")
-                return this.reified(builder.text(child.value));
+                return this.reified(this.builder.text(child.value));
 
             return child;
         });
@@ -76,7 +78,7 @@ export class OptimizingBuilder extends ESTreeBuilder {
             !tag.isDynamic
         ) {
             // checking void rule is done by the builder
-            const ast = builder.element(
+            const ast = this.builder.element(
                 _tag,
                 attributes.statics,
                 ...children.children
@@ -102,6 +104,6 @@ export class OptimizingBuilder extends ESTreeBuilder {
     }
 
     text(text: string): ESTree.Expression {
-        return this.reified(builder.text(text));
+        return this.reified(this.builder.text(text));
     }
 }
