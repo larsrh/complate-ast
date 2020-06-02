@@ -7,7 +7,7 @@
     "dev": "tsc --watch --incremental",
     "test": "jest",
     "eslint": "eslint src --ext .ts",
-    "dist": "tsc && rollup -c",
+    "dist": "rm -rf dist tsconfig.tsbuildinfo && tsc",
     "bench": "tsc && ./bin/run-benchmarks.sh"
   },
   "author": "",
