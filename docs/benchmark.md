@@ -1,7 +1,7 @@
 # Benchmarking results
 
 ```
-./dist/benchmark/force.bench.js
+./src/benchmark/force.bench.ts
 Compiling {"mode":"simple","target":"structured"}
 Compiling {"mode":"simple","target":"stream"}
 Compiling {"mode":"simple","target":"raw"}
@@ -9,28 +9,28 @@ Compiling {"mode":"optimizing","target":"structured"}
 Compiling {"mode":"optimizing","target":"stream"}
 Compiling {"mode":"optimizing","target":"raw"}
 Compiling complate-stream
-complate-ast (simple/structured) x 267 ops/sec ±4.27% (65 runs sampled)
-complate-ast (simple/stream) x 263 ops/sec ±4.04% (64 runs sampled)
-complate-ast (simple/raw) x 280 ops/sec ±3.55% (68 runs sampled)
-complate-ast (optimizing/structured) x 203 ops/sec ±6.34% (61 runs sampled)
-complate-ast (optimizing/stream) x 302 ops/sec ±3.71% (70 runs sampled)
-complate-ast (optimizing/raw) x 212 ops/sec ±7.74% (54 runs sampled)
-complate-stream x 92.10 ops/sec ±3.66% (51 runs sampled)
-./dist/benchmark/pipeline.bench.js
-complate-ast (simple/structured) x 19.10 ops/sec ±10.02% (57 runs sampled)
-complate-ast (simple/stream) x 24.17 ops/sec ±3.52% (59 runs sampled)
-complate-ast (simple/raw) x 25.10 ops/sec ±3.67% (60 runs sampled)
-complate-ast (optimizing/structured) x 27.33 ops/sec ±4.94% (66 runs sampled)
-complate-ast (optimizing/stream) x 30.97 ops/sec ±4.20% (74 runs sampled)
-complate-ast (optimizing/raw) x 33.54 ops/sec ±3.20% (59 runs sampled)
-complate-stream x 31.73 ops/sec ±8.93% (60 runs sampled)
-./dist/benchmark/preprocess.bench.js
-complate-ast (simple/structured) x 2,833 ops/sec ±4.81% (79 runs sampled)
-complate-ast (simple/stream) x 2,114 ops/sec ±4.83% (66 runs sampled)
-complate-ast (simple/raw) x 2,485 ops/sec ±3.92% (73 runs sampled)
-complate-ast (optimizing/structured) x 2,328 ops/sec ±5.09% (71 runs sampled)
-complate-ast (optimizing/stream) x 1,593 ops/sec ±5.18% (71 runs sampled)
-complate-ast (optimizing/raw) x 2,266 ops/sec ±4.56% (73 runs sampled)
-sucrase x 47,471 ops/sec ±5.08% (76 runs sampled)
-babel x 170 ops/sec ±5.81% (67 runs sampled)
+complate-ast (simple/structured) x 1,719 ops/sec ±3.47% (75 runs sampled)
+complate-ast (simple/stream) x 1,791 ops/sec ±3.29% (77 runs sampled)
+complate-ast (simple/raw) x 1,912 ops/sec ±3.25% (75 runs sampled)
+complate-ast (optimizing/structured) x 1,902 ops/sec ±5.65% (69 runs sampled)
+complate-ast (optimizing/stream) x 2,244 ops/sec ±4.07% (75 runs sampled)
+complate-ast (optimizing/raw) x 2,338 ops/sec ±3.29% (77 runs sampled)
+complate-stream x 1,646 ops/sec ±2.99% (78 runs sampled)
+./src/benchmark/pipeline.bench.ts
+complate-ast (simple/structured) x 22.83 ops/sec ±9.66% (63 runs sampled)
+complate-ast (simple/stream) x 27.53 ops/sec ±2.67% (65 runs sampled)
+complate-ast (simple/raw) x 29.27 ops/sec ±1.52% (69 runs sampled)
+complate-ast (optimizing/structured) x 29.79 ops/sec ±1.65% (70 runs sampled)
+complate-ast (optimizing/stream) x 29.41 ops/sec ±4.08% (71 runs sampled)
+complate-ast (optimizing/raw) x 32.58 ops/sec ±2.22% (74 runs sampled)
+complate-stream x 30.23 ops/sec ±4.61% (72 runs sampled)
+./src/benchmark/preprocess.bench.ts
+complate-ast (simple/structured) x 4,872 ops/sec ±2.44% (86 runs sampled)
+complate-ast (simple/stream) x 4,995 ops/sec ±1.40% (92 runs sampled)
+complate-ast (simple/raw) x 4,995 ops/sec ±0.62% (93 runs sampled)
+complate-ast (optimizing/structured) x 4,413 ops/sec ±2.00% (87 runs sampled)
+complate-ast (optimizing/stream) x 3,748 ops/sec ±8.68% (83 runs sampled)
+complate-ast (optimizing/raw) x 4,431 ops/sec ±2.84% (87 runs sampled)
+sucrase x 75,352 ops/sec ±0.49% (93 runs sampled)
+babel x 423 ops/sec ±4.14% (75 runs sampled)
 ```
