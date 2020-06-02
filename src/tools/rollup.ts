@@ -1,7 +1,6 @@
 import {Plugin} from "rollup";
 import {preprocess} from "../jsx/preprocess";
 import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../jsx/estreebuilders/config";
-import {generate} from "astring";
 import {RuntimeConfig, runtimeModuleFromConfig} from "../jsx/runtime";
 
 const defaultESTreeConfig: ESTreeBuilderConfig = {
@@ -17,9 +16,11 @@ export default function complate(
 ): Plugin {
     return {
         name: "complate",
-        transform(code, id) {
+        async transform(code, id) {
             if (!/\.jsx$/.test(id))
                 return;
+
+            const {generate} = await import("astring");
 
             const ast = this.parse(code, {});
             const esTreeBuilder = esTreeBuilderFromConfig(runtimeModuleFromConfig(runtimeConfig), esTreeConfig);
