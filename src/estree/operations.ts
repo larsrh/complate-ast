@@ -108,7 +108,6 @@ export function ret(value: ESTree.Expression): ESTree.ReturnStatement {
 export function object(...items: (ESTree.Property | ESTree.SpreadElement)[]): ESTree.ObjectExpression {
     return {
         type: "ObjectExpression",
-        // FIXME bug in @types/estree
-        properties: items as ESTree.Property[]
+        properties: items
     };
 }
