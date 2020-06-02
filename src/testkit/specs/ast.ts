@@ -3,7 +3,7 @@ import * as Structured from "../../ast/structured";
 import * as Raw from "../../ast/raw";
 import fc, {Arbitrary} from "fast-check";
 import * as Gen from "../gen";
-import {addItems} from "../../ast";
+import {addItems, textBuilderOfBuilder} from "../../ast";
 import {TextBuilder, escapeHTML} from "../../jsx/syntax";
 
 const exactBuilder = new Structured.ASTBuilder(false);
@@ -135,6 +135,13 @@ export class Spec<AST extends Base.AST, Forced> {
                     const target = Structured.render(ast, this.info.builder);
                     const reference = Structured.render(ast, Raw.info().builder);
                     expect(this.asString(target)).toEqual(reference.value);
+                }));
+            });
+
+            it("Optimized text builder", () => {
+                fc.assert(fc.property(fc.fullUnicodeString(), fc.boolean(), (text, escape) => {
+                    const dynamicTextBuilder = textBuilderOfBuilder(this.info.builder);
+                    expect(this.asString(dynamicTextBuilder(text, escape))).toEqual(this.asString(this.textBuilder(text, escape)));
                 }));
             });
 

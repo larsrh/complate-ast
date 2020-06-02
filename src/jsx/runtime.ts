@@ -61,6 +61,10 @@ export class RuntimeModule {
     get fragmentMacro(): ESTree.Expression {
         return this._member("Fragment");
     }
+
+    get unsafeRawMacro(): ESTree.Expression {
+        return this._member("__UnsafeRaw");
+    }
 }
 
 export interface RuntimeConfig {
@@ -80,7 +84,7 @@ export function runtimeModuleFromConfig(config: RuntimeConfig = defaultRuntimeCo
     return new RuntimeModule(prefixOrDefault(config));
 }
 
-const runtimeSymbols: string[] = [
+export const runtimeSymbols: string[] = [
     "normalizeChildren",
     "flatCompact",
     "escapeHTML",
@@ -88,6 +92,8 @@ const runtimeSymbols: string[] = [
     "normalizeAttribute",
     "normalizeAttributes",
     "renderAttributes",
+    "safe",
+    "__UnsafeRaw",
     "Fragment",
     ...["structured", "stream", "raw"].flatMap(kind => [
         `${kind}Info`,

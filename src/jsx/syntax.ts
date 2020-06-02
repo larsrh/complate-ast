@@ -62,10 +62,20 @@ export function renderAttributes(attrs?: Attributes): string {
     return result;
 }
 
+const htmlRawProp = "__raw_html";
+
 export class HTMLString {
-    constructor(
-        readonly content: string
-    ) {}
+
+    private readonly [htmlRawProp]: string;
+
+    constructor(content: string) {
+        this[htmlRawProp] = content;
+    }
+
+}
+
+function isHTMLString(value: any): value is HTMLString {
+    return typeof value === "object" && htmlRawProp in value && typeof value[htmlRawProp] === "string";
 }
 
 export type TextBuilder<AST> = (text: string, escape: boolean) => AST;
@@ -80,8 +90,8 @@ export function normalizeChildren<AST>(textBuilder: TextBuilder<AST>, ...childre
             newChildren.push(textBuilder(child, true));
         else if (Array.isArray(child))
             newChildren.push(...normalizeChildren(textBuilder, ...child));
-        else if (child instanceof HTMLString)
-            newChildren.push(textBuilder(child.content, false));
+        else if (isHTMLString(child))
+            newChildren.push(textBuilder(child[htmlRawProp], false));
         else if (typeof child !== "object" || !child.astKind)
             newChildren.push(textBuilder(child.toString(), true));
         else

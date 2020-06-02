@@ -125,6 +125,8 @@ export function preprocess(
                 let replacement: ESTree.Expression;
                 if (isMacro(tag))
                     replacement = macro(runtime, Operations.identifier(tag), attributes, children);
+                else if (tag === "__UnsafeRaw")
+                    replacement = macro(runtime, runtime.unsafeRawMacro, attributes, children);
                 else
                     replacement = builder.jsxElement(tag, processAttributes(attributes), children);
                 this.replace(replacement);

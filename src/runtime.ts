@@ -8,3 +8,13 @@ export {info as rawInfo} from "./ast/raw";
 export function Fragment<T>(props: {}, ...children: T[]): T[] {
     return children;
 }
+
+import {HTMLString} from "./jsx/syntax";
+
+export function safe(content: string): HTMLString {
+    return new HTMLString(content);
+}
+
+export function __UnsafeRaw(props: { html: string }): HTMLString {
+    return safe(props.html);
+}

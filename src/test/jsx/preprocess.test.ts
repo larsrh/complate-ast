@@ -1,10 +1,11 @@
 import {normalizeWhitespace, preprocess} from "../../jsx/preprocess";
+import {AST} from "../../ast/base";
 import * as ESTree from "estree-jsx";
 import * as Structured from "../../ast/structured";
 import {generate} from "astring";
 import {runInNewContext} from "vm";
 import {matrix, runtimeConfig} from "../_util";
-import {addItems, astInfos} from "../../ast";
+import {addItems, astInfos, renderToString} from "../../ast";
 import * as Gen from "../../testkit/gen";
 import fc from "fast-check";
 import {CompactingBuilder} from "../../ast/builders/compact";
@@ -14,8 +15,8 @@ import {esTreeBuilderFromConfig} from "../../jsx/estreebuilders/config";
 import {runtimeModuleFromConfig} from "../../jsx/runtime";
 import {Parser} from "acorn";
 import jsx from "acorn-jsx";
-import {safe} from "../../index";
 import {fromDOM, parseHTML} from "../../testkit/dom";
+import {safe} from "../../runtime";
 
 const parser = Parser.extend(jsx());
 
@@ -42,9 +43,9 @@ describe("Preprocessing", () => {
         const force = astInfos(config.target).force;
         const esBuilder = esTreeBuilderFromConfig(runtimeModuleFromConfig(runtimeConfig), config);
 
-        function check(name: string, jsx: string, _expected: Structured.AST | string, expectStatic = false): void {
+        function check(name: string, jsx: string, _expected: Structured.AST<string> | string, expectStatic = false): void {
             const doStatic = expectStatic && esBuilder.canStatic;
-            let expected;
+            let expected: AST;
             if (typeof _expected === "string") {
                 const node = parseHTML(window.document, _expected);
                 expected = fromDOM(astBuilder, node);
@@ -61,6 +62,7 @@ describe("Preprocessing", () => {
                 it("Equivalence", () => {
                     const result = runInNewContext(generate(processed), sandbox);
                     expect(force(result)).toEqual(force(expected));
+                    expect(renderToString(config.target, result)).toEqual(renderToString(config.target, expected));
                 });
 
                 const name = doStatic ? "Static" : "Non-static";
@@ -92,7 +94,7 @@ describe("Preprocessing", () => {
             })
         }
 
-        const builder = new Structured.ASTBuilder();
+        const builder = new Structured.ASTBuilder<string>();
 
         check(
             "Simple wrapped text",
@@ -331,7 +333,7 @@ describe("Preprocessing", () => {
             "Complex macro",
             `(() => {
                 function RDiv(props, ...children) {
-                    return <div>{children.reverse()}</div>;
+                    return <div>{[...children].reverse()}</div>;
                 }
                 return <RDiv>abc<span>def</span></RDiv>
             })()`,
@@ -373,9 +375,9 @@ describe("Preprocessing", () => {
             const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
             const macro1 = jest.fn((props: object, ...children: any[]) => children);
-            const macro2 = jest.fn((props: object, ...children: any[]) => children.reverse());
+            const macro2 = jest.fn((props: object, ...children: any[]) => [...children.reverse()]);
 
-            const sandbox = {...JSXRuntime, safe, Macro1: macro1, Macro2: macro2};
+            const sandbox = {...JSXRuntime, Macro1: macro1, Macro2: macro2};
 
             const result = runInNewContext(generate(processed), sandbox);
 
@@ -550,6 +552,15 @@ describe("Preprocessing", () => {
                     return <div><Add attrs={ ({ class: "foo" }) } chldrn={ [<span />, "hi"] }><span /><div /></Add></div>;
                 })()`,
                 "<div><span class='foo'><span></span>hi</span><div class='foo'><span></span>hi</div></div>"
+            );
+
+            check(
+                "Introspection with non-AST children",
+                `(() => {
+                    const WithSafe = ({ text }, child) => addItems(child, {}, safe(text));
+                    return <WithSafe text="<br>"><div></div></WithSafe>
+                })()`,
+                builder.element("div", {}, builder.prerendered("<br>"))
             );
 
         }

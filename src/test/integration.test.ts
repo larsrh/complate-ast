@@ -1,5 +1,5 @@
 import {matrix, projectRoot} from "./_util";
-import {astInfos} from "../ast";
+import {renderToString} from "../ast";
 import {runInNewContext} from "vm";
 import {join} from "path";
 import {Parser} from "acorn";
@@ -16,7 +16,8 @@ const runtimeConfig: RuntimeConfig = {
     prefix: ""
 };
 
-const expected = "<div><h1>Hello World</h1><article><h2>Lipsum</h2><ol><li>foo</li><li>bar</li></ol><p>lorem ipsum dolor sit amet</p></article></div>";
+const expected =
+    "<!DOCTYPE HTML><html><body><h1>Hello World</h1><article><h2>Lipsum</h2><ol><li>foo</li><li>bar</li></ol><p>lorem ipsum dolor sit amet</p></article></body></html>";
 
 describe("Full example", () => {
 
@@ -25,8 +26,6 @@ describe("Full example", () => {
 
     matrix(config => {
 
-        const info = astInfos(config.target);
-
         it("Correct rendering", async () => {
 
             const contents = await fs.readFile(file, { encoding: "utf-8" });
@@ -34,8 +33,8 @@ describe("Full example", () => {
             const esTreeBuilder = esTreeBuilderFromConfig(runtimeModuleFromConfig(runtimeConfig), config);
             const generated = generate(preprocess(parsedAST, esTreeBuilder, runtimeConfig));
 
-            const complateAST = runInNewContext(generated, Runtime);
-            const html = info.asString(info.force(complateAST));
+            const result = runInNewContext(generated, Runtime);
+            const html = renderToString(config.target, result);
 
             expect(html).toEqual(expected);
 
