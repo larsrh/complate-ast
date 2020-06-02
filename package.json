@@ -3,11 +3,12 @@
   "version": "0.0.7",
   "description": "",
   "main": "dist/index.js",
+  "module": "dist/index.es.js",
   "scripts": {
     "dev": "tsc --watch --incremental",
     "test": "jest",
     "eslint": "eslint src --ext .ts",
-    "dist": "rm -rf dist tsconfig.tsbuildinfo && tsc",
+    "build": "rm -rf tsconfig.tsbuildinfo dist && tsc --emitDeclarationOnly && rollup -c",
     "bench": "./bin/run-benchmarks.sh"
   },
   "author": "",
