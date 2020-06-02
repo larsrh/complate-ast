@@ -68,13 +68,15 @@ function addConfig(config: ESTreeBuilderConfig): void {
                     "",
                     complate(
                         {
-                            importPath: path.resolve(root, "dist", "runtime")
+                            importPath: path.resolve(root, "src", "runtime")
                         },
                         config
                     ),
-                    resolve({ extensions: [".js"] }),
-                    commonjs({
-                        include: `${root}/node_modules/**`
+                    resolve({ extensions: [".js", ".ts"] }),
+                    commonjs(),
+                    sucrase({
+                        exclude: [`${root}/node_modules/**`],
+                        transforms: ["typescript"]
                     })
                 ).then(result => {
                     const info = astInfos(config.target);
@@ -102,9 +104,7 @@ suite
                         jsxPragma: "generateHTML"
                     }),
                     resolve({ extensions: [".js"] }),
-                    commonjs({
-                        include: `${root}/node_modules/**`
-                    })
+                    commonjs()
                 ).then(result => {
                     const stream = new BufferedStream();
                     result(stream, { nonBlocking: true }, () => {

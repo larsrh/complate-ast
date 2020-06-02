@@ -62,13 +62,15 @@ async function addConfig(config: ESTreeBuilderConfig): Promise<void> {
         "",
         complate(
             {
-                importPath: path.resolve(root, "dist", "runtime")
+                importPath: path.resolve(root, "src", "runtime")
             },
             config
         ),
-        resolve({ extensions: [".js"] }),
-        commonjs({
-            include: `${root}/node_modules/**`
+        resolve({ extensions: [".js", ".ts"] }),
+        commonjs(),
+        sucrase({
+            exclude: [`${root}/node_modules/**`],
+            transforms: ["typescript"]
         })
     );
     const info = astInfos(config.target);
@@ -98,9 +100,7 @@ async function addComplateStream(): Promise<void> {
             jsxPragma: "generateHTML"
         }),
         resolve({ extensions: [".js"] }),
-        commonjs({
-            include: `${root}/node_modules/**`
-        })
+        commonjs()
     );
     suite.add(
         "complate-stream",
