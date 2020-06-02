@@ -90,3 +90,17 @@ export function normalizeChildren<AST>(textBuilder: TextBuilder<AST>, ...childre
     }
     return newChildren;
 }
+
+export function flatCompact(...children: any[]): any[] {
+    const result: any[] = [];
+    for (const child of children) {
+        if (child === undefined || child === false || child === null)
+            continue;
+
+        if (Array.isArray(child))
+            result.push(...flatCompact(...child));
+        else
+            result.push(child);
+    }
+    return result;
+}

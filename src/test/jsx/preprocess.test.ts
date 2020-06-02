@@ -344,10 +344,10 @@ describe("Preprocessing", () => {
         it("Macro children and props", () => {
             const expected = astBuilder.element("div", {},
                 astBuilder.prerendered("<br>"),
-                astBuilder.text("true"),
                 astBuilder.text("<"),
-                astBuilder.text("testc"),
+                astBuilder.text("true"),
                 astBuilder.text("testd"),
+                astBuilder.text("testc"),
                 astBuilder.text("testb"),
                 astBuilder.text("testa"),
                 astBuilder.element("span")
@@ -386,14 +386,16 @@ describe("Preprocessing", () => {
 
             const macro1Call = macro1.mock.calls[0];
             expect(macro1Call[0]).toEqual({});
-            expect(macro1Call[1].slice(0, 5)).toEqual([
+            expect(macro1Call.slice(1, 8)).toEqual([
                 safe("<br>"),
-                [null, false, true, undefined, "<"],
-                ["testc", "testd"],
+                "<",
+                true,
+                "testd",
+                "testc",
                 "testb",
                 "testa"
             ]);
-            expect(force(macro1Call[1][5])).toEqual(force(astBuilder.element("span")));
+            expect(force(macro1Call[8])).toEqual(force(astBuilder.element("span")));
 
             const macro2Call = macro2.mock.calls[0];
             expect(macro2Call[0]).toEqual({
@@ -411,8 +413,10 @@ describe("Preprocessing", () => {
             expect(macro2Call.slice(2)).toEqual([
                 "testa",
                 "testb",
-                ["testc", "testd"],
-                [null, false, true, undefined, "<"],
+                "testc",
+                "testd",
+                true,
+                "<",
                 safe("<br>")
             ]);
         });
