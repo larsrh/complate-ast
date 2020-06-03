@@ -19,7 +19,7 @@
     "reify-to-estree": "^0.0.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
+    "@babel/core": "^7.10.2",
     "@babel/plugin-transform-react-jsx": "^7.9.4",
     "@rollup/plugin-commonjs": "^11.1.0",
     "@rollup/plugin-node-resolve": "^7.1.3",
