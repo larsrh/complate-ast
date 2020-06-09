@@ -1,5 +1,12 @@
+export function objectFromEntries<T = any>(entries: [string, T][]): { [k: string]: T } {
+    const object = {};
+    for (const [key, value] of entries)
+        object[key] = value;
+    return object;
+}
+
 export function mapObject<V, W>(object: Record<string, V>, fn: (v: V) => W): Record<string, W> {
-    return Object.fromEntries(Object.entries(object).map(entry => {
+    return objectFromEntries(Object.entries(object).map(entry => {
         const [key, value] = entry;
         return [key, fn(value)]
     }));

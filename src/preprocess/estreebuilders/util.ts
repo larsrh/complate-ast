@@ -2,7 +2,7 @@ import * as ESTree from "estree-jsx";
 import {Attributes, isDynamic, normalizeAttribute, normalizeAttributes, renderAttributes} from "../../syntax/util";
 import * as Operations from "../../syntax/operations";
 import * as Reify from "reify-to-estree";
-import {every, mapObject} from "../../util";
+import {every, mapObject, objectFromEntries} from "../../util";
 
 export function tagExpression(tag: string): ESTree.Expression {
     if (isDynamic(tag))
@@ -111,7 +111,7 @@ export function processAttributes(attributes: (ESTree.JSXAttribute | ESTree.JSXS
     });
 
     if (maybeSimple !== false) {
-        return NoSpreadProcessedAttributes.fromExpressions(Object.fromEntries(maybeSimple.map(attribute => {
+        return NoSpreadProcessedAttributes.fromExpressions(objectFromEntries(maybeSimple.map(attribute => {
             const value = attribute.value as ESTree.Expression || Reify.boolean(true);
             return [(attribute.name as ESTree.JSXIdentifier).name, value]
         })));

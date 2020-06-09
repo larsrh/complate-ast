@@ -1,4 +1,5 @@
 import {Builder} from "../ast/builder";
+import {objectFromEntries} from "../util";
 
 export function parseHTML(document: Document, html: string): Node {
     const dummy = document.createElement("div");
@@ -41,7 +42,7 @@ export function fromDOM<A>(builder: Builder<A>, node: Node): A {
     const tree = node as Element;
     return builder.element(
         tree.tagName.toLowerCase(),
-        Object.fromEntries(tree.getAttributeNames().map(attr => [attr, tree.getAttribute(attr)])),
+        objectFromEntries(tree.getAttributeNames().map(attr => [attr, tree.getAttribute(attr)])),
         ...Array.from(tree.childNodes).map(child => fromDOM(builder, child))
     );
 }

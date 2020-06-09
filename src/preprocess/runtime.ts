@@ -95,10 +95,12 @@ export const runtimeSymbols: string[] = [
     "safe",
     "__UnsafeRaw",
     "Fragment",
-    ...["structured", "stream", "raw"].flatMap(kind => [
-        `${kind}Info`,
-        `${kind}Text`
-    ])
+    "structuredInfo",
+    "structuredText",
+    "streamInfo",
+    "streamText",
+    "rawInfo",
+    "rawText"
 ];
 
 export function importStatement(config: RuntimeConfig): ESTree.Statement {

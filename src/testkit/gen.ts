@@ -1,6 +1,7 @@
 import fc, {Arbitrary} from "fast-check";
 import {Attributes, AttributeValue} from "../syntax/util";
 import {BaseBuilder} from "../ast/builder";
+import {objectFromEntries} from "../util";
 
 // TODO dashes
 const alphabetic =
@@ -27,7 +28,7 @@ export const attr: Arbitrary<AttributeValue> = fc.oneof(
 );
 
 export function attrs<AV>(attr: Arbitrary<AV>): Arbitrary<Attributes<AV>> {
-    return fc.array(fc.tuple(alphabetic, attr)).map(attrs => Object.fromEntries(attrs));
+    return fc.array(fc.tuple(alphabetic, attr)).map(attrs => objectFromEntries(attrs));
 }
 
 export const defaultAttrs: Arbitrary<Attributes> = attrs(attr);
