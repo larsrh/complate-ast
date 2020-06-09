@@ -1,3 +1,5 @@
 # complate-ast
 
-Ham-fisted attempt to retrofit a (versatile) syntax tree on JSX
+![Node CI](https://github.com/larsrh/complate-ast/workflows/Node%20CI/badge.svg)
+
+More efficient rendering of JSX
