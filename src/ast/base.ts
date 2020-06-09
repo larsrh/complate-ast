@@ -1,5 +1,5 @@
 import {Builder} from "./builder";
-import {Attributes} from "../jsx/syntax";
+import {Attributes} from "../syntax/util";
 
 export interface AST {
     readonly astKind: string;

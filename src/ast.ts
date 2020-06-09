@@ -2,7 +2,7 @@ import * as Base from "./ast/base";
 import {AST as StructuredAST, info as structuredInfo} from "./ast/structured";
 import {AST as StreamAST, info as streamInfo} from "./ast/stream";
 import {AST as RawAST, info as rawInfo} from "./ast/raw";
-import {Attributes, normalizeChildren, TextBuilder} from "./jsx/syntax";
+import {Attributes, normalizeChildren, TextBuilder} from "./syntax/util";
 import {Builder} from "./ast/builder";
 
 export type Kind = "raw" | "stream" | "structured"

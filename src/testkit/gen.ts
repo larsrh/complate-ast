@@ -1,5 +1,5 @@
 import fc, {Arbitrary} from "fast-check";
-import {Attributes, AttributeValue} from "../jsx/syntax";
+import {Attributes, AttributeValue} from "../syntax/util";
 import {BaseBuilder} from "../ast/builder";
 
 // TODO dashes

@@ -1,5 +1,5 @@
 import {Event, Suite} from "benchmark";
-import {ESTreeBuilderConfig} from "../jsx/estreebuilders/config";
+import {ESTreeBuilderConfig} from "../preprocess/estreebuilders/config";
 import {allConfigs, projectRoot} from "../test/_util";
 import {InputOptions, Plugin, OutputOptions, rollup} from "rollup";
 import * as tempy from "tempy";

@@ -1,7 +1,7 @@
 import * as Structured from "./structured";
 import * as Stream from "./stream";
 import * as Raw from "./raw";
-import {escapeHTML} from "../jsx/syntax";
+import {escapeHTML} from "../syntax/util";
 
 // optimized builders for plain text nodes
 

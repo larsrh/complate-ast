@@ -1,9 +1,9 @@
 import {walk} from "estree-walker";
 import * as ESTree from "estree-jsx";
 import {Node} from "estree";
-import * as Operations from "../estree/operations";
+import * as Operations from "../syntax/operations";
 import * as Reify from "reify-to-estree";
-import {isMacro} from "./syntax";
+import {isMacro} from "../syntax/util";
 import {processAttributes} from "./estreebuilders/util";
 import {ESTreeBuilder} from "./estreebuilder";
 import {importStatement, RuntimeConfig, RuntimeModule, runtimeModuleFromConfig} from "./runtime";

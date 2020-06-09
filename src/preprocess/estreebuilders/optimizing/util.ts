@@ -1,9 +1,9 @@
 import * as ESTree from "estree-jsx";
 import {tagExpression} from "../util";
-import {isVoidElement, isDynamic, isMacro} from "../../syntax";
-import * as Operations from "../../../estree/operations";
+import {isVoidElement, isDynamic, isMacro} from "../../../syntax/util";
+import * as Operations from "../../../syntax/operations";
 import * as Reify from "reify-to-estree";
-import {ArrayExpr} from "../../../estree/expr";
+import {ArrayExpr} from "../../../syntax/expr";
 import * as Structured from "../../../ast/structured";
 import * as Raw from "../../../ast/raw";
 import {RuntimeModule} from "../../runtime";

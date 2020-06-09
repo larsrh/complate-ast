@@ -8,7 +8,7 @@ import {
     normalizeChildren,
     renderAttributes,
     TextBuilder
-} from "../../jsx/syntax";
+} from "../../syntax/util";
 import {allKinds, astInfos} from "../../ast";
 import {AST} from "../../ast/base";
 import {rawText, streamText, structuredText} from "../../ast/_text";

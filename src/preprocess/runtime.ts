@@ -1,6 +1,6 @@
 import * as ESTree from "estree-jsx";
-import * as Operations from "../estree/operations";
-import {ArrayExpr} from "../estree/expr";
+import * as Operations from "../syntax/operations";
+import {ArrayExpr} from "../syntax/expr";
 import * as Reify from "reify-to-estree";
 
 export class RuntimeModule {

@@ -1,4 +1,4 @@
-import {normalizeWhitespace, preprocess} from "../../jsx/preprocess";
+import {normalizeWhitespace, preprocess} from "../../preprocess/preprocess";
 import {AST} from "../../ast/base";
 import * as ESTree from "estree-jsx";
 import * as Structured from "../../ast/structured";
@@ -11,8 +11,8 @@ import fc from "fast-check";
 import {CompactingBuilder} from "../../ast/builders/compact";
 import * as Raw from "../../ast/raw";
 import * as JSXRuntime from "../../runtime";
-import {esTreeBuilderFromConfig} from "../../jsx/estreebuilders/config";
-import {runtimeModuleFromConfig} from "../../jsx/runtime";
+import {esTreeBuilderFromConfig} from "../../preprocess/estreebuilders/config";
+import {runtimeModuleFromConfig} from "../../preprocess/runtime";
 import {Parser} from "acorn";
 import jsx from "acorn-jsx";
 import {fromDOM, parseHTML} from "../../testkit/dom";

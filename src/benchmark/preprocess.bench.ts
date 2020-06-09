@@ -1,7 +1,7 @@
 import {Event, Suite} from "benchmark";
-import {preprocess} from "../jsx/preprocess";
-import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../jsx/estreebuilders/config";
-import {defaultRuntimeConfig, runtimeModuleFromConfig} from "../jsx/runtime";
+import {preprocess} from "../preprocess/preprocess";
+import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../preprocess/estreebuilders/config";
+import {defaultRuntimeConfig, runtimeModuleFromConfig} from "../preprocess/runtime";
 import {generate} from "astring";
 import * as sucrase from "sucrase";
 import * as babel from "@babel/core";

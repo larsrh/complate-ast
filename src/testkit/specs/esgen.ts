@@ -1,7 +1,7 @@
 import fc, {Arbitrary} from "fast-check";
 import {StaticExpr} from "../esgen";
 import {runInNewContext} from "vm";
-import {expressionStatement} from "../../estree/operations";
+import {expressionStatement} from "../../syntax/operations";
 import {generate} from "astring";
 
 export function spec<T>(name: string, arb: Arbitrary<StaticExpr<T>>): void {

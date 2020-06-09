@@ -1,5 +1,5 @@
 import * as Structured from "../structured";
-import {Attributes, normalizeAttributes} from "../../jsx/syntax";
+import {Attributes, normalizeAttributes} from "../../syntax/util";
 import {defaultTo, mapObject} from "../../util";
 
 export interface CompactingOptions {

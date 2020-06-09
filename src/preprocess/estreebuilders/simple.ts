@@ -1,7 +1,7 @@
 import * as ESTree from "estree-jsx";
-import * as Operations from "../../estree/operations";
+import * as Operations from "../../syntax/operations";
 import {ProcessedAttributes, tagExpression} from "./util";
-import {isVoidElement} from "../syntax";
+import {isVoidElement} from "../../syntax/util";
 import {ESTreeBuilder} from "../estreebuilder";
 import {RuntimeModule} from "../runtime";
 import * as Reify from "reify-to-estree";

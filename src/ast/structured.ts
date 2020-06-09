@@ -1,7 +1,7 @@
 import * as Base from "./base";
 import * as Raw from "./raw";
 import {mapObject} from "../util";
-import {Attributes, normalizeAttributes} from "../jsx/syntax";
+import {Attributes, normalizeAttributes} from "../syntax/util";
 import {BaseBuilder, Builder, defaultTagCheck} from "./builder";
 
 export type NodeType = "text" | "element" | "prerendered"

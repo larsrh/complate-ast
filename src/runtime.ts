@@ -1,4 +1,4 @@
-export {escapeHTML, flatCompact, normalizeAttribute, normalizeAttributes, normalizeChildren, renderAttributes, isVoidElement} from "./jsx/syntax";
+export {escapeHTML, flatCompact, normalizeAttribute, normalizeAttributes, normalizeChildren, renderAttributes, isVoidElement} from "./syntax/util";
 export {structuredText, streamText, rawText} from "./ast/_text";
 
 export {info as structuredInfo} from "./ast/structured";
@@ -9,7 +9,7 @@ export function Fragment<T>(props: {}, ...children: T[]): T[] {
     return children;
 }
 
-import {HTMLString} from "./jsx/syntax";
+import {HTMLString} from "./syntax/util";
 
 export function safe(content: string): HTMLString {
     return new HTMLString(content);

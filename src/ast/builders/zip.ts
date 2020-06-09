@@ -1,5 +1,5 @@
 import {BaseBuilder} from "../builder";
-import {Attributes, AttributeValue} from "../../jsx/syntax";
+import {Attributes, AttributeValue} from "../../syntax/util";
 import {mapObject} from "../../util";
 
 export class ZipBuilder<A1, A2, P1, P2, AV1, AV2> implements BaseBuilder<[A1, A2], [P1, P2], [AV1, AV2]> {

@@ -1,4 +1,4 @@
-import {Attributes, normalizeAttributes} from "../../jsx/syntax";
+import {Attributes, normalizeAttributes} from "../../syntax/util";
 import {Builder} from "../builder";
 
 export class DOMBuilder extends Builder<Node, Node> {

@@ -1,8 +1,8 @@
-import {Expr} from "../estree/expr";
+import {Expr} from "../syntax/expr";
 import fc, {Arbitrary} from "fast-check";
 import * as Reify from "reify-to-estree";
-import * as Operations from "../estree/operations";
-import {AttributeValue} from "../jsx/syntax";
+import * as Operations from "../syntax/operations";
+import {AttributeValue} from "../syntax/util";
 
 export interface StaticExpr<T> extends Expr {
     readonly value: T;

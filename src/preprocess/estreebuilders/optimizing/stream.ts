@@ -1,10 +1,10 @@
 import * as ESTree from "estree-jsx";
-import * as Operations from "../../../estree/operations";
+import * as Operations from "../../../syntax/operations";
 import {NoSpreadProcessedAttributes, ProcessedAttributes} from "../util";
 import * as Reify from "reify-to-estree";
 import {Gensym, ProcessedChildren, StaticProcessedChildren, Tag} from "./util";
-import {Attributes, escapeHTML, renderAttributes} from "../../syntax";
-import {ArrayExpr} from "../../../estree/expr";
+import {Attributes, escapeHTML, renderAttributes} from "../../../syntax/util";
+import {ArrayExpr} from "../../../syntax/expr";
 import * as Structured from "../../../ast/structured";
 import {Factory} from "../optimizing";
 import {RuntimeModule} from "../../runtime";

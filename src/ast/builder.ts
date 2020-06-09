@@ -1,4 +1,4 @@
-import {Attributes, AttributeValue, isDynamic, isMacro, isVoidElement} from "../jsx/syntax";
+import {Attributes, AttributeValue, isDynamic, isMacro, isVoidElement} from "../syntax/util";
 
 export interface BaseBuilder<A, P = never, AV = AttributeValue> {
     text(text: string): A;

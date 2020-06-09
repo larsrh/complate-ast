@@ -1,5 +1,5 @@
-import {ESTreeBuilderConfig} from "../jsx/estreebuilders/config";
-import {RuntimeConfig} from "../jsx/runtime";
+import {ESTreeBuilderConfig} from "../preprocess/estreebuilders/config";
+import {RuntimeConfig} from "../preprocess/runtime";
 import path from "path";
 
 export const allConfigs: ESTreeBuilderConfig[] = [

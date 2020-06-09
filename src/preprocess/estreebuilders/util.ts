@@ -1,6 +1,6 @@
 import * as ESTree from "estree-jsx";
-import {Attributes, isDynamic, normalizeAttribute, normalizeAttributes, renderAttributes} from "../syntax";
-import * as Operations from "../../estree/operations";
+import {Attributes, isDynamic, normalizeAttribute, normalizeAttributes, renderAttributes} from "../../syntax/util";
+import * as Operations from "../../syntax/operations";
 import * as Reify from "reify-to-estree";
 import {every, mapObject} from "../../util";
 

@@ -5,10 +5,10 @@ import {join} from "path";
 import {Parser} from "acorn";
 import jsx from "acorn-jsx";
 import {promises as fs} from "fs";
-import {esTreeBuilderFromConfig} from "../jsx/estreebuilders/config";
-import {RuntimeConfig, runtimeModuleFromConfig} from "../jsx/runtime";
+import {esTreeBuilderFromConfig} from "../preprocess/estreebuilders/config";
+import {RuntimeConfig, runtimeModuleFromConfig} from "../preprocess/runtime";
 import {generate} from "astring";
-import {preprocess} from "../jsx/preprocess";
+import {preprocess} from "../preprocess/preprocess";
 import * as Runtime from "../runtime";
 
 const parser = Parser.extend(jsx());

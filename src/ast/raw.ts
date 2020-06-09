@@ -1,5 +1,5 @@
 import * as Base from "./base";
-import {Attributes, escapeHTML, isVoidElement, renderAttributes} from "../jsx/syntax";
+import {Attributes, escapeHTML, isVoidElement, renderAttributes} from "../syntax/util";
 import {Builder, defaultTagCheck} from "./builder";
 
 export interface AST extends Base.AST {

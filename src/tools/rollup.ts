@@ -1,7 +1,7 @@
 import {Plugin} from "rollup";
-import {preprocess} from "../jsx/preprocess";
-import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../jsx/estreebuilders/config";
-import {RuntimeConfig, runtimeModuleFromConfig} from "../jsx/runtime";
+import {preprocess} from "../preprocess/preprocess";
+import {ESTreeBuilderConfig, esTreeBuilderFromConfig} from "../preprocess/estreebuilders/config";
+import {RuntimeConfig, runtimeModuleFromConfig} from "../preprocess/runtime";
 
 const defaultESTreeConfig: ESTreeBuilderConfig = {
     target: "raw",
