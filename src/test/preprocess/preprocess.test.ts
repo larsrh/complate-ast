@@ -375,7 +375,7 @@ describe("Preprocessing", () => {
             const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
             const macro1 = jest.fn((props: object, ...children: any[]) => children);
-            const macro2 = jest.fn((props: object, ...children: any[]) => [...children.reverse()]);
+            const macro2 = jest.fn((props: object, ...children: any[]) => [...children].reverse());
 
             const sandbox = {...JSXRuntime, Macro1: macro1, Macro2: macro2};
 
