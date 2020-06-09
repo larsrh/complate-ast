@@ -7,6 +7,8 @@ import {isMacro} from "../syntax/util";
 import {processAttributes} from "./estreebuilders/util";
 import {ESTreeBuilder} from "./estreebuilder";
 import {importStatement, RuntimeConfig, RuntimeModule, runtimeModuleFromConfig} from "./runtime";
+import {every} from "../util";
+import {hasAST} from "./estreebuilders/optimizing";
 
 // Implementation copied from babel
 // Copyright (c) 2014-present Sebastian McKenzie and other contributors, MIT license
@@ -86,12 +88,24 @@ function macro(
         }
     });
 
-    const flattened = runtime.flatCompact(children);
+    const maybeStatic = every(children, child => {
+        if (hasAST(child))
+            return child;
+        else
+            return false;
+    });
+
+    let flattened: (ESTree.Expression | ESTree.SpreadElement)[];
+
+    if (maybeStatic === false)
+        flattened = [runtime.flatCompact(children)];
+    else
+        flattened = children;
 
     return Operations.call(
         expr,
         Operations.object(...props),
-        flattened
+        ...flattened
     );
 }
 
