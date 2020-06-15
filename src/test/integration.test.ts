@@ -33,7 +33,7 @@ describe("Full example", () => {
             const esTreeBuilder = esTreeBuilderFromConfig(runtimeModuleFromConfig(runtimeConfig), config);
             const generated = generate(preprocess(parsedAST, esTreeBuilder, runtimeConfig));
 
-            const result = runInNewContext(generated, Runtime);
+            const result = runInNewContext(generated, { Complate: Runtime });
             const html = renderToString(config.target, result);
 
             expect(html).toEqual(expected);

@@ -15,8 +15,6 @@ import complate from "./tools/rollup";
 
 export {complate};
 
-export {runtimeSymbols} from "./preprocess/runtime";
-
 export {ESTreeBuilder} from "./preprocess/estreebuilder"
 export * from "./preprocess/estreebuilders/config";
 

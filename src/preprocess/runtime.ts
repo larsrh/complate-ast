@@ -9,7 +9,7 @@ export class RuntimeModule {
     ) {}
 
     _member(name: string): ESTree.Expression {
-        return Operations.identifier(this.prefix + name);
+        return Operations.member(Operations.identifier(this.prefix + "Complate"), Operations.identifier(name));
     }
 
     _call(name: string, ...args: (ESTree.Expression | ESTree.SpreadElement)[]): ESTree.Expression {
@@ -84,36 +84,16 @@ export function runtimeModuleFromConfig(config: RuntimeConfig = defaultRuntimeCo
     return new RuntimeModule(prefixOrDefault(config));
 }
 
-export const runtimeSymbols: string[] = [
-    "normalizeChildren",
-    "flatCompact",
-    "escapeHTML",
-    "isVoidElement",
-    "normalizeAttribute",
-    "normalizeAttributes",
-    "renderAttributes",
-    "safe",
-    "__UnsafeRaw",
-    "Fragment",
-    "structuredInfo",
-    "structuredText",
-    "streamInfo",
-    "streamText",
-    "rawInfo",
-    "rawText"
-];
-
 export function importDeclaration(config: RuntimeConfig): ESTree.ModuleDeclaration {
     const prefix = prefixOrDefault(config);
     const source = Reify.string(config.importPath!);
 
     return {
         type: "ImportDeclaration",
-        specifiers: runtimeSymbols.map(symbol => ({
-            type: "ImportSpecifier",
-            imported: Operations.identifier(symbol),
-            local: Operations.identifier(prefix + symbol)
-        })),
+        specifiers: [{
+            type: "ImportNamespaceSpecifier",
+            local: Operations.identifier(prefix + "Complate")
+        }],
         source: source
     };
 }

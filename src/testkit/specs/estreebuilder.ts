@@ -25,7 +25,7 @@ export class Spec<AST extends Base.AST, Forced> {
     ) {}
 
     private evaluate(expr: ESTree.Expression, strict = false): any {
-        const sandbox = strict && this.treeBuilder.canStatic ? {} : JSXRuntime;
+        const sandbox = strict && this.treeBuilder.canStatic ? {} : { Complate: JSXRuntime };
         const statement = expressionStatement(expr);
         const js = generate(statement);
         return runInNewContext(js, sandbox);

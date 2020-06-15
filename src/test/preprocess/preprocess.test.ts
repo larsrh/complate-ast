@@ -16,7 +16,7 @@ import {runtimeModuleFromConfig} from "../../preprocess/runtime";
 import {Parser} from "acorn";
 import jsx from "acorn-jsx";
 import {fromDOM, parseHTML} from "../../testkit/dom";
-import {safe} from "../../runtime";
+import {Fragment, safe} from "../../runtime";
 
 const parser = Parser.extend(jsx());
 
@@ -57,7 +57,7 @@ describe("Preprocessing", () => {
                 const input = parser.parse(jsx);
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
-                const sandbox = doStatic ? {} : {...JSXRuntime, addItems};
+                const sandbox = doStatic ? {} : { Complate: JSXRuntime, Fragment, addItems, safe };
 
                 it("Equivalence", () => {
                     const result = runInNewContext(generate(processed), sandbox);
@@ -78,7 +78,7 @@ describe("Preprocessing", () => {
         }
 
         function checkRuntimeFailure(name: string, jsx: string, regex: RegExp): void {
-            const sandbox = {...JSXRuntime, addItems};
+            const sandbox = { Complate: JSXRuntime, addItems };
             it(name, () => {
                 const input = parser.parse(jsx);
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
@@ -366,7 +366,7 @@ describe("Preprocessing", () => {
                             { "testb" }
                             { ["testc", "testd"] }
                             { [null, false, true, undefined, "<" ] }
-                            { safe("<br>") }
+                            <__UnsafeRaw html={"<br>"} />
                         </Macro2>
                     </Macro1>
                 </div>
@@ -377,7 +377,7 @@ describe("Preprocessing", () => {
             const macro1 = jest.fn((props: object, ...children: any[]) => children);
             const macro2 = jest.fn((props: object, ...children: any[]) => [...children].reverse());
 
-            const sandbox = {...JSXRuntime, Macro1: macro1, Macro2: macro2};
+            const sandbox = { Complate: JSXRuntime, Macro1: macro1, Macro2: macro2 };
 
             const result = runInNewContext(generate(processed), sandbox);
 
@@ -599,7 +599,7 @@ describe("Preprocessing", () => {
          */
         it("Roundtrip (Structured → JSX → ESTree → Preprocess → AST)", () => {
             const gen = Gen.defaultAST(Structured.info().builder).filter(ast => ast.nodeType !== "text");
-            const sandbox = esBuilder.canStatic ? {} : JSXRuntime;
+            const sandbox = esBuilder.canStatic ? {} : { Complate: JSXRuntime };
 
             fc.assert(fc.property(gen, ast => {
                 const ast1 = Structured.render(
