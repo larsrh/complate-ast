@@ -6,7 +6,7 @@ import * as Reify from "reify-to-estree";
 import {isMacro} from "../syntax/util";
 import {processAttributes} from "./estreebuilders/util";
 import {ESTreeBuilder} from "./estreebuilder";
-import {importStatement, RuntimeConfig, RuntimeModule, runtimeModuleFromConfig} from "./runtime";
+import {importDeclaration, RuntimeConfig, RuntimeModule, runtimeModuleFromConfig} from "./runtime";
 import {every} from "../util";
 import {hasAST} from "./estreebuilders/optimizing";
 
@@ -128,7 +128,7 @@ export function preprocess(
                 }
             }
             else if (node.type === "Program" && config.importPath) {
-                const replacement = { ...node, body: [importStatement(config), ...node.body] };
+                const replacement = { ...node, body: [importDeclaration(config), ...node.body] };
                 this.replace(replacement);
             }
             else if (node.type === "JSXElement") {

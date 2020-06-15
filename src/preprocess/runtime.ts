@@ -103,11 +103,10 @@ export const runtimeSymbols: string[] = [
     "rawText"
 ];
 
-export function importStatement(config: RuntimeConfig): ESTree.Statement {
+export function importDeclaration(config: RuntimeConfig): ESTree.ModuleDeclaration {
     const prefix = prefixOrDefault(config);
     const source = Reify.string(config.importPath!);
 
-    // FIXME import declaration not yet supported in ESTree?!
     return {
         type: "ImportDeclaration",
         specifiers: runtimeSymbols.map(symbol => ({
@@ -116,5 +115,5 @@ export function importStatement(config: RuntimeConfig): ESTree.Statement {
             local: Operations.identifier(prefix + symbol)
         })),
         source: source
-    } as any;
+    };
 }
