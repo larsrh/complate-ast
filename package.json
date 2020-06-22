@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.10.3",
-    "@babel/plugin-transform-react-jsx": "^7.10.1",
+    "@babel/plugin-transform-react-jsx": "^7.10.3",
     "@rollup/plugin-commonjs": "^13.0.0",
     "@rollup/plugin-node-resolve": "^8.0.1",
     "@rollup/plugin-sucrase": "^3.0.2",
