@@ -34,7 +34,8 @@ export function call(callee: ESTree.Expression, ...args: (ESTree.Expression | ES
     return {
         type: "CallExpression",
         callee: callee,
-        arguments: args
+        arguments: args,
+        optional: false
     };
 }
 
@@ -43,7 +44,8 @@ export function member(object: ESTree.Expression, property: ESTree.Expression, c
         type: "MemberExpression",
         object: object,
         property: property,
-        computed: computed
+        computed: computed,
+        optional: false
     };
 }
 
