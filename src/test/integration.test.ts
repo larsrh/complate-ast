@@ -29,7 +29,7 @@ describe("Full example", () => {
         it("Correct rendering", async () => {
 
             const contents = await fs.readFile(file, { encoding: "utf-8" });
-            const parsedAST = parser.parse(contents);
+            const parsedAST = parser.parse(contents, { ecmaVersion: 2019 });
             const esTreeBuilder = esTreeBuilderFromConfig(runtimeModuleFromConfig(runtimeConfig), config);
             const generated = generate(preprocess(parsedAST, esTreeBuilder, runtimeConfig));
 

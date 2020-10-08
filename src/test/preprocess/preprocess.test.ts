@@ -54,7 +54,7 @@ describe("Preprocessing", () => {
                 expected = Structured.render(_expected, astBuilder);
             }
             describe(name, () => {
-                const input = parser.parse(jsx);
+                const input = parser.parse(jsx, { ecmaVersion: 2019 });
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
                 const sandbox = doStatic ? {} : {...JSXRuntime, addItems};
@@ -80,7 +80,7 @@ describe("Preprocessing", () => {
         function checkRuntimeFailure(name: string, jsx: string, regex: RegExp): void {
             const sandbox = {...JSXRuntime, addItems};
             it(name, () => {
-                const input = parser.parse(jsx);
+                const input = parser.parse(jsx, { ecmaVersion: 2019 });
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
                 const generated = generate(processed);
                 expect(() => force(runInNewContext(generated, sandbox))).toThrow(regex);
@@ -89,7 +89,7 @@ describe("Preprocessing", () => {
 
         function checkCompileFailure(name: string, jsx: string, regex: RegExp): void {
             it(name, () => {
-                const input = parser.parse(jsx);
+                const input = parser.parse(jsx, { ecmaVersion: 2019 });
                 expect(() => preprocess(input, esBuilder, runtimeConfig)).toThrow(regex);
             })
         }
@@ -370,7 +370,7 @@ describe("Preprocessing", () => {
                         </Macro2>
                     </Macro1>
                 </div>
-            `);
+            `, { ecmaVersion: 2019 });
 
             const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
@@ -608,7 +608,7 @@ describe("Preprocessing", () => {
                 );
 
                 const jsx = Structured.render(ast, Raw.info().builder).value;
-                const input = parser.parse(jsx);
+                const input = parser.parse(jsx, { ecmaVersion: 2019 });
                 const processed = preprocess(input, esBuilder, runtimeConfig) as ESTree.Program;
 
                 const ast2 = runInNewContext(generate(processed), sandbox);

@@ -28,7 +28,8 @@ function addConfig(config: ESTreeBuilderConfig): void {
             const parsed = acorn.parse(
                 data,
                 {
-                    sourceType: "module"
+                    sourceType: "module",
+                    ecmaVersion: 2019
                 }
             );
             generate(preprocess(parsed, esTreeBuilder, defaultRuntimeConfig));
