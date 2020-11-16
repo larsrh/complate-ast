@@ -39,7 +39,7 @@
     "eslint": "^6.8.0",
     "eslint-plugin-import": "^2.22.1",
     "esm": "^3.2.25",
-    "fast-check": "^2.6.0",
+    "fast-check": "^2.7.0",
     "jest": "^25.5.4",
     "rollup": "^2.33.1",
     "sucrase": "^3.16.0",
